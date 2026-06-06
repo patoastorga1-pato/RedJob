@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./styles.css?v=20260606j" />
+    <link rel="stylesheet" href="./styles.css?v=20260606k" />
   </head>
   <body>
     <header class="site-header">
@@ -359,9 +359,16 @@
               <button class="text-danger-button compact" type="button" id="deleteCompanyButton">Eliminar empresa</button>
             </div>
           </section>
-          <section class="info-card">
-            <h2>Publicar vacante</h2>
-            <form class="entity-form" id="companyJobForm">
+          <details class="info-card profile-editor company-job-editor" id="companyJobEditor">
+            <summary>
+              <span>
+                <strong>Publicar vacante</strong>
+                <small>Crea una nueva oportunidad para tu empresa</small>
+              </span>
+              <span class="profile-editor-chevron" aria-hidden="true"></span>
+            </summary>
+            <div class="profile-editor-content">
+              <form class="entity-form" id="companyJobForm">
               <label>
                 Empresa
                 <input id="companyNameInput" type="text" placeholder="Nombre de tu empresa" />
@@ -411,9 +418,10 @@
                 <textarea id="jobSkillsInput" rows="6" placeholder="Escribe un requisito por renglón.&#10;Ej. Experiencia en ventas&#10;Manejo de Excel&#10;Disponibilidad de horario"></textarea>
               </label>
               <button class="primary-button" type="submit" id="companyJobSubmitButton">Publicar vacante real</button>
-              <button class="secondary-button subtle is-hidden" type="button" id="cancelJobEditButton">Cancelar edición</button>
-            </form>
-          </section>
+                <button class="secondary-button subtle is-hidden" type="button" id="cancelJobEditButton">Cancelar edición</button>
+              </form>
+            </div>
+          </details>
           <section class="info-card">
             <h2>Vacantes activas</h2>
             <div class="mini-job-list" id="companyJobsList">
@@ -615,6 +623,6 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script src="./config.js?v=20260605h"></script>
-    <script src="./app.js?v=20260606j"></script>
+    <script src="./app.js?v=20260606k"></script>
   </body>
 </html>

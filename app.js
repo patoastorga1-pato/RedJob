@@ -63,6 +63,7 @@ const candidateLocation = document.querySelector("#candidateLocation");
 const candidateWorkMode = document.querySelector("#candidateWorkMode");
 const candidateSkills = document.querySelector("#candidateSkills");
 const candidateSummary = document.querySelector("#candidateSummary");
+const companyJobEditor = document.querySelector("#companyJobEditor");
 const companyJobForm = document.querySelector("#companyJobForm");
 const companyNameInput = document.querySelector("#companyNameInput");
 const companyDescriptionInput = document.querySelector("#companyDescriptionInput");
@@ -1484,7 +1485,9 @@ function editCompanyJob(jobId) {
   jobSalaryMinInput.value = salaryNumbers[0] ?? "";
   jobSalaryMaxInput.value = salaryNumbers[1] ?? "";
   jobSkillsInput.value = (job.tags ?? []).join("\n");
+  companyJobEditor.open = true;
   updateJobFormMode();
+  companyJobEditor.scrollIntoView({ behavior: "smooth", block: "start" });
   showToast("Editando vacante.");
 }
 
@@ -2209,6 +2212,7 @@ deleteCompanyButton.addEventListener("click", async () => {
 
 cancelJobEditButton.addEventListener("click", () => {
   resetJobForm();
+  companyJobEditor.open = false;
   showToast("Edición cancelada.");
 });
 
