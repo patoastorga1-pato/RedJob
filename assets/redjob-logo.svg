@@ -1,0 +1,15 @@
+<svg width="760" height="360" viewBox="0 0 760 360" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">RedJob logo</title>
+  <desc id="desc">Briefcase icon with RedJob wordmark and tagline.</desc>
+  <rect width="760" height="360" rx="28" fill="white"/>
+  <path d="M321 108V78C321 58 337 42 357 42H403C423 42 439 58 439 78V108" stroke="#191919" stroke-width="18" stroke-linecap="round"/>
+  <path d="M244 100H516C537 100 554 117 554 138V162L392 236H368L206 162V138C206 117 223 100 244 100Z" fill="#ED111A"/>
+  <path d="M206 170L364 242C374 247 386 247 396 242L554 170V265C554 292 532 314 505 314H255C228 314 206 292 206 265V170Z" fill="#151515"/>
+  <path d="M206 162L363 234C374 239 386 239 397 234L554 162" stroke="white" stroke-width="18" stroke-linejoin="round"/>
+  <rect x="346" y="194" width="68" height="58" rx="14" fill="white"/>
+  <rect x="360" y="209" width="40" height="28" rx="5" fill="#ED111A"/>
+  <text x="162" y="344" font-family="Inter, Arial, sans-serif" font-size="72" font-weight="900" letter-spacing="-2">
+    <tspan fill="#ED111A">Red</tspan><tspan fill="#151515">Job</tspan>
+  </text>
+  <text x="232" y="358" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="700" letter-spacing="12" fill="#151515">TU PROXIMA OPORTUNIDAD</text>
+</svg>
