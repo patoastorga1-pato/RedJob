@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./styles.css?v=20260606f" />
+    <link rel="stylesheet" href="./styles.css?v=20260606h" />
   </head>
   <body>
     <header class="site-header">
@@ -15,7 +15,7 @@
         <img src="./assets/redjob-logo.png" alt="RedJob" />
       </a>
 
-      <nav class="desktop-nav" aria-label="Navegacion principal">
+      <nav class="desktop-nav" aria-label="Navegación principal">
         <a class="nav-link active" href="#vacantes" data-view-link="inicio" data-role-nav="candidate">Vacantes</a>
         <a class="nav-link" href="#empresas" data-view-link="empresas" data-role-nav="company">Empresas</a>
         <a class="nav-link messages-nav-link" href="#mensajes" data-view-link="mensajes">
@@ -29,7 +29,7 @@
           Buscar
         </button>
         <button class="auth-header-button" type="button" data-view-link="acceso" id="headerSignInButton">
-          Iniciar sesion
+          Iniciar sesión
         </button>
         <button class="auth-header-button primary" type="button" data-view-link="acceso" data-auth-create id="headerCreateAccountButton">
           Crear cuenta
@@ -45,16 +45,16 @@
       <section class="view active-view" id="inicio">
         <section class="hero">
           <div class="hero-copy">
-            <p class="eyebrow">RedJob - Tu proxima oportunidad</p>
-            <h1>Encuentra tu proximo empleo</h1>
-            <p class="hero-subtitle">Conecta con empresas, postulate facilmente y conversa directamente con reclutadores.</p>
+            <p class="eyebrow">RedJob - Tu próxima oportunidad</p>
+            <h1>Encuentra tu próximo empleo</h1>
+            <p class="hero-subtitle">Conecta con empresas, postúlate fácilmente y conversa directamente con reclutadores.</p>
             <div class="hero-actions">
               <button class="primary-button" type="button" data-scroll-target="jobSearch">Buscar empleo</button>
               <button class="secondary-button" type="button" data-view-link="acceso" data-auth-create>Crear cuenta</button>
             </div>
           </div>
 
-          <div class="hero-visual" aria-label="Ilustracion de empleo y contratacion">
+          <div class="hero-visual" aria-label="Ilustración de empleo y contratación">
             <div class="visual-card candidate-card">
               <span class="avatar">RJ</span>
               <div>
@@ -91,10 +91,10 @@
           <form class="job-search" aria-label="Buscador de empleo">
             <label>
               <span>Puesto o habilidad</span>
-              <input id="searchInput" type="search" placeholder="React, ventas, diseno..." />
+              <input id="searchInput" type="search" placeholder="React, ventas, diseño..." />
             </label>
             <label>
-              <span>Ubicacion</span>
+              <span>Ubicación</span>
               <select id="locationInput"></select>
             </label>
             <label>
@@ -102,12 +102,12 @@
               <select id="modeFilter">
                 <option value="all">Todas</option>
                 <option value="Remoto">Remoto</option>
-                <option value="Hibrido">Hibrido</option>
+                <option value="Hibrido">Híbrido</option>
                 <option value="Presencial">Presencial</option>
               </select>
             </label>
             <label>
-              <span>Categoria</span>
+              <span>Categoría</span>
               <select id="categoryFilter"></select>
             </label>
             <button class="primary-button" type="submit">Buscar empleo</button>
@@ -116,16 +116,16 @@
 
         <section class="section-block">
           <div class="section-title">
-            <span>Categorias</span>
-            <h2>Explora por area profesional</h2>
+            <span>Categorías</span>
+            <h2>Explora por área profesional</h2>
           </div>
           <div class="category-grid">
-            <button class="category-card" type="button" data-category-filter="Tecnologia"><span>IT</span>Tecnologia</button>
+            <button class="category-card" type="button" data-category-filter="Tecnologia"><span>IT</span>Tecnología</button>
             <button class="category-card" type="button" data-category-filter="Ventas"><span>$</span>Ventas</button>
-            <button class="category-card" type="button" data-category-filter="Atencion al Cliente"><span>AC</span>Atencion al Cliente</button>
+            <button class="category-card" type="button" data-category-filter="Atencion al Cliente"><span>AC</span>Atención al Cliente</button>
             <button class="category-card" type="button" data-category-filter="Marketing"><span>M</span>Marketing</button>
-            <button class="category-card" type="button" data-category-filter="Administracion"><span>AD</span>Administracion</button>
-            <button class="category-card" type="button" data-category-filter="Logistica"><span>LG</span>Logistica</button>
+            <button class="category-card" type="button" data-category-filter="Administracion"><span>AD</span>Administración</button>
+            <button class="category-card" type="button" data-category-filter="Logistica"><span>LG</span>Logística</button>
             <button class="category-card" type="button" data-category-filter="Manufactura"><span>IN</span>Manufactura</button>
             <button class="category-card" type="button" data-category-filter="Salud"><span>+</span>Salud</button>
           </div>
@@ -135,15 +135,15 @@
           <div class="section-title split">
             <div>
               <span>Empresas destacadas</span>
-              <h2>Companias contratando ahora</h2>
+              <h2>Compañías contratando ahora</h2>
             </div>
             <button class="text-button" type="button" data-view-link="empresas">Ver todas</button>
           </div>
           <div class="companies-grid" id="hiringCompaniesList">
             <article class="company-card">
               <span class="company-logo">RJ</span>
-              <strong>Sin empresas destacadas aun</strong>
-              <p>Publica una vacante real para empezar a mostrar empresas aqui.</p>
+              <strong>Sin empresas destacadas aún</strong>
+              <p>Publica una vacante real para empezar a mostrar empresas aquí.</p>
             </article>
           </div>
         </section>
@@ -170,7 +170,7 @@
                 <span id="detailCompany">Empresa</span>
                 <h1 id="detailTitle">Vacante</h1>
                 <div class="job-commercial-badges" id="detailCommercialBadges"></div>
-                <p id="detailMeta">Ubicacion - Modalidad - Salario</p>
+                <p id="detailMeta">Ubicación - Modalidad - Salario</p>
               </div>
             </div>
             <div class="match-block">
@@ -183,8 +183,12 @@
               </div>
             </div>
             <section>
-              <h2>Descripcion</h2>
-              <p id="detailDescription">Descripcion de la vacante.</p>
+              <h2>Descripción</h2>
+              <p id="detailDescription">Descripción de la vacante.</p>
+            </section>
+            <section class="company-about-section">
+              <h2>Sobre la empresa</h2>
+              <p id="detailCompanyDescription">Información de la empresa.</p>
             </section>
             <section>
               <h2>Requisitos</h2>
@@ -217,7 +221,7 @@
               <span class="company-logo">R</span>
               <div>
                 <strong>RedJob</strong>
-                <small>Selecciona una conversacion</small>
+                <small>Selecciona una conversación</small>
               </div>
               <button class="secondary-button subtle is-hidden" type="button" id="chatJobDetailButton">Ver vacante</button>
             </div>
@@ -230,12 +234,12 @@
                 </div>
               </div>
               <p id="candidatePreviewSummary">Sin resumen disponible.</p>
-              <button class="secondary-button subtle" type="button" id="candidatePreviewResume">Ver curriculum</button>
+              <button class="secondary-button subtle" type="button" id="candidatePreviewResume">Ver currículum</button>
             </aside>
             <div class="chat-body">
               <article class="bubble candidate">
                 <span>RedJob</span>
-                <p>Cuando una postulacion cree una conversacion, aparecera aqui.</p>
+                <p>Cuando una postulación cree una conversación, aparecerá aquí.</p>
               </article>
             </div>
             <form class="compose-bar" id="messageForm">
@@ -252,11 +256,11 @@
             <span class="profile-photo" id="profileAvatar">RJ</span>
             <h1 id="profileDisplayName">Tu perfil RedJob</h1>
             <p id="profileDisplayMeta">Completa tu perfil para mejorar tus postulaciones.</p>
-            <button class="primary-button" type="button" id="resumeButton">Actualizar curriculum</button>
+            <button class="primary-button" type="button" id="resumeButton">Actualizar currículum</button>
             <input class="is-hidden" id="resumeInput" type="file" accept=".pdf,.doc,.docx" />
-            <small class="resume-status" id="resumeStatus">Sin curriculum cargado</small>
+            <small class="resume-status" id="resumeStatus">Sin currículum cargado</small>
             <button class="secondary-button subtle" type="button" data-view-link="empresas">Publicar vacante</button>
-            <button class="logout-profile-button" type="button" id="profileSignOutButton">Cerrar sesion</button>
+            <button class="logout-profile-button" type="button" id="profileSignOutButton">Cerrar sesión</button>
           </aside>
           <div class="profile-content">
             <section class="info-card">
@@ -272,23 +276,23 @@
                 </label>
                 <label>
                   Rol objetivo
-                  <input id="candidateTargetRole" type="text" placeholder="Puesto o area que buscas" />
+                  <input id="candidateTargetRole" type="text" placeholder="Puesto o área que buscas" />
                 </label>
                 <label>
-                  Ubicacion
+                  Ubicación
                   <select id="candidateLocation"></select>
                 </label>
                 <label>
                   Modalidad
                   <select id="candidateWorkMode">
                     <option value="remote">Remoto</option>
-                    <option value="hybrid" selected>Hibrido</option>
+                    <option value="hybrid" selected>Híbrido</option>
                     <option value="onsite">Presencial</option>
                   </select>
                 </label>
                 <label>
                   Habilidades
-                  <input id="candidateSkills" type="text" placeholder="Ej. React, Ventas, Excel, Logistica" />
+                  <input id="candidateSkills" type="text" placeholder="Ej. React, Ventas, Excel, Logística" />
                 </label>
                 <button class="primary-button" type="submit">Guardar perfil</button>
               </form>
@@ -351,63 +355,63 @@
                 <input id="companyNameInput" type="text" placeholder="Nombre de tu empresa" />
               </label>
               <label>
-                Descripcion de empresa
-                <textarea id="companyDescriptionInput" rows="3" placeholder="Que hace tu empresa y que tipo de talento busca."></textarea>
+                Descripción de empresa
+                <textarea id="companyDescriptionInput" rows="3" placeholder="Qué hace tu empresa y qué tipo de talento busca."></textarea>
               </label>
               <label>
                 Puesto
                 <input id="jobTitleInput" type="text" placeholder="Nombre del puesto" />
               </label>
               <label>
-                Descripcion de vacante
+                Descripción de vacante
                 <textarea id="jobDescriptionInput" rows="4" placeholder="Responsabilidades, equipo y expectativas."></textarea>
               </label>
               <label>
-                Ubicacion
+                Ubicación
                 <select id="jobLocationInput"></select>
               </label>
               <label>
                 Modalidad
                 <select id="jobWorkModeInput">
                   <option value="remote">Remoto</option>
-                  <option value="hybrid">Hibrido</option>
+                  <option value="hybrid">Híbrido</option>
                   <option value="onsite">Presencial</option>
                 </select>
               </label>
               <label>
-                Categoria
+                Categoría
                 <select id="jobCategoryInput"></select>
               </label>
               <label class="is-hidden" id="jobCustomCategoryLabel">
-                Categoria personalizada
+                Categoría personalizada
                 <input id="jobCustomCategoryInput" type="text" placeholder="Ej. Turismo, Construccion, Legal" />
               </label>
               <label>
-                Salario minimo
+                Salario mínimo
                 <input id="jobSalaryMinInput" type="number" placeholder="35000" />
               </label>
               <label>
-                Salario maximo
+                Salario máximo
                 <input id="jobSalaryMaxInput" type="number" placeholder="50000" />
               </label>
               <label>
                 Requisitos
-                <textarea id="jobSkillsInput" rows="6" placeholder="Escribe un requisito por renglon.&#10;Ej. Experiencia en ventas&#10;Manejo de Excel&#10;Disponibilidad de horario"></textarea>
+                <textarea id="jobSkillsInput" rows="6" placeholder="Escribe un requisito por renglón.&#10;Ej. Experiencia en ventas&#10;Manejo de Excel&#10;Disponibilidad de horario"></textarea>
               </label>
               <button class="primary-button" type="submit" id="companyJobSubmitButton">Publicar vacante real</button>
-              <button class="secondary-button subtle is-hidden" type="button" id="cancelJobEditButton">Cancelar edicion</button>
+              <button class="secondary-button subtle is-hidden" type="button" id="cancelJobEditButton">Cancelar edición</button>
             </form>
           </section>
           <section class="info-card">
             <h2>Vacantes activas</h2>
             <div class="mini-job-list" id="companyJobsList">
-              <p class="empty-list">Aun no hay vacantes publicadas para esta empresa.</p>
+              <p class="empty-list">Aún no hay vacantes publicadas para esta empresa.</p>
             </div>
           </section>
           <section class="info-card">
             <h2>Candidatos recibidos</h2>
             <div class="candidate-inbox" id="receivedCandidatesList">
-              <p class="empty-list">Aun no hay candidatos recibidos.</p>
+              <p class="empty-list">Aún no hay candidatos recibidos.</p>
             </div>
           </section>
         </section>
@@ -418,7 +422,7 @@
           <div>
             <span>Acceso</span>
             <h1>Crea tu cuenta RedJob</h1>
-            <p>Registrate como candidato o empresa para comenzar.</p>
+            <p>Regístrate como candidato o empresa para comenzar.</p>
           </div>
           <form class="access-card">
             <div class="role-toggle">
@@ -426,12 +430,12 @@
               <button class="role-option" type="button" data-role="company">Empresa</button>
             </div>
             <label>
-              Correo electronico
+              Correo electrónico
               <input id="authEmail" type="email" placeholder="tu@correo.com" autocomplete="email" />
             </label>
             <label>
-              Contrasena
-              <input id="authPassword" type="password" placeholder="Minimo 8 caracteres" autocomplete="current-password" />
+              Contraseña
+              <input id="authPassword" type="password" placeholder="Mínimo 8 caracteres" autocomplete="current-password" />
             </label>
             <label id="accountNameLabel">
               Nombre completo <span class="field-note">Solo para crear cuenta</span>
@@ -439,17 +443,17 @@
             </label>
             <div class="auth-actions">
               <button class="primary-button" type="button" id="simulateSignup" data-auth-create>Crear cuenta</button>
-              <button class="secondary-button" type="button" id="signInButton">Iniciar sesion</button>
+              <button class="secondary-button" type="button" id="signInButton">Iniciar sesión</button>
             </div>
-            <button class="link-button" type="button" id="forgotPasswordButton">Recuperar contrasena</button>
-            <button class="text-danger-button" type="button" id="signOutButton">Cerrar sesion</button>
+            <button class="link-button" type="button" id="forgotPasswordButton">Recuperar contraseña</button>
+            <button class="text-danger-button" type="button" id="signOutButton">Cerrar sesión</button>
             <p class="legal-note">
               Al crear cuenta aceptas los
-              <button type="button" data-view-link="terminos">Terminos y Condiciones</button>
+              <button type="button" data-view-link="terminos">Términos y Condiciones</button>
               y el
               <button type="button" data-view-link="privacidad">Aviso de Privacidad</button>.
             </p>
-            <p id="signupMessage">Puedes crear una cuenta o iniciar sesion.</p>
+            <p id="signupMessage">Puedes crear una cuenta o iniciar sesión.</p>
           </form>
           <aside class="auth-status-panel is-hidden" aria-hidden="true">
             <h2>Estado</h2>
@@ -458,8 +462,8 @@
               <strong>tkfexxkbdkvpwhcqkvwp</strong>
             </div>
             <div>
-              <span>Sesion</span>
-              <strong id="sessionStatus">Sin sesion</strong>
+              <span>Sesión</span>
+              <strong id="sessionStatus">Sin sesión</strong>
             </div>
             <div>
               <span>Rol seleccionado</span>
@@ -473,14 +477,14 @@
     <dialog class="application-dialog" id="applicationDialog">
       <form method="dialog" class="dialog-card">
         <button class="dialog-close" type="button" id="closeApplicationDialog" aria-label="Cerrar">x</button>
-        <span>Postulacion</span>
+        <span>Postulación</span>
         <h2 id="applicationJobTitle">Postularme</h2>
         <p id="applicationJobMeta">Agrega una nota breve para el reclutador.</p>
         <label>
           Mensaje inicial
-          <textarea id="coverNote" rows="5" placeholder="Cuentale al reclutador por que te interesa esta vacante."></textarea>
+          <textarea id="coverNote" rows="5" placeholder="Cuéntale al reclutador por qué te interesa esta vacante."></textarea>
         </label>
-        <button class="primary-button" type="button" id="confirmApplication">Enviar postulacion</button>
+        <button class="primary-button" type="button" id="confirmApplication">Enviar postulación</button>
       </form>
     </dialog>
 
@@ -492,89 +496,89 @@
           <span class="profile-photo" id="receivedCandidateAvatar">RJ</span>
           <div>
             <h2 id="receivedCandidateName">Candidato</h2>
-            <p id="receivedCandidateMeta">Informacion profesional</p>
+            <p id="receivedCandidateMeta">Información profesional</p>
           </div>
         </div>
         <div class="candidate-profile-context">
-          <span>Postulacion para</span>
+          <span>Postulación para</span>
           <strong id="receivedCandidateJob">Vacante</strong>
-          <small id="receivedCandidateApplicationStatus">Estado de postulacion</small>
+          <small id="receivedCandidateApplicationStatus">Estado de postulación</small>
         </div>
         <section>
           <h3>Acerca del candidato</h3>
           <p id="receivedCandidateSummary">Sin resumen disponible.</p>
         </section>
-        <button class="primary-button" type="button" id="receivedCandidateResume">Ver curriculum</button>
+        <button class="primary-button" type="button" id="receivedCandidateResume">Ver currículum</button>
       </article>
     </dialog>
 
-    <section class="legal-pages" aria-label="Informacion legal">
+    <section class="legal-pages" aria-label="Información legal">
       <article class="view legal-view" id="privacidad">
         <section class="page-hero compact">
           <span>Privacidad</span>
           <h1>Aviso de privacidad</h1>
-          <p>Este aviso describe como RedJob trata datos personales de candidatos, empresas y usuarios de la plataforma de empleo en Mexico.</p>
+          <p>Este aviso describe cómo RedJob trata datos personales de candidatos, empresas y usuarios de la plataforma de empleo en México.</p>
         </section>
         <section class="section-block legal-copy">
           <h2>Responsable</h2>
           <p>RedJob es responsable del tratamiento de los datos personales recabados mediante la plataforma. Para temas de privacidad, derechos ARCO o seguridad, puedes escribir a contacto@redjob.mx.</p>
 
           <h2>Datos personales que podemos tratar</h2>
-          <p>Podemos tratar datos de identificacion y contacto, informacion profesional, ubicacion, habilidades, experiencia, edad, curriculum, postulaciones, mensajes internos, datos de empresa, vacantes publicadas y datos tecnicos necesarios para operar la cuenta y proteger la plataforma.</p>
+          <p>Podemos tratar datos de identificación y contacto, información profesional, ubicación, habilidades, experiencia, edad, currículum, postulaciones, mensajes internos, datos de empresa, vacantes publicadas y datos técnicos necesarios para operar la cuenta y proteger la plataforma.</p>
 
           <h2>Finalidades principales</h2>
-          <p>Usamos la informacion para registrar cuentas, crear perfiles de candidato y empresa, publicar vacantes, permitir postulaciones, mostrar compatibilidad, habilitar mensajeria entre candidatos y reclutadores, administrar CVs, prevenir abuso, dar soporte y mejorar la experiencia de busqueda de empleo.</p>
+          <p>Usamos la información para registrar cuentas, crear perfiles de candidato y empresa, publicar vacantes, permitir postulaciones, mostrar compatibilidad, habilitar mensajería entre candidatos y reclutadores, administrar CV, prevenir abusos, dar soporte y mejorar la experiencia de búsqueda de empleo.</p>
 
           <h2>CVs y postulaciones</h2>
-          <p>Los curriculum se almacenan de forma privada. Solo el candidato titular y las empresas relacionadas con una postulacion real pueden consultar el CV asociado, conforme a las reglas de seguridad de la plataforma.</p>
+          <p>Los currículums se almacenan de forma privada. Solo el candidato titular y las empresas relacionadas con una postulación real pueden consultar el CV asociado, conforme a las reglas de seguridad de la plataforma.</p>
 
           <h2>Transferencias</h2>
-          <p>RedJob no vende datos personales. Al postularte, autorizas que la empresa responsable de la vacante consulte la informacion necesaria para evaluar tu candidatura. Tambien podemos usar proveedores tecnologicos para alojamiento, autenticacion, base de datos, seguridad y operacion del servicio.</p>
+          <p>RedJob no vende datos personales. Al postularte, autorizas que la empresa responsable de la vacante consulte la información necesaria para evaluar tu candidatura. También podemos usar proveedores tecnológicos para alojamiento, autenticación, base de datos, seguridad y operación del servicio.</p>
 
           <h2>Derechos ARCO</h2>
-          <p>Puedes solicitar acceso, rectificacion, cancelacion u oposicion al tratamiento de tus datos, asi como revocar consentimiento cuando proceda, escribiendo a contacto@redjob.mx. Podremos pedir informacion adicional para verificar tu identidad.</p>
+          <p>Puedes solicitar acceso, rectificación, cancelación u oposición al tratamiento de tus datos, así como revocar tu consentimiento cuando proceda, escribiendo a contacto@redjob.mx. Podremos pedir información adicional para verificar tu identidad.</p>
 
-          <h2>Conservacion y seguridad</h2>
-          <p>Conservamos la informacion mientras la cuenta exista o sea necesaria para operar postulaciones, cumplir obligaciones legales, resolver disputas o prevenir fraude. Aplicamos controles de acceso, politicas RLS y almacenamiento privado para proteger informacion sensible como CVs y mensajes.</p>
+          <h2>Conservación y seguridad</h2>
+          <p>Conservamos la información mientras la cuenta exista o sea necesaria para operar postulaciones, cumplir obligaciones legales, resolver disputas o prevenir fraudes. Aplicamos controles de acceso, políticas RLS y almacenamiento privado para proteger información sensible, como CV y mensajes.</p>
 
-          <h2>Legislacion aplicable</h2>
-          <p>Este aviso se interpreta conforme a la legislacion mexicana aplicable en materia de proteccion de datos personales en posesion de particulares. RedJob podra actualizar este aviso para reflejar cambios legales, operativos o de seguridad.</p>
+          <h2>Legislación aplicable</h2>
+          <p>Este aviso se interpreta conforme a la legislación mexicana aplicable en materia de protección de datos personales en posesión de particulares. RedJob podrá actualizar este aviso para reflejar cambios legales, operativos o de seguridad.</p>
         </section>
       </article>
 
       <article class="view legal-view" id="terminos">
         <section class="page-hero compact">
-          <span>Terminos</span>
-          <h1>Terminos y condiciones de uso</h1>
-          <p>Estos terminos regulan el uso de RedJob por candidatos, empresas, reclutadores y visitantes de la plataforma.</p>
+          <span>Términos</span>
+          <h1>Términos y condiciones de uso</h1>
+          <p>Estos términos regulan el uso de RedJob por candidatos, empresas, reclutadores y visitantes de la plataforma.</p>
         </section>
         <section class="section-block legal-copy">
           <h2>Objeto del servicio</h2>
-          <p>RedJob es una plataforma tecnologica que facilita la publicacion de vacantes, creacion de perfiles profesionales, postulaciones y comunicacion entre candidatos y empresas. RedJob no es empleador, agencia de colocacion ni representante laboral de los usuarios.</p>
+          <p>RedJob es una plataforma tecnológica que facilita la publicación de vacantes, creación de perfiles profesionales, postulaciones y comunicación entre candidatos y empresas. RedJob no es empleador, agencia de colocación ni representante laboral de los usuarios.</p>
 
           <h2>Cuentas de usuario</h2>
-          <p>Los usuarios deben proporcionar informacion verdadera, actualizada y propia. Cada cuenta es personal y el usuario es responsable de proteger sus credenciales y de toda actividad realizada desde su cuenta.</p>
+          <p>Los usuarios deben proporcionar información verdadera, actualizada y propia. Cada cuenta es personal y el usuario es responsable de proteger sus credenciales y de toda actividad realizada desde su cuenta.</p>
 
           <h2>Candidatos</h2>
-          <p>Los candidatos son responsables de la veracidad de su perfil, edad, experiencia, habilidades, CV, mensajes y postulaciones. No deben subir informacion de terceros sin autorizacion ni usar RedJob para fines fraudulentos, discriminatorios o ilegales.</p>
+          <p>Los candidatos son responsables de la veracidad de su perfil, edad, experiencia, habilidades, CV, mensajes y postulaciones. No deben subir información de terceros sin autorización ni usar RedJob para fines fraudulentos, discriminatorios o ilegales.</p>
 
           <h2>Empresas y reclutadores</h2>
-          <p>Las empresas deben publicar vacantes reales, claras y legalmente permitidas. Deben respetar la legislacion laboral mexicana, evitar ofertas discriminatorias, proteger datos de candidatos y usar la informacion recibida solo para procesos de seleccion relacionados con la vacante.</p>
+          <p>Las empresas deben publicar vacantes reales, claras y legalmente permitidas. Deben respetar la legislación laboral mexicana, evitar ofertas discriminatorias, proteger los datos de los candidatos y usar la información recibida solo para procesos de selección relacionados con la vacante.</p>
 
           <h2>Vacantes, postulaciones y mensajes</h2>
-          <p>RedJob puede ordenar vacantes por relevancia, compatibilidad u otros criterios de experiencia. Las conversaciones internas deben usarse para fines profesionales. Esta prohibido enviar spam, acoso, datos falsos, contenido ofensivo o solicitudes ajenas al proceso laboral.</p>
+          <p>RedJob puede ordenar vacantes por relevancia, compatibilidad u otros criterios de experiencia. Las conversaciones internas deben usarse para fines profesionales. Está prohibido enviar spam, acoso, datos falsos, contenido ofensivo o solicitudes ajenas al proceso laboral.</p>
 
-          <h2>Limitacion de responsabilidad</h2>
-          <p>RedJob no garantiza contrataciones, entrevistas, salarios, permanencia laboral, identidad absoluta de usuarios ni exactitud total de la informacion publicada por terceros. Cada candidato y empresa debe verificar la informacion relevante antes de tomar decisiones.</p>
+          <h2>Limitación de responsabilidad</h2>
+          <p>RedJob no garantiza contrataciones, entrevistas, salarios, permanencia laboral, identidad absoluta de usuarios ni exactitud total de la información publicada por terceros. Cada candidato y empresa debe verificar la información relevante antes de tomar decisiones.</p>
 
-          <h2>Suspension o retiro de contenido</h2>
+          <h2>Suspensión o retiro de contenido</h2>
           <p>RedJob puede suspender cuentas, retirar vacantes, bloquear mensajes o limitar funciones cuando detecte incumplimientos, riesgos de seguridad, fraude, abuso, contenido ilegal o afectaciones a otros usuarios.</p>
 
           <h2>Planes y visibilidad futura</h2>
-          <p>RedJob podra ofrecer funciones pagadas para empresas, como mayor visibilidad de vacantes o herramientas de reclutamiento. Las condiciones comerciales especificas se informaran antes de contratar cualquier plan.</p>
+          <p>RedJob podrá ofrecer funciones de pago para empresas, como mayor visibilidad de vacantes o herramientas de reclutamiento. Las condiciones comerciales específicas se informarán antes de contratar cualquier plan.</p>
 
-          <h2>Legislacion aplicable</h2>
-          <p>Estos terminos se rigen por las leyes aplicables de Mexico. El uso de RedJob implica la aceptacion de estos terminos y del Aviso de Privacidad vigente.</p>
+          <h2>Legislación aplicable</h2>
+          <p>Estos términos se rigen por las leyes aplicables de México. El uso de RedJob implica la aceptación de estos términos y del Aviso de Privacidad vigente.</p>
         </section>
       </article>
 
@@ -592,13 +596,13 @@
 
     <footer class="site-footer">
       <button type="button" data-view-link="privacidad">Privacidad</button>
-      <button type="button" data-view-link="terminos">Terminos</button>
+      <button type="button" data-view-link="terminos">Términos</button>
       <button type="button" data-view-link="contacto">Contacto</button>
     </footer>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script src="./config.js?v=20260605h"></script>
-    <script src="./app.js?v=20260606f"></script>
+    <script src="./app.js?v=20260606h"></script>
   </body>
 </html>

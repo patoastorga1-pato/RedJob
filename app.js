@@ -98,6 +98,7 @@ const detailCommercialBadges = document.querySelector("#detailCommercialBadges")
 const detailMatch = document.querySelector("#detailMatch");
 const detailMatchBar = document.querySelector("#detailMatchBar");
 const detailDescription = document.querySelector("#detailDescription");
+const detailCompanyDescription = document.querySelector("#detailCompanyDescription");
 const detailRequirements = document.querySelector("#detailRequirements");
 const detailSaveButton = document.querySelector("#detailSaveButton");
 const detailApplyButton = document.querySelector("#detailApplyButton");
@@ -189,12 +190,40 @@ const mexicoStates = [
   "Zacatecas"
 ];
 
+function formatCategoryLabel(category) {
+  return {
+    Tecnologia: "Tecnología",
+    "Atencion al Cliente": "Atención al Cliente",
+    Administracion: "Administración",
+    Logistica: "Logística",
+    Educacion: "Educación"
+  }[category] ?? category;
+}
+
+function formatLocationLabel(location) {
+  return {
+    "Todo Mexico": "Todo México",
+    "Ciudad de Mexico": "Ciudad de México",
+    "Estado de Mexico": "Estado de México",
+    Michoacan: "Michoacán",
+    "Nuevo Leon": "Nuevo León",
+    Queretaro: "Querétaro",
+    "San Luis Potosi": "San Luis Potosí",
+    Yucatan: "Yucatán",
+    Mexico: "México"
+  }[location] ?? location;
+}
+
+function formatWorkModeLabel(mode) {
+  return mode === "Hibrido" ? "Híbrido" : mode;
+}
+
 function populateMexicoStateSelects() {
   const stateSelects = [locationInput, candidateLocation, jobLocationInput];
 
   stateSelects.forEach((select) => {
     select.innerHTML = mexicoStates
-      .map((state) => `<option value="${escapeHtml(state === "Todo Mexico" ? "" : state)}">${escapeHtml(state)}</option>`)
+      .map((state) => `<option value="${escapeHtml(state === "Todo Mexico" ? "" : state)}">${escapeHtml(formatLocationLabel(state))}</option>`)
       .join("");
   });
 
@@ -205,11 +234,11 @@ function populateMexicoStateSelects() {
 function populateCategorySelects() {
   categoryFilter.innerHTML = [
     `<option value="all">Todas</option>`,
-    ...jobCategories.map((category) => `<option value="${escapeHtml(category)}">${escapeHtml(category)}</option>`)
+    ...jobCategories.map((category) => `<option value="${escapeHtml(category)}">${escapeHtml(formatCategoryLabel(category))}</option>`)
   ].join("");
 
   jobCategoryInput.innerHTML = jobCategories
-    .map((category) => `<option value="${escapeHtml(category)}">${escapeHtml(category)}</option>`)
+    .map((category) => `<option value="${escapeHtml(category)}">${escapeHtml(formatCategoryLabel(category))}</option>`)
     .join("");
   jobCategoryInput.value = "Tecnologia";
   renderCustomCategoryField();
@@ -253,7 +282,7 @@ function setStoredSession(session) {
   renderSessionStatus();
 }
 
-function clearExpiredSession(message = "Tu sesion expiro. Inicia sesion de nuevo.") {
+function clearExpiredSession(message = "Tu sesión expiró. Inicia sesión de nuevo.") {
   currentProfile = null;
   currentCandidateProfile = null;
   currentCompanyProfile = null;
@@ -292,7 +321,7 @@ function getInitials(name) {
 
 function renderResumeStatus() {
   const resumeName = currentCandidateProfile?.resume_name;
-  resumeStatus.textContent = resumeName ? `Curriculum listo: ${resumeName}` : "Sin curriculum cargado";
+  resumeStatus.textContent = resumeName ? `Currículum listo: ${resumeName}` : "Sin currículum cargado";
 }
 
 function renderProfileHeader() {
@@ -312,7 +341,7 @@ function renderProfileHeader() {
 
 function renderSessionStatus() {
   const session = getStoredSession();
-  sessionStatus.textContent = session?.user?.email ?? "Sin sesion";
+  sessionStatus.textContent = session?.user?.email ?? "Sin sesión";
   signOutButton.classList.toggle("is-hidden", !session?.access_token);
   renderHeaderAuthState();
   renderProfileHeader();
@@ -393,7 +422,7 @@ function renderCompanyJobs() {
               <div>
                 <div class="job-commercial-badges">${renderCommercialBadges(job)}</div>
                 <strong>${escapeHtml(job.title)}</strong>
-                <span>${escapeHtml(job.company)} - ${escapeHtml(job.location)} - ${escapeHtml(job.mode)}</span>
+                <span>${escapeHtml(job.company)} - ${escapeHtml(formatLocationLabel(job.location))} - ${escapeHtml(formatWorkModeLabel(job.mode))}</span>
               </div>
               <button class="secondary-button subtle" type="button" data-edit-job="${escapeHtml(job.id)}">
                 Editar
@@ -405,7 +434,7 @@ function renderCompanyJobs() {
           `
         )
         .join("")
-    : `<p class="empty-list">Aun no hay vacantes publicadas en tus empresas.</p>`;
+    : `<p class="empty-list">Aún no hay vacantes publicadas en tus empresas.</p>`;
 }
 
 function renderHiringCompanies() {
@@ -450,8 +479,8 @@ function renderHiringCompanies() {
     : `
         <article class="company-card company-card-empty">
           <span class="company-logo">RJ</span>
-          <strong>Aun no hay empresas contratando</strong>
-          <p>Las empresas apareceran aqui cuando publiquen una vacante activa.</p>
+          <strong>Aún no hay empresas contratando</strong>
+          <p>Las empresas aparecerán aquí cuando publiquen una vacante activa.</p>
         </article>
       `;
 }
@@ -534,12 +563,12 @@ async function fetchJobById(jobId) {
   let rows = null;
   try {
     rows = await supabaseRestRequest(
-      `/jobs?select=id,title,description,location,work_mode,category,salary_min,salary_max,is_featured,featured_priority,featured_until,promotion_source,status,company_profiles(id,user_id,company_name,plan,plan_status,is_verified),job_skills(skill_name)&id=eq.${jobId}&status=eq.published&limit=1`
+      `/jobs?select=id,title,description,location,work_mode,category,salary_min,salary_max,is_featured,featured_priority,featured_until,promotion_source,status,company_profiles(id,user_id,company_name,description,plan,plan_status,is_verified),job_skills(skill_name)&id=eq.${jobId}&status=eq.published&limit=1`
     );
   } catch (error) {
     if (!/category|schema cache|column|Falta instalar/i.test(error.message)) throw error;
     rows = await supabaseRestRequest(
-      `/jobs?select=id,title,description,location,work_mode,salary_min,salary_max,status,company_profiles(id,user_id,company_name),job_skills(skill_name)&id=eq.${jobId}&status=eq.published&limit=1`
+      `/jobs?select=id,title,description,location,work_mode,salary_min,salary_max,status,company_profiles(id,user_id,company_name,description),job_skills(skill_name)&id=eq.${jobId}&status=eq.published&limit=1`
     );
   }
   const mapped = mapSupabaseJob(rows?.[0]);
@@ -571,11 +600,13 @@ async function openJobDetail(jobId) {
   detailCompany.textContent = job.company;
   detailTitle.textContent = job.title;
   detailCommercialBadges.innerHTML = renderCommercialBadges(job);
-  detailMeta.textContent = `${job.location} - ${job.mode} - ${job.salary} - ${job.category ?? "Otra"}`;
+  detailMeta.textContent = `${formatLocationLabel(job.location)} - ${formatWorkModeLabel(job.mode)} - ${job.salary} - ${formatCategoryLabel(job.category ?? "Otra")}`;
   detailMatch.textContent = `${safePercent(job.match)}% Compatible`;
   detailMatchBar.style.width = `${safePercent(job.match)}%`;
   detailDescription.textContent =
-    job.description || "La empresa aun no agrego una descripcion extensa para esta vacante.";
+    job.description || "La empresa aún no agregó una descripción extensa para esta vacante.";
+  detailCompanyDescription.textContent =
+    job.companyDescription || "Esta empresa aún no agregó una descripción a su perfil.";
   detailRequirements.innerHTML = job.tags.length
     ? job.tags.map((tag) => `<li>${escapeHtml(tag)}</li>`).join("")
     : `<li>Sin requisitos publicados</li>`;
@@ -601,7 +632,7 @@ async function supabaseAuthRequest(path, body, accessToken) {
   if (!response.ok) {
     const errorMessage = payload.msg || payload.message || payload.error_description || "No se pudo completar la solicitud.";
     if (response.status === 401 || errorMessage.toLowerCase().includes("jwt")) {
-      clearExpiredSession("Tu sesion expiro. Inicia sesion de nuevo.");
+      clearExpiredSession("Tu sesión expiró. Inicia sesión de nuevo.");
     }
     throw new Error(errorMessage);
   }
@@ -628,7 +659,7 @@ async function supabaseRestRequest(path, options = {}) {
   if (!response.ok) {
     const errorMessage = payload?.message || payload?.hint || "Supabase no pudo completar la operacion.";
     if (response.status === 401 || errorMessage.toLowerCase().includes("jwt")) {
-      clearExpiredSession("Tu sesion expiro. Inicia sesion de nuevo.");
+      clearExpiredSession("Tu sesión expiró. Inicia sesión de nuevo.");
     }
     if (isMissingSupabaseSchema(errorMessage)) {
       throw new Error(SUPABASE_SCHEMA_MESSAGE);
@@ -654,7 +685,7 @@ async function supabaseStorageUpload(path, file) {
 
   if (!response.ok) {
     const payload = await response.json().catch(() => ({}));
-    throw new Error(payload.message || payload.error || "No se pudo subir el curriculum.");
+    throw new Error(payload.message || payload.error || "No se pudo subir el currículum.");
   }
 }
 
@@ -673,7 +704,7 @@ async function createResumeSignedUrl(path) {
   const payload = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    throw new Error(payload.message || payload.error || "No se pudo abrir el curriculum.");
+    throw new Error(payload.message || payload.error || "No se pudo abrir el currículum.");
   }
 
   return `${SUPABASE_URL}/storage/v1${payload.signedURL}`;
@@ -683,7 +714,7 @@ function requireSession() {
   const session = getStoredSession();
 
   if (!session?.access_token || !session?.user?.id) {
-    throw new Error("Inicia sesion para guardar datos reales.");
+    throw new Error("Inicia sesión para guardar datos reales.");
   }
 
   return session;
@@ -854,7 +885,7 @@ async function loadReceivedCandidates() {
               <article class="candidate-row-card" data-application-id="${escapeHtml(application.id)}">
                 <div>
                   <strong>${escapeHtml(candidate?.full_name ?? "Candidato")}</strong>
-                  <small>${escapeHtml(candidate?.target_role ?? "Perfil candidato")} - ${escapeHtml(candidate?.location ?? "Mexico")}${candidate?.age ? ` - ${escapeHtml(candidate.age)} anos` : ""}</small>
+                  <small>${escapeHtml(candidate?.target_role ?? "Perfil candidato")} - ${escapeHtml(formatLocationLabel(candidate?.location ?? "Mexico"))}${candidate?.age ? ` - ${escapeHtml(candidate.age)} años` : ""}</small>
                   <small>${escapeHtml(company?.company_name ?? "Empresa")} - ${escapeHtml(job?.title ?? "Vacante")} - ${escapeHtml(mapApplicationStatus(application.status))}${candidate?.resume_name ? ` - CV: ${escapeHtml(candidate.resume_name)}` : ""}</small>
                 </div>
                 <strong>${safePercent(application.match_score)}%</strong>
@@ -868,7 +899,7 @@ async function loadReceivedCandidates() {
             `;
           })
           .join("")
-      : `<p class="empty-list">Aun no hay candidatos recibidos.</p>`;
+      : `<p class="empty-list">Aún no hay candidatos recibidos.</p>`;
   } catch (error) {
     receivedCandidatesList.innerHTML = `<p class="empty-list">No se pudieron cargar candidatos: ${escapeHtml(error.message)}</p>`;
   }
@@ -887,14 +918,14 @@ function openReceivedCandidateProfile(applicationId) {
   receivedCandidateName.textContent = candidate.full_name ?? "Candidato";
   receivedCandidateMeta.textContent = [
     candidate.target_role || "Perfil candidato",
-    candidate.location || "Mexico",
-    candidate.age ? `${candidate.age} anos` : "",
-    candidate.work_mode ? mapWorkModeToUi(candidate.work_mode) : ""
+    formatLocationLabel(candidate.location || "Mexico"),
+    candidate.age ? `${candidate.age} años` : "",
+    candidate.work_mode ? formatWorkModeLabel(mapWorkModeToUi(candidate.work_mode)) : ""
   ].filter(Boolean).join(" - ");
   receivedCandidateJob.textContent = `${profile.jobTitle} en ${profile.companyName}`;
   receivedCandidateApplicationStatus.textContent = `${mapApplicationStatus(profile.status)} - ${safePercent(profile.matchScore)}% de compatibilidad`;
-  receivedCandidateSummary.textContent = candidate.summary || "Este candidato aun no agrego un resumen profesional.";
-  receivedCandidateResume.textContent = candidate.resume_name ? `Ver curriculum: ${candidate.resume_name}` : "Sin curriculum disponible";
+  receivedCandidateSummary.textContent = candidate.summary || "Este candidato aún no agregó un resumen profesional.";
+  receivedCandidateResume.textContent = candidate.resume_name ? `Ver currículum: ${candidate.resume_name}` : "Sin currículum disponible";
   receivedCandidateResume.disabled = !candidate.resume_path;
   candidateProfileDialog.showModal();
 }
@@ -959,7 +990,7 @@ async function loadCandidateApplications() {
 function mapApplicationStatus(status) {
   return {
     submitted: "Enviada",
-    reviewing: "En revision",
+    reviewing: "En revisión",
     interview: "En entrevista",
     rejected: "No seleccionada",
     hired: "Contratada",
@@ -1046,7 +1077,7 @@ async function markConversationMessagesAsRead(conversationId) {
       body: { conversation_uuid: conversationId }
     });
   } catch (error) {
-    console.warn("No se pudo marcar la conversacion como leida.", error);
+    console.warn("No se pudo marcar la conversación como leída.", error);
   }
 }
 
@@ -1062,7 +1093,7 @@ function renderConversationList(conversations) {
             ? conversation.candidate_profiles[0]
             : conversation.candidate_profiles;
           const jobTitle = Array.isArray(conversation.jobs) ? conversation.jobs[0]?.title : conversation.jobs?.title;
-          const primaryName = candidate?.full_name || company || "Conversacion";
+          const primaryName = candidate?.full_name || company || "Conversación";
           const secondaryLabel = candidate?.full_name ? `${company ?? "Empresa"} - ${jobTitle ?? "Vacante"}` : jobTitle ?? "Vacante";
           return `
             <button class="conversation-item ${sameId(conversation.id, activeConversationId) ? "active" : ""}" type="button" data-conversation-id="${escapeHtml(conversation.id)}">
@@ -1076,7 +1107,7 @@ function renderConversationList(conversations) {
           `;
         })
         .join("")
-    : `<p class="empty-list">Aun no hay conversaciones reales. Se crea una al postularte.</p>`;
+    : `<p class="empty-list">Aún no hay conversaciones reales. Se crea una al postularte.</p>`;
 }
 
 function renderActiveConversation() {
@@ -1098,7 +1129,7 @@ function renderChatMessages(messages, conversation) {
   const chatTitle = isCompanyView ? candidate?.full_name ?? "Candidato" : companyName ?? "Empresa";
   const chatSubtitle = isCompanyView
     ? `${candidate?.target_role ?? "Perfil candidato"} - ${jobTitle ?? "Vacante"}`
-    : `${jobTitle ?? "Vacante"} - conversacion real`;
+    : `${jobTitle ?? "Vacante"} - conversación real`;
 
   document.querySelector(".chat-head .company-logo").textContent = getInitials(chatTitle);
   document.querySelector(".chat-head strong").textContent = chatTitle;
@@ -1121,7 +1152,7 @@ function renderChatMessages(messages, conversation) {
           `;
         })
         .join("")
-    : `<article class="bubble candidate"><span>RedJob</span><p>Conversacion lista. Escribe el primer mensaje.</p></article>`;
+    : `<article class="bubble candidate"><span>RedJob</span><p>Conversación lista. Escribe el primer mensaje.</p></article>`;
 }
 
 function renderCandidatePreview(candidate, isCompanyView) {
@@ -1135,9 +1166,9 @@ function renderCandidatePreview(candidate, isCompanyView) {
   candidatePreview.classList.remove("is-hidden");
   candidatePreviewAvatar.textContent = getInitials(candidate.full_name ?? "Candidato");
   candidatePreviewName.textContent = candidate.full_name ?? "Candidato";
-  candidatePreviewMeta.textContent = `${candidate.target_role ?? "Perfil candidato"} - ${candidate.location ?? "Mexico"}${candidate.age ? ` - ${candidate.age} anos` : ""}`;
-  candidatePreviewSummary.textContent = candidate.summary || "Este candidato aun no agrego resumen.";
-  candidatePreviewResume.textContent = candidate.resume_name ? `Ver curriculum: ${candidate.resume_name}` : "Sin curriculum";
+  candidatePreviewMeta.textContent = `${candidate.target_role ?? "Perfil candidato"} - ${formatLocationLabel(candidate.location ?? "Mexico")}${candidate.age ? ` - ${candidate.age} años` : ""}`;
+  candidatePreviewSummary.textContent = candidate.summary || "Este candidato aún no agregó un resumen.";
+  candidatePreviewResume.textContent = candidate.resume_name ? `Ver currículum: ${candidate.resume_name}` : "Sin currículum";
   candidatePreviewResume.disabled = !candidate.resume_path;
 }
 
@@ -1163,12 +1194,12 @@ async function loadRealJobs() {
     let rows = null;
     try {
       rows = await supabaseRestRequest(
-        "/jobs?select=id,title,description,location,work_mode,category,salary_min,salary_max,is_featured,featured_priority,featured_until,promotion_source,status,company_profiles(id,user_id,company_name,plan,plan_status,is_verified),job_skills(skill_name)&status=eq.published"
+        "/jobs?select=id,title,description,location,work_mode,category,salary_min,salary_max,is_featured,featured_priority,featured_until,promotion_source,status,company_profiles(id,user_id,company_name,description,plan,plan_status,is_verified),job_skills(skill_name)&status=eq.published"
       );
     } catch (error) {
       if (!/category|schema cache|column|Falta instalar/i.test(error.message)) throw error;
       rows = await supabaseRestRequest(
-        "/jobs?select=id,title,description,location,work_mode,salary_min,salary_max,status,company_profiles(id,user_id,company_name),job_skills(skill_name)&status=eq.published"
+        "/jobs?select=id,title,description,location,work_mode,salary_min,salary_max,status,company_profiles(id,user_id,company_name,description),job_skills(skill_name)&status=eq.published"
       );
     }
 
@@ -1207,6 +1238,7 @@ function mapSupabaseJob(row) {
     companyId: company?.id,
     companyUserId: company?.user_id,
     company: company?.company_name ?? "Empresa",
+    companyDescription: company?.description ?? "",
     companyPlan: company?.plan ?? "free",
     companyPlanStatus: company?.plan_status ?? "beta",
     companyVerified: Boolean(company?.is_verified),
@@ -1306,7 +1338,7 @@ async function publishRealJob() {
   const jobDescription = jobDescriptionInput.value.trim();
 
   if (!jobTitle || !jobDescription) {
-    throw new Error("Agrega puesto y descripcion de vacante.");
+    throw new Error("Agrega el puesto y la descripción de la vacante.");
   }
 
   if (!companyProfile?.id) {
@@ -1463,7 +1495,7 @@ async function createRealApplication(job) {
       throw new Error("Ya te postulaste a esta vacante. Revisa Perfil o Mensajes.");
     }
     if (/row-level security|violates row-level security/i.test(error.message)) {
-    throw new Error("No fue posible enviar la postulacion con esta cuenta. Intenta cerrar sesion y volver a entrar.");
+    throw new Error("No fue posible enviar la postulación con esta cuenta. Intenta cerrar sesión y volver a entrar.");
     }
     throw error;
   }
@@ -1487,7 +1519,7 @@ async function createRealApplication(job) {
     });
   }
 
-  showToast("Postulacion enviada correctamente.");
+  showToast("Postulación enviada correctamente.");
   await loadReceivedCandidates();
   return rows?.[0];
 }
@@ -1500,7 +1532,7 @@ async function sendRealMessage(body) {
   }
 
   if (!activeConversationId) {
-    throw new Error("Aun no hay una conversacion real. Postulate a una vacante real primero.");
+    throw new Error("Aún no hay una conversación real. Postúlate a una vacante real primero.");
   }
 
   await supabaseRestRequest("/messages", {
@@ -1521,7 +1553,7 @@ function getAuthFormValues() {
   const role = document.querySelector(".role-option.active").dataset.role;
 
   if (!email || !password) {
-    throw new Error("Agrega correo y contrasena.");
+    throw new Error("Agrega tu correo y contraseña.");
   }
 
   return { email, password, name, role };
@@ -1532,7 +1564,7 @@ function getSignInFormValues() {
   const password = authPassword.value;
 
   if (!email || !password) {
-    throw new Error("Agrega correo y contrasena.");
+    throw new Error("Agrega tu correo y contraseña.");
   }
 
   return { email, password };
@@ -1556,9 +1588,9 @@ async function createSupabaseAccount() {
   if (payload.access_token) {
     setStoredSession(payload);
     await loadCurrentProfile();
-    signupMessage.textContent = "Cuenta creada y sesion iniciada.";
+    signupMessage.textContent = "Cuenta creada y sesión iniciada.";
   } else {
-    signupMessage.textContent = "Cuenta creada. Si se requiere confirmacion, revisa tu correo.";
+    signupMessage.textContent = "Cuenta creada. Si se requiere confirmación, revisa tu correo.";
   }
 
   showToast("Cuenta creada. Revisa tu correo si necesitas confirmarla.");
@@ -1566,7 +1598,7 @@ async function createSupabaseAccount() {
 
 async function signInWithSupabase() {
   const { email, password } = getSignInFormValues();
-  signupMessage.textContent = "Iniciando sesion...";
+  signupMessage.textContent = "Iniciando sesión...";
 
   const payload = await supabaseAuthRequest("/auth/v1/token?grant_type=password", {
     email,
@@ -1578,15 +1610,15 @@ async function signInWithSupabase() {
   await loadRealJobs();
   await loadSavedJobs();
   await loadFirstConversation(false);
-  signupMessage.textContent = "Sesion iniciada correctamente.";
-  showToast("Sesion iniciada.");
+  signupMessage.textContent = "Sesión iniciada correctamente.";
+  showToast("Sesión iniciada.");
   switchView("inicio");
 }
 
 async function sendPasswordRecovery() {
   const email = authEmail.value.trim();
   if (!email) {
-    throw new Error("Agrega tu correo para recuperar la contrasena.");
+    throw new Error("Agrega tu correo para recuperar la contraseña.");
   }
 
   signupMessage.textContent = "Enviando correo de recuperacion...";
@@ -1594,7 +1626,7 @@ async function sendPasswordRecovery() {
     email,
     redirect_to: window.location.origin
   });
-  signupMessage.textContent = "Te enviamos instrucciones para recuperar tu contrasena.";
+  signupMessage.textContent = "Te enviamos instrucciones para recuperar tu contraseña.";
   showToast("Correo de recuperacion enviado.");
 }
 
@@ -1615,8 +1647,8 @@ async function signOutFromSupabase() {
   renderProfileHeader();
   renderResumeStatus();
   renderUnreadMessagesBadge(0);
-  signupMessage.textContent = "Sesion cerrada.";
-  showToast("Sesion cerrada.");
+  signupMessage.textContent = "Sesión cerrada.";
+  showToast("Sesión cerrada.");
 }
 
 async function checkSupabaseSchema() {
@@ -1635,7 +1667,7 @@ async function checkSupabaseSchema() {
       await supabaseRestRequest(path);
     } catch (error) {
       if (isMissingSupabaseSchema(error.message)) {
-        throw new Error(`El servicio de RedJob no esta disponible en este momento (${tableName}).`);
+        throw new Error(`El servicio de RedJob no está disponible en este momento (${tableName}).`);
       }
       throw error;
     }
@@ -1681,11 +1713,11 @@ function renderJobs() {
               <div class="job-commercial-badges">${renderCommercialBadges(job)}</div>
               <h3>${escapeHtml(job.title)}</h3>
               <div class="job-meta">
-                <span>${escapeHtml(job.category ?? "Otra")}</span>
+                <span>${escapeHtml(formatCategoryLabel(job.category ?? "Otra"))}</span>
                 <span>${escapeHtml(job.company)}</span>
-                <span>${escapeHtml(job.location)}</span>
+                <span>${escapeHtml(formatLocationLabel(job.location))}</span>
                 <span>${escapeHtml(job.salary)}</span>
-                <span>${escapeHtml(job.mode)}</span>
+                <span>${escapeHtml(formatWorkModeLabel(job.mode))}</span>
               </div>
             </div>
             <span class="company-logo">${escapeHtml(job.company.charAt(0))}</span>
@@ -1735,7 +1767,7 @@ function renderProfileActivity() {
           `
         )
         .join("")
-    : `<p class="empty-list">Aun no tienes vacantes guardadas.</p>`;
+    : `<p class="empty-list">Aún no tienes vacantes guardadas.</p>`;
 
   applicationsList.innerHTML = applications.length
     ? applications
@@ -1757,7 +1789,7 @@ function renderProfileActivity() {
           `;
         })
         .join("")
-    : `<p class="empty-list">Aun no has enviado postulaciones.</p>`;
+    : `<p class="empty-list">Aún no has enviado postulaciones.</p>`;
 }
 
 function showToast(message) {
@@ -1771,13 +1803,13 @@ function showToast(message) {
 }
 
 function friendlyError(error) {
-  const message = error?.message ?? "No se pudo completar la accion.";
+  const message = error?.message ?? "No se pudo completar la acción.";
 
   if (/duplicate key|unique/i.test(message)) return "Ese registro ya existe.";
-  if (/row-level security|violates row-level security/i.test(message)) return "No tienes permiso para hacer esta accion con esta cuenta.";
+  if (/row-level security|violates row-level security/i.test(message)) return "No tienes permiso para hacer esta acción con esta cuenta.";
   if (/failed to fetch|network/i.test(message)) return "No se pudo conectar. Revisa tu internet e intenta de nuevo.";
-  if (/supabase|schema cache|database|relation|column/i.test(message)) return "No pudimos completar la accion. Intenta de nuevo mas tarde.";
-  if (/jwt/i.test(message)) return "Tu sesion expiro. Inicia sesion de nuevo.";
+  if (/supabase|schema cache|database|relation|column/i.test(message)) return "No pudimos completar la acción. Intenta de nuevo más tarde.";
+  if (/jwt/i.test(message)) return "Tu sesión expiró. Inicia sesión de nuevo.";
   if (/not found|404/i.test(message)) return "No encontramos ese recurso.";
 
   return message;
@@ -1802,14 +1834,14 @@ async function withButtonLoading(button, loadingText, action) {
 
 function openApplicationDialog(job) {
   if (!getStoredSession()?.access_token) {
-    showToast("Inicia sesion para postularte.");
+    showToast("Inicia sesión para postularte.");
     switchView("acceso");
     return;
   }
 
   activeApplicationJob = job;
   applicationJobTitle.textContent = job.title;
-  applicationJobMeta.textContent = `${job.company} - ${job.location} - ${job.mode}`;
+  applicationJobMeta.textContent = `${job.company} - ${formatLocationLabel(job.location)} - ${formatWorkModeLabel(job.mode)}`;
   coverNote.value = "";
   applicationDialog.showModal();
 }
@@ -1922,7 +1954,7 @@ jobsList.addEventListener("click", async (event) => {
     if (!job) return;
 
     if (alreadyApplied) {
-      showToast("Ya enviaste una postulacion para esta vacante.");
+      showToast("Ya enviaste una postulación para esta vacante.");
       return;
     }
 
@@ -1952,7 +1984,7 @@ detailApplyButton.addEventListener("click", () => {
   if (!job) return;
 
   if (hasApplication(job.id)) {
-    showToast("Ya enviaste una postulacion para esta vacante.");
+    showToast("Ya enviaste una postulación para esta vacante.");
     return;
   }
 
@@ -2036,7 +2068,7 @@ companyJobsList.addEventListener("click", async (event) => {
 
   if (!deleteButton) return;
 
-  if (!window.confirm("Seguro que quieres borrar esta vacante? Esta accion no se puede deshacer.")) {
+  if (!window.confirm("¿Seguro que quieres borrar esta vacante? Esta acción no se puede deshacer.")) {
     return;
   }
 
@@ -2060,7 +2092,7 @@ receivedCandidatesList.addEventListener("click", async (event) => {
   statusButton.disabled = true;
   try {
     await updateApplicationStatus(statusButton.dataset.applicationId, statusButton.dataset.applicationStatus);
-    showToast("Estado de postulacion actualizado.");
+    showToast("Estado de postulación actualizado.");
   } catch (error) {
     showToast(friendlyError(error));
   } finally {
@@ -2075,7 +2107,7 @@ document.querySelector("#closeCandidateProfileDialog").addEventListener("click",
 receivedCandidateResume.addEventListener("click", async () => {
   try {
     if (!activeReceivedCandidate?.resume_path) {
-      showToast("Este candidato aun no subio curriculum.");
+      showToast("Este candidato aún no subió su currículum.");
       return;
     }
 
@@ -2114,7 +2146,7 @@ deleteCompanyButton.addEventListener("click", async () => {
     return;
   }
 
-  if (!window.confirm("Seguro que quieres eliminar esta empresa y sus vacantes? Esta accion no se puede deshacer.")) {
+  if (!window.confirm("¿Seguro que quieres eliminar esta empresa y sus vacantes? Esta acción no se puede deshacer.")) {
     return;
   }
 
@@ -2134,7 +2166,7 @@ deleteCompanyButton.addEventListener("click", async () => {
 
 cancelJobEditButton.addEventListener("click", () => {
   resetJobForm();
-  showToast("Edicion cancelada.");
+  showToast("Edición cancelada.");
 });
 
 conversationList.addEventListener("click", async (event) => {
@@ -2151,7 +2183,7 @@ conversationList.addEventListener("click", async (event) => {
 candidatePreviewResume.addEventListener("click", async () => {
   try {
     if (!activePreviewCandidate?.resume_path) {
-      showToast("Este candidato aun no subio curriculum.");
+      showToast("Este candidato aún no subió su currículum.");
       return;
     }
 
@@ -2164,7 +2196,7 @@ candidatePreviewResume.addEventListener("click", async () => {
 
 chatJobDetailButton.addEventListener("click", async () => {
   if (!activeConversationJobId) {
-    showToast("Selecciona una conversacion con vacante.");
+    showToast("Selecciona una conversación con vacante.");
     return;
   }
 
@@ -2189,7 +2221,7 @@ resumeInput.addEventListener("change", async () => {
     }
 
     if (file.size > 8 * 1024 * 1024) {
-      throw new Error("El curriculum debe pesar menos de 8 MB.");
+      throw new Error("El currículum debe pesar menos de 8 MB.");
     }
 
     if (!currentCandidateProfile?.id) {
@@ -2200,7 +2232,7 @@ resumeInput.addEventListener("change", async () => {
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
     const resumePath = `${session.user.id}/${Date.now()}-${safeName}`;
 
-    resumeStatus.textContent = "Subiendo curriculum...";
+    resumeStatus.textContent = "Subiendo currículum...";
     await supabaseStorageUpload(resumePath, file);
 
     const rows = await supabaseRestRequest(`/candidate_profiles?id=eq.${currentCandidateProfile.id}`, {
@@ -2214,7 +2246,7 @@ resumeInput.addEventListener("change", async () => {
 
     currentCandidateProfile = rows?.[0] ?? currentCandidateProfile;
     renderResumeStatus();
-    showToast("Curriculum subido correctamente.");
+    showToast("Currículum subido correctamente.");
   } catch (error) {
     renderResumeStatus();
     showToast(error.message);
@@ -2246,7 +2278,7 @@ document.querySelector("#confirmApplication").addEventListener("click", async ()
     renderJobs();
     renderProfileActivity();
     if (activeDetailJobId) await openJobDetail(activeApplicationJob.id);
-    showToast(`Postulacion enviada a ${activeApplicationJob.company}.`);
+    showToast(`Postulación enviada a ${activeApplicationJob.company}.`);
     activeApplicationJob = null;
   } catch (error) {
     showToast(error.message);
@@ -2263,7 +2295,7 @@ document.querySelector("#messageForm").addEventListener("submit", async (event) 
   try {
     if (!getStoredSession()?.access_token) {
       switchView("acceso");
-      showToast("Inicia sesion para enviar mensajes.");
+      showToast("Inicia sesión para enviar mensajes.");
       return;
     }
 
@@ -2277,7 +2309,7 @@ document.querySelector("#messageForm").addEventListener("submit", async (event) 
       await openConversation(activeConversationId);
       showToast("Mensaje enviado.");
     } else {
-      showToast("Primero necesitas una conversacion real. Se crea al postularte a una vacante real.");
+      showToast("Primero necesitas una conversación real. Se crea al postularte a una vacante real.");
     }
     input.value = "";
   } catch (error) {
