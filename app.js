@@ -821,7 +821,7 @@ async function loadCurrentProfile() {
       const skillRows = await supabaseRestRequest(
         `/candidate_skills?select=skill_name&candidate_id=eq.${currentCandidateProfile.id}&order=skill_name.asc`
       );
-      candidateSkills.value = (skillRows ?? []).map((skill) => skill.skill_name).join(", ");
+      candidateSkills.value = (skillRows ?? []).map((skill) => skill.skill_name).join("\n");
     } else {
       candidateFullName.value = candidateFullName.value.trim() || getSessionDisplayName(session);
       candidateTargetRole.value = candidateTargetRole.value.trim();
@@ -858,9 +858,15 @@ async function loadReceivedCandidates() {
   }
 
   try {
-    const rows = await supabaseRestRequest(
-      `/applications?select=id,status,match_score,created_at,candidate_profiles(full_name,age,target_role,location,work_mode,summary,resume_name,resume_path),jobs!inner(title,company_id,company_profiles(company_name))&jobs.company_id=in.(${companyIds.join(",")})&order=created_at.desc`
-    );
+    const applicationsQuery =
+      `/applications?select=id,status,match_score,created_at,candidate_profiles(full_name,age,target_role,location,work_mode,summary,resume_name,resume_path),jobs!inner(title,company_id,company_profiles(company_name))&jobs.company_id=in.(${companyIds.join(",")})`;
+    let rows;
+    try {
+      rows = await supabaseRestRequest(`${applicationsQuery}&company_archived_at=is.null&order=created_at.desc`);
+    } catch (error) {
+      if (!/company_archived_at|schema cache|column/i.test(error.message)) throw error;
+      rows = await supabaseRestRequest(`${applicationsQuery}&order=created_at.desc`);
+    }
 
     receivedCandidateProfiles.clear();
     companyCandidatesCount.textContent = String(rows?.length ?? 0);
@@ -891,6 +897,9 @@ async function loadReceivedCandidates() {
                 <strong>${safePercent(application.match_score)}%</strong>
                 <button class="secondary-button subtle candidate-profile-button" type="button" data-view-candidate="${escapeHtml(application.id)}">
                   Ver perfil
+                </button>
+                <button class="remove-candidate-button" type="button" data-remove-candidate="${escapeHtml(application.id)}" title="Quitar candidato de esta vacante">
+                  Quitar
                 </button>
                 <div class="application-status-actions">
                   ${renderApplicationStatusButtons(application.id, application.status)}
@@ -956,6 +965,17 @@ async function updateApplicationStatus(applicationId, nextStatus) {
     body: {
       application_uuid: applicationId,
       next_status: nextStatus
+    }
+  });
+  await loadReceivedCandidates();
+}
+
+async function removeCandidateFromJob(applicationId) {
+  await supabaseRestRequest("/rpc/archive_company_application", {
+    method: "POST",
+    prefer: "return=representation",
+    body: {
+      application_uuid: applicationId
     }
   });
   await loadReceivedCandidates();
@@ -1273,16 +1293,22 @@ async function saveCandidateProfile() {
   currentCandidateProfile = profileRows?.[0] ?? currentCandidateProfile;
   const skills = splitSkills(candidateSkills.value);
 
-  if (currentCandidateProfile?.id && skills.length) {
-    await supabaseRestRequest("/candidate_skills?on_conflict=candidate_id,skill_name", {
-      method: "POST",
-      prefer: "resolution=merge-duplicates",
-      body: skills.map((skill) => ({
-        candidate_id: currentCandidateProfile.id,
-        skill_name: skill,
-        level: "intermediate"
-      }))
+  if (currentCandidateProfile?.id) {
+    await supabaseRestRequest(`/candidate_skills?candidate_id=eq.${currentCandidateProfile.id}`, {
+      method: "DELETE"
     });
+
+    if (skills.length) {
+      await supabaseRestRequest("/candidate_skills?on_conflict=candidate_id,skill_name", {
+        method: "POST",
+        prefer: "resolution=merge-duplicates",
+        body: skills.map((skill) => ({
+          candidate_id: currentCandidateProfile.id,
+          skill_name: skill,
+          level: "intermediate"
+        }))
+      });
+    }
   }
 
   showToast("Perfil guardado correctamente.");
@@ -2083,6 +2109,23 @@ receivedCandidatesList.addEventListener("click", async (event) => {
   const profileButton = event.target.closest("[data-view-candidate]");
   if (profileButton) {
     openReceivedCandidateProfile(profileButton.dataset.viewCandidate);
+    return;
+  }
+
+  const removeButton = event.target.closest("[data-remove-candidate]");
+  if (removeButton) {
+    if (!window.confirm("¿Quieres quitar a este candidato de la vacante? Su postulación y conversación se conservarán.")) {
+      return;
+    }
+
+    removeButton.disabled = true;
+    try {
+      await removeCandidateFromJob(removeButton.dataset.removeCandidate);
+      showToast("Candidato retirado de esta lista.");
+    } catch (error) {
+      showToast(friendlyError(error));
+      removeButton.disabled = false;
+    }
     return;
   }
 

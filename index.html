@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./styles.css?v=20260606h" />
+    <link rel="stylesheet" href="./styles.css?v=20260606i" />
   </head>
   <body>
     <header class="site-header">
@@ -252,16 +252,20 @@
 
       <section class="view" id="perfil">
         <section class="profile-layout">
-          <aside class="profile-card">
+          <section class="profile-card profile-overview">
             <span class="profile-photo" id="profileAvatar">RJ</span>
-            <h1 id="profileDisplayName">Tu perfil RedJob</h1>
-            <p id="profileDisplayMeta">Completa tu perfil para mejorar tus postulaciones.</p>
-            <button class="primary-button" type="button" id="resumeButton">Actualizar currículum</button>
+            <div class="profile-overview-copy">
+              <h1 id="profileDisplayName">Tu perfil RedJob</h1>
+              <p id="profileDisplayMeta">Completa tu perfil para mejorar tus postulaciones.</p>
+              <small class="resume-status" id="resumeStatus">Sin currículum cargado</small>
+            </div>
+            <div class="profile-overview-actions">
+              <button class="primary-button" type="button" id="resumeButton">Actualizar currículum</button>
+              <button class="secondary-button subtle" type="button" data-view-link="empresas">Publicar vacante</button>
+              <button class="logout-profile-button" type="button" id="profileSignOutButton">Cerrar sesión</button>
+            </div>
             <input class="is-hidden" id="resumeInput" type="file" accept=".pdf,.doc,.docx" />
-            <small class="resume-status" id="resumeStatus">Sin currículum cargado</small>
-            <button class="secondary-button subtle" type="button" data-view-link="empresas">Publicar vacante</button>
-            <button class="logout-profile-button" type="button" id="profileSignOutButton">Cerrar sesión</button>
-          </aside>
+          </section>
           <div class="profile-content">
             <section class="info-card">
               <h2>Perfil editable</h2>
@@ -292,7 +296,7 @@
                 </label>
                 <label>
                   Habilidades
-                  <input id="candidateSkills" type="text" placeholder="Ej. React, Ventas, Excel, Logística" />
+                  <textarea id="candidateSkills" rows="6" placeholder="Escribe una habilidad por renglón.&#10;Ej. Atención al cliente&#10;Excel&#10;Logística"></textarea>
                 </label>
                 <button class="primary-button" type="submit">Guardar perfil</button>
               </form>
@@ -603,6 +607,6 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script src="./config.js?v=20260605h"></script>
-    <script src="./app.js?v=20260606h"></script>
+    <script src="./app.js?v=20260606i"></script>
   </body>
 </html>

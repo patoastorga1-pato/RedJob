@@ -39,7 +39,8 @@ body {
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
 }
 
@@ -724,6 +725,18 @@ textarea:focus {
   white-space: pre-line;
 }
 
+.company-about-section {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 20px;
+  background: var(--light);
+}
+
+#detailCompanyDescription {
+  margin-bottom: 0;
+  white-space: pre-line;
+}
+
 .requirements-list {
   display: grid;
   gap: 10px;
@@ -1091,8 +1104,29 @@ textarea:focus {
 
 .profile-card {
   display: grid;
-  justify-items: start;
-  gap: 14px;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 20px;
+}
+
+.profile-overview-copy {
+  min-width: 0;
+}
+
+.profile-overview-copy p {
+  margin: 8px 0 6px;
+  color: var(--muted);
+}
+
+.profile-overview-actions {
+  display: flex;
+  grid-column: 1 / -1;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.profile-overview-actions > button {
+  width: auto;
 }
 
 .logout-profile-button {
@@ -1125,6 +1159,10 @@ textarea:focus {
 .company-hero h1,
 .access-page h1 {
   font-size: clamp(32px, 7vw, 64px);
+}
+
+.profile-card h1 {
+  font-size: clamp(26px, 4vw, 42px);
 }
 
 .resume-status {
@@ -1264,6 +1302,25 @@ textarea:focus {
 
 .candidate-profile-button {
   flex: 0 0 auto;
+}
+
+.remove-candidate-button {
+  min-height: 38px;
+  border: 1px solid rgba(220, 38, 38, 0.18);
+  border-radius: 999px;
+  padding: 0 14px;
+  background: #ffffff;
+  color: var(--red);
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 900;
+  transition: border-color 180ms ease, background 180ms ease, transform 180ms ease;
+}
+
+.remove-candidate-button:hover {
+  border-color: rgba(220, 38, 38, 0.35);
+  background: var(--red-soft);
+  transform: translateY(-1px);
 }
 
 .status-action {
@@ -1691,8 +1748,13 @@ textarea:focus {
     grid-template-columns: minmax(0, 1fr) auto;
   }
 
-  .profile-layout {
-    grid-template-columns: minmax(260px, 0.34fr) minmax(0, 1fr);
+  .profile-card {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .profile-overview-actions {
+    grid-column: auto;
+    justify-content: flex-end;
   }
 
   .profile-stats,
@@ -1842,6 +1904,15 @@ textarea:focus {
   .access-card {
     border-radius: 18px;
     padding: 20px;
+  }
+
+  .profile-overview-actions {
+    width: 100%;
+  }
+
+  .profile-overview-actions > button {
+    flex: 1 1 100%;
+    width: 100%;
   }
 
   .job-detail-head,
