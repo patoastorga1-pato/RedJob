@@ -1,6 +1,7 @@
 let jobs = [];
 
 const jobsList = document.querySelector("#jobsList");
+const hiringCompaniesList = document.querySelector("#hiringCompaniesList");
 const resultCount = document.querySelector("#resultCount");
 const searchInput = document.querySelector("#searchInput");
 const locationInput = document.querySelector("#locationInput");
@@ -77,7 +78,6 @@ const companyInterviewCount = document.querySelector("#companyInterviewCount");
 const companyHeroLogo = document.querySelector("#companyHeroLogo");
 const companyHeroName = document.querySelector("#companyHeroName");
 const companyHeroDescription = document.querySelector("#companyHeroDescription");
-const companyPlanBadge = document.querySelector("#companyPlanBadge");
 const companyVerifiedBadge = document.querySelector("#companyVerifiedBadge");
 const companyProfileSelect = document.querySelector("#companyProfileSelect");
 const newCompanyButton = document.querySelector("#newCompanyButton");
@@ -337,14 +337,10 @@ function applyRoleExperience() {
 function renderCompanyHeader() {
   const name = currentCompanyProfile?.company_name || "Tu empresa";
   const description = currentCompanyProfile?.description || "Completa el perfil de empresa para publicar vacantes reales.";
-  const plan = currentCompanyProfile?.plan ?? "free";
-  const planStatus = currentCompanyProfile?.plan_status ?? "beta";
 
   companyHeroLogo.textContent = getInitials(name);
   companyHeroName.textContent = name;
   companyHeroDescription.textContent = description;
-  companyPlanBadge.textContent = `${formatPlanName(plan)}${planStatus === "beta" ? " beta" : ""}`;
-  companyPlanBadge.dataset.plan = plan;
   companyVerifiedBadge.classList.toggle("is-hidden", !currentCompanyProfile?.is_verified);
 }
 
@@ -366,9 +362,6 @@ function renderCommercialBadges(job) {
   const badges = [];
   if (isJobFeatured(job)) badges.push(`<span class="featured-badge">Destacada</span>`);
   if (job.companyVerified) badges.push(`<span class="verified-badge">Empresa verificada</span>`);
-  if (job.companyPlan && job.companyPlan !== "free") {
-    badges.push(`<span class="plan-badge" data-plan="${escapeHtml(job.companyPlan)}">${escapeHtml(formatPlanName(job.companyPlan))}</span>`);
-  }
   return badges.join("");
 }
 
@@ -411,6 +404,54 @@ function renderCompanyJobs() {
         )
         .join("")
     : `<p class="empty-list">Aun no hay vacantes publicadas en tus empresas.</p>`;
+}
+
+function renderHiringCompanies() {
+  const companies = new Map();
+
+  jobs.forEach((job) => {
+    const key = String(job.companyId ?? job.company);
+    const existing = companies.get(key);
+
+    if (existing) {
+      existing.activeJobs += 1;
+      existing.isVerified ||= Boolean(job.companyVerified);
+      return;
+    }
+
+    companies.set(key, {
+      name: job.company,
+      activeJobs: 1,
+      isVerified: Boolean(job.companyVerified)
+    });
+  });
+
+  const visibleCompanies = Array.from(companies.values())
+    .sort((a, b) => Number(b.isVerified) - Number(a.isVerified) || b.activeJobs - a.activeJobs || a.name.localeCompare(b.name))
+    .slice(0, 8);
+
+  hiringCompaniesList.innerHTML = visibleCompanies.length
+    ? visibleCompanies
+        .map(
+          (company) => `
+            <button class="company-card" type="button" data-company-search="${escapeHtml(company.name)}">
+              <span class="company-logo">${escapeHtml(getInitials(company.name))}</span>
+              <span class="company-card-title">
+                <strong>${escapeHtml(company.name)}</strong>
+                ${company.isVerified ? '<span class="verified-badge">Verificada</span>' : ""}
+              </span>
+              <p>${company.activeJobs} vacante${company.activeJobs === 1 ? "" : "s"} activa${company.activeJobs === 1 ? "" : "s"}</p>
+            </button>
+          `
+        )
+        .join("")
+    : `
+        <article class="company-card company-card-empty">
+          <span class="company-logo">RJ</span>
+          <strong>Aun no hay empresas contratando</strong>
+          <p>Las empresas apareceran aqui cuando publiquen una vacante activa.</p>
+        </article>
+      `;
 }
 
 function sameId(left, right) {
@@ -1096,15 +1137,16 @@ async function loadRealJobs() {
 
     jobs = realJobs;
     renderJobs();
+    renderHiringCompanies();
     renderProfileActivity();
     renderCompanyJobs();
-    if (realJobs.length) showToast("Vacantes reales cargadas desde Supabase.");
   } catch (error) {
     jobs = [];
     renderJobs();
+    renderHiringCompanies();
     renderProfileActivity();
     renderCompanyJobs();
-    showToast(`No se pudieron cargar vacantes reales: ${error.message}`);
+    showToast(friendlyError(error));
   }
 }
 
@@ -1172,7 +1214,7 @@ async function saveCandidateProfile() {
     });
   }
 
-  showToast("Perfil candidato guardado en Supabase.");
+  showToast("Perfil guardado correctamente.");
   await loadCurrentProfile();
   renderProfileHeader();
 }
@@ -1282,7 +1324,7 @@ async function publishRealJob() {
 
   await loadRealJobs();
   await loadReceivedCandidates();
-  showToast(activeEditingJobId ? "Vacante actualizada." : "Vacante publicada en Supabase.");
+  showToast(activeEditingJobId ? "Vacante actualizada." : "Vacante publicada correctamente.");
   activeEditingJobId = null;
   updateJobFormMode();
   return newJob;
@@ -1296,13 +1338,13 @@ async function deleteCompanyJob(jobId) {
     await supabaseRestRequest(`/jobs?id=eq.${job.id}`, {
       method: "DELETE"
     });
-    showToast("Vacante borrada de Supabase.");
+    showToast("Vacante eliminada.");
     await loadRealJobs();
     await loadReceivedCandidates();
     return;
   }
 
-  showToast("Solo se pueden borrar vacantes reales publicadas en Supabase.");
+  showToast("Esta vacante no se puede eliminar.");
 }
 
 function updateJobFormMode() {
@@ -1382,7 +1424,7 @@ async function createRealApplication(job) {
       throw new Error("Ya te postulaste a esta vacante. Revisa Perfil o Mensajes.");
     }
     if (/row-level security|violates row-level security/i.test(error.message)) {
-      throw new Error("Supabase bloqueo la postulacion por permisos. Ejecuta el SQL actualizado para activar la funcion segura de postulacion.");
+    throw new Error("No fue posible enviar la postulacion con esta cuenta. Intenta cerrar sesion y volver a entrar.");
     }
     throw error;
   }
@@ -1406,7 +1448,7 @@ async function createRealApplication(job) {
     });
   }
 
-  showToast("Postulacion real guardada en Supabase.");
+  showToast("Postulacion enviada correctamente.");
   await loadReceivedCandidates();
   return rows?.[0];
 }
@@ -1464,7 +1506,7 @@ async function createSupabaseAccount() {
     throw new Error(role === "company" ? "Agrega el nombre de la empresa." : "Agrega tu nombre completo.");
   }
 
-  signupMessage.textContent = "Creando cuenta en Supabase...";
+  signupMessage.textContent = "Creando tu cuenta...";
 
   const payload = await supabaseAuthRequest("/auth/v1/signup", {
     email,
@@ -1477,10 +1519,10 @@ async function createSupabaseAccount() {
     await loadCurrentProfile();
     signupMessage.textContent = "Cuenta creada y sesion iniciada.";
   } else {
-    signupMessage.textContent = "Cuenta creada. Si Supabase pide confirmacion, revisa tu correo.";
+    signupMessage.textContent = "Cuenta creada. Si se requiere confirmacion, revisa tu correo.";
   }
 
-  showToast("Cuenta enviada a Supabase.");
+  showToast("Cuenta creada. Revisa tu correo si necesitas confirmarla.");
 }
 
 async function signInWithSupabase() {
@@ -1539,7 +1581,7 @@ async function signOutFromSupabase() {
 }
 
 async function checkSupabaseSchema() {
-  signupMessage.textContent = "Verificando tablas de Supabase...";
+  signupMessage.textContent = "Verificando el servicio...";
 
   const checks = [
     ["/profiles?select=id&limit=1", "profiles"],
@@ -1554,14 +1596,14 @@ async function checkSupabaseSchema() {
       await supabaseRestRequest(path);
     } catch (error) {
       if (isMissingSupabaseSchema(error.message)) {
-        throw new Error(`Falta la tabla ${tableName}. Ejecuta completo outputs/RedJob/supabase-schema.sql en Supabase SQL Editor.`);
+        throw new Error(`El servicio de RedJob no esta disponible en este momento (${tableName}).`);
       }
       throw error;
     }
   }
 
-  signupMessage.textContent = "Base de datos conectada. Las tablas principales de RedJob ya responden.";
-  showToast("Supabase verificado.");
+  signupMessage.textContent = "El servicio funciona correctamente.";
+  showToast("Conexion verificada.");
 }
 
 function renderJobs() {
@@ -1680,8 +1722,11 @@ function renderProfileActivity() {
 }
 
 function showToast(message) {
+  const visibleMessage = /supabase|schema cache|database|relation|column/i.test(String(message))
+    ? friendlyError({ message: String(message) })
+    : String(message);
   window.clearTimeout(toastTimer);
-  toast.textContent = message;
+  toast.textContent = visibleMessage;
   toast.classList.add("visible");
   toastTimer = window.setTimeout(() => toast.classList.remove("visible"), 2600);
 }
@@ -1691,7 +1736,8 @@ function friendlyError(error) {
 
   if (/duplicate key|unique/i.test(message)) return "Ese registro ya existe.";
   if (/row-level security|violates row-level security/i.test(message)) return "No tienes permiso para hacer esta accion con esta cuenta.";
-  if (/failed to fetch|network/i.test(message)) return "No se pudo conectar con Supabase. Revisa internet o intenta de nuevo.";
+  if (/failed to fetch|network/i.test(message)) return "No se pudo conectar. Revisa tu internet e intenta de nuevo.";
+  if (/supabase|schema cache|database|relation|column/i.test(message)) return "No pudimos completar la accion. Intenta de nuevo mas tarde.";
   if (/jwt/i.test(message)) return "Tu sesion expiro. Inicia sesion de nuevo.";
   if (/not found|404/i.test(message)) return "No encontramos ese recurso.";
 
@@ -1750,6 +1796,18 @@ document.querySelectorAll("[data-view-link]").forEach((trigger) => {
     event.preventDefault();
     switchView(trigger.dataset.viewLink);
   });
+});
+
+hiringCompaniesList.addEventListener("click", (event) => {
+  const companyButton = event.target.closest("[data-company-search]");
+  if (!companyButton) return;
+
+  searchInput.value = companyButton.dataset.companySearch;
+  locationInput.value = "";
+  modeFilter.value = "all";
+  categoryFilter.value = "all";
+  renderJobs();
+  document.querySelector("#jobSearch").scrollIntoView({ behavior: "smooth", block: "start" });
 });
 
 document.querySelectorAll("[data-scroll-target]").forEach((trigger) => {
@@ -1887,8 +1945,8 @@ document.querySelector("#simulateSignup").addEventListener("click", async () => 
   try {
     await createSupabaseAccount();
   } catch (error) {
-    signupMessage.textContent = error.message;
-    showToast(error.message);
+    signupMessage.textContent = friendlyError(error);
+    showToast(friendlyError(error));
   }
 });
 
@@ -1896,8 +1954,8 @@ signInButton.addEventListener("click", async () => {
   try {
     await signInWithSupabase();
   } catch (error) {
-    signupMessage.textContent = error.message;
-    showToast(error.message);
+    signupMessage.textContent = friendlyError(error);
+    showToast(friendlyError(error));
   }
 });
 
@@ -1905,8 +1963,8 @@ forgotPasswordButton.addEventListener("click", async () => {
   try {
     await sendPasswordRecovery();
   } catch (error) {
-    signupMessage.textContent = error.message;
-    showToast(error.message);
+    signupMessage.textContent = friendlyError(error);
+    showToast(friendlyError(error));
   }
 });
 
@@ -1914,8 +1972,8 @@ signOutButton.addEventListener("click", async () => {
   try {
     await signOutFromSupabase();
   } catch (error) {
-    signupMessage.textContent = error.message;
-    showToast(error.message);
+    signupMessage.textContent = friendlyError(error);
+    showToast(friendlyError(error));
   }
 });
 
@@ -2154,7 +2212,7 @@ document.querySelector("#messageForm").addEventListener("submit", async (event) 
       await sendRealMessage(message);
       await loadFirstConversation(false);
       await openConversation(activeConversationId);
-      showToast("Mensaje real guardado en Supabase.");
+      showToast("Mensaje enviado.");
     } else {
       showToast("Primero necesitas una conversacion real. Se crea al postularte a una vacante real.");
     }
@@ -2203,6 +2261,7 @@ companyJobForm.addEventListener("submit", async (event) => {
 populateMexicoStateSelects();
 populateCategorySelects();
 renderJobs();
+renderHiringCompanies();
 renderProfileActivity();
 renderSessionStatus();
 renderCompanyJobs();
@@ -2212,4 +2271,4 @@ loadCurrentProfile()
   .then(loadSavedJobs)
   .then(() => loadFirstConversation(false))
   .then(loadReceivedCandidates)
-  .catch((error) => showToast(`Supabase: ${error.message}`));
+  .catch((error) => showToast(friendlyError(error)));

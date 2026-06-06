@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./styles.css?v=20260605h" />
+    <link rel="stylesheet" href="./styles.css?v=20260606a" />
   </head>
   <body>
     <header class="site-header">
@@ -139,7 +139,7 @@
             </div>
             <button class="text-button" type="button" data-view-link="empresas">Ver todas</button>
           </div>
-          <div class="companies-grid">
+          <div class="companies-grid" id="hiringCompaniesList">
             <article class="company-card">
               <span class="company-logo">RJ</span>
               <strong>Sin empresas destacadas aun</strong>
@@ -322,7 +322,6 @@
               <span>Perfil de empresa</span>
               <h1 id="companyHeroName">Tu empresa</h1>
               <div class="company-plan-row">
-                <span class="plan-badge" id="companyPlanBadge">Free beta</span>
                 <span class="verified-badge is-hidden" id="companyVerifiedBadge">Empresa verificada</span>
               </div>
               <p id="companyHeroDescription">Completa el perfil de empresa para publicar vacantes reales.</p>
@@ -419,7 +418,7 @@
           <div>
             <span>Acceso</span>
             <h1>Crea tu cuenta RedJob</h1>
-            <p>Registrate como candidato o empresa. Este flujo ya intenta conectarse a Supabase Auth.</p>
+            <p>Registrate como candidato o empresa para comenzar.</p>
           </div>
           <form class="access-card">
             <div class="role-toggle">
@@ -450,7 +449,7 @@
               y el
               <button type="button" data-view-link="privacidad">Aviso de Privacidad</button>.
             </p>
-            <p id="signupMessage">Supabase configurado. Puedes crear cuenta o iniciar sesion.</p>
+            <p id="signupMessage">Puedes crear una cuenta o iniciar sesion.</p>
           </form>
           <aside class="auth-status-panel is-hidden" aria-hidden="true">
             <h2>Estado</h2>
@@ -576,6 +575,6 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script src="./config.js?v=20260605h"></script>
-    <script src="./app.js?v=20260605h"></script>
+    <script src="./app.js?v=20260606a"></script>
   </body>
 </html>
