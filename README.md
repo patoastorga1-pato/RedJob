@@ -15,8 +15,7 @@ La app ya incluye:
 - Categorias de vacantes con filtro en busqueda y categoria personalizada.
 - Vacantes guardadas persistentes en Supabase.
 - Cambio de estado de postulaciones recibidas por empresa.
-- Estructura de monetizacion preparada para planes Free, Pro y Premium.
-- Empresas verificadas, vacantes destacadas y prioridad futura sin pagos activos.
+- Empresas verificadas y soporte interno para vacantes destacadas futuras.
 - Postulaciones reales con conversacion automatica.
 - Mensajes reales entre candidato y empresa.
 - Vista de candidato para empresas, incluyendo informacion del perfil y acceso controlado al curriculum.
@@ -41,19 +40,6 @@ Ese archivo crea tablas, funciones, politicas de seguridad y el bucket privado `
 Importante: despues de cambios de seguridad, vuelve a ejecutar `supabase-schema.sql` completo. Las postulaciones, cambios de estado y lectura de mensajes pasan por funciones seguras RPC.
 
 Si agregas categorias de vacantes, tambien debes ejecutar el SQL actualizado para crear la columna `jobs.category`.
-
-## Monetizacion preparada
-
-La beta no activa pagos ni limita funciones. El esquema incluye:
-
-- `plan_catalog` para configurar Free, Pro y Premium.
-- Campos de plan, estado y proveedor de cobro en empresas.
-- Verificacion de empresa.
-- Vacantes destacadas, prioridad y fecha de expiracion.
-- `billing_events` para webhooks futuros de Stripe o Mercado Pago.
-- Triggers que evitan que un usuario se asigne un plan o destacado desde la API.
-
-Las actualizaciones comerciales futuras deben hacerse desde un backend seguro con `service_role`, nunca desde el navegador.
 
 Configuracion local usada por la app:
 

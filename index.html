@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./styles.css?v=20260606a" />
+    <link rel="stylesheet" href="./styles.css?v=20260606f" />
   </head>
   <body>
     <header class="site-header">
@@ -188,7 +188,7 @@
             </section>
             <section>
               <h2>Requisitos</h2>
-              <div class="tags" id="detailRequirements"></div>
+              <ul class="requirements-list" id="detailRequirements"></ul>
             </section>
             <div class="job-actions">
               <button class="save-button" type="button" id="detailSaveButton">Guardar</button>
@@ -392,7 +392,7 @@
               </label>
               <label>
                 Requisitos
-                <input id="jobSkillsInput" type="text" placeholder="Ej. experiencia en ventas, Excel, disponibilidad de horario" />
+                <textarea id="jobSkillsInput" rows="6" placeholder="Escribe un requisito por renglon.&#10;Ej. Experiencia en ventas&#10;Manejo de Excel&#10;Disponibilidad de horario"></textarea>
               </label>
               <button class="primary-button" type="submit" id="companyJobSubmitButton">Publicar vacante real</button>
               <button class="secondary-button subtle is-hidden" type="button" id="cancelJobEditButton">Cancelar edicion</button>
@@ -482,6 +482,30 @@
         </label>
         <button class="primary-button" type="button" id="confirmApplication">Enviar postulacion</button>
       </form>
+    </dialog>
+
+    <dialog class="application-dialog candidate-profile-dialog" id="candidateProfileDialog">
+      <article class="dialog-card candidate-profile-detail">
+        <button class="dialog-close" type="button" id="closeCandidateProfileDialog" aria-label="Cerrar">x</button>
+        <span>Perfil del candidato</span>
+        <div class="candidate-profile-heading">
+          <span class="profile-photo" id="receivedCandidateAvatar">RJ</span>
+          <div>
+            <h2 id="receivedCandidateName">Candidato</h2>
+            <p id="receivedCandidateMeta">Informacion profesional</p>
+          </div>
+        </div>
+        <div class="candidate-profile-context">
+          <span>Postulacion para</span>
+          <strong id="receivedCandidateJob">Vacante</strong>
+          <small id="receivedCandidateApplicationStatus">Estado de postulacion</small>
+        </div>
+        <section>
+          <h3>Acerca del candidato</h3>
+          <p id="receivedCandidateSummary">Sin resumen disponible.</p>
+        </section>
+        <button class="primary-button" type="button" id="receivedCandidateResume">Ver curriculum</button>
+      </article>
     </dialog>
 
     <section class="legal-pages" aria-label="Informacion legal">
@@ -575,6 +599,6 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script src="./config.js?v=20260605h"></script>
-    <script src="./app.js?v=20260606a"></script>
+    <script src="./app.js?v=20260606f"></script>
   </body>
 </html>

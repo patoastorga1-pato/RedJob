@@ -47,6 +47,14 @@ const candidatePreviewName = document.querySelector("#candidatePreviewName");
 const candidatePreviewMeta = document.querySelector("#candidatePreviewMeta");
 const candidatePreviewSummary = document.querySelector("#candidatePreviewSummary");
 const candidatePreviewResume = document.querySelector("#candidatePreviewResume");
+const candidateProfileDialog = document.querySelector("#candidateProfileDialog");
+const receivedCandidateAvatar = document.querySelector("#receivedCandidateAvatar");
+const receivedCandidateName = document.querySelector("#receivedCandidateName");
+const receivedCandidateMeta = document.querySelector("#receivedCandidateMeta");
+const receivedCandidateJob = document.querySelector("#receivedCandidateJob");
+const receivedCandidateApplicationStatus = document.querySelector("#receivedCandidateApplicationStatus");
+const receivedCandidateSummary = document.querySelector("#receivedCandidateSummary");
+const receivedCandidateResume = document.querySelector("#receivedCandidateResume");
 const candidateProfileForm = document.querySelector("#candidateProfileForm");
 const candidateFullName = document.querySelector("#candidateFullName");
 const candidateAge = document.querySelector("#candidateAge");
@@ -123,6 +131,8 @@ let currentCompanyProfiles = [];
 let activeConversationId = null;
 let activeDetailJobId = null;
 let activePreviewCandidate = null;
+let activeReceivedCandidate = null;
+const receivedCandidateProfiles = new Map();
 let activeEditingJobId = null;
 let activeConversationJobId = null;
 
@@ -342,14 +352,6 @@ function renderCompanyHeader() {
   companyHeroName.textContent = name;
   companyHeroDescription.textContent = description;
   companyVerifiedBadge.classList.toggle("is-hidden", !currentCompanyProfile?.is_verified);
-}
-
-function formatPlanName(plan) {
-  return {
-    free: "Free",
-    pro: "Pro",
-    premium: "Premium"
-  }[plan] ?? "Free";
 }
 
 function isJobFeatured(job) {
@@ -575,8 +577,8 @@ async function openJobDetail(jobId) {
   detailDescription.textContent =
     job.description || "La empresa aun no agrego una descripcion extensa para esta vacante.";
   detailRequirements.innerHTML = job.tags.length
-    ? job.tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")
-    : `<span>Sin requisitos publicados</span>`;
+    ? job.tags.map((tag) => `<li>${escapeHtml(tag)}</li>`).join("")
+    : `<li>Sin requisitos publicados</li>`;
   detailSaveButton.textContent = isSavedJob(job.id) ? "Guardada" : "Guardar";
   detailSaveButton.classList.toggle("active", isSavedJob(job.id));
   detailApplyButton.textContent = hasApplication(job.id) ? "Postulada" : "Postularme";
@@ -736,10 +738,10 @@ function safePercent(value) {
 }
 
 function splitSkills(value) {
-  return value
-    .split(",")
+  return Array.from(new Set(value
+    .split(/\r?\n|,/)
     .map((skill) => skill.trim())
-    .filter(Boolean);
+    .filter(Boolean)));
 }
 
 function calculateMatch(job) {
@@ -817,6 +819,7 @@ async function loadCurrentProfile() {
 async function loadReceivedCandidates() {
   const companyIds = currentCompanyProfiles.map((company) => company.id);
   if (!companyIds.length) {
+    receivedCandidateProfiles.clear();
     receivedCandidatesList.innerHTML = `<p class="empty-list">Guarda tu perfil de empresa para ver candidatos.</p>`;
     companyCandidatesCount.textContent = "0";
     companyInterviewCount.textContent = "0";
@@ -825,9 +828,10 @@ async function loadReceivedCandidates() {
 
   try {
     const rows = await supabaseRestRequest(
-      `/applications?select=id,status,match_score,created_at,candidate_profiles(full_name,age,target_role,location,resume_name,resume_path),jobs!inner(title,company_id,company_profiles(company_name))&jobs.company_id=in.(${companyIds.join(",")})&order=created_at.desc`
+      `/applications?select=id,status,match_score,created_at,candidate_profiles(full_name,age,target_role,location,work_mode,summary,resume_name,resume_path),jobs!inner(title,company_id,company_profiles(company_name))&jobs.company_id=in.(${companyIds.join(",")})&order=created_at.desc`
     );
 
+    receivedCandidateProfiles.clear();
     companyCandidatesCount.textContent = String(rows?.length ?? 0);
     companyInterviewCount.textContent = String((rows ?? []).filter((row) => row.status === "interview").length);
 
@@ -839,6 +843,13 @@ async function loadReceivedCandidates() {
               : application.candidate_profiles;
             const job = Array.isArray(application.jobs) ? application.jobs[0] : application.jobs;
             const company = Array.isArray(job?.company_profiles) ? job.company_profiles[0] : job?.company_profiles;
+            receivedCandidateProfiles.set(String(application.id), {
+              candidate,
+              jobTitle: job?.title ?? "Vacante",
+              companyName: company?.company_name ?? "Empresa",
+              status: application.status,
+              matchScore: application.match_score
+            });
             return `
               <article class="candidate-row-card" data-application-id="${escapeHtml(application.id)}">
                 <div>
@@ -847,6 +858,9 @@ async function loadReceivedCandidates() {
                   <small>${escapeHtml(company?.company_name ?? "Empresa")} - ${escapeHtml(job?.title ?? "Vacante")} - ${escapeHtml(mapApplicationStatus(application.status))}${candidate?.resume_name ? ` - CV: ${escapeHtml(candidate.resume_name)}` : ""}</small>
                 </div>
                 <strong>${safePercent(application.match_score)}%</strong>
+                <button class="secondary-button subtle candidate-profile-button" type="button" data-view-candidate="${escapeHtml(application.id)}">
+                  Ver perfil
+                </button>
                 <div class="application-status-actions">
                   ${renderApplicationStatusButtons(application.id, application.status)}
                 </div>
@@ -858,6 +872,31 @@ async function loadReceivedCandidates() {
   } catch (error) {
     receivedCandidatesList.innerHTML = `<p class="empty-list">No se pudieron cargar candidatos: ${escapeHtml(error.message)}</p>`;
   }
+}
+
+function openReceivedCandidateProfile(applicationId) {
+  const profile = receivedCandidateProfiles.get(String(applicationId));
+  if (!profile?.candidate) {
+    showToast("No se pudo abrir el perfil del candidato.");
+    return;
+  }
+
+  const candidate = profile.candidate;
+  activeReceivedCandidate = candidate;
+  receivedCandidateAvatar.textContent = getInitials(candidate.full_name ?? "Candidato");
+  receivedCandidateName.textContent = candidate.full_name ?? "Candidato";
+  receivedCandidateMeta.textContent = [
+    candidate.target_role || "Perfil candidato",
+    candidate.location || "Mexico",
+    candidate.age ? `${candidate.age} anos` : "",
+    candidate.work_mode ? mapWorkModeToUi(candidate.work_mode) : ""
+  ].filter(Boolean).join(" - ");
+  receivedCandidateJob.textContent = `${profile.jobTitle} en ${profile.companyName}`;
+  receivedCandidateApplicationStatus.textContent = `${mapApplicationStatus(profile.status)} - ${safePercent(profile.matchScore)}% de compatibilidad`;
+  receivedCandidateSummary.textContent = candidate.summary || "Este candidato aun no agrego un resumen profesional.";
+  receivedCandidateResume.textContent = candidate.resume_name ? `Ver curriculum: ${candidate.resume_name}` : "Sin curriculum disponible";
+  receivedCandidateResume.disabled = !candidate.resume_path;
+  candidateProfileDialog.showModal();
 }
 
 function renderApplicationStatusButtons(applicationId, status) {
@@ -1386,7 +1425,7 @@ function editCompanyJob(jobId) {
   const salaryNumbers = job.salary.match(/\d[\d,]*/g)?.map((value) => Number(value.replace(/,/g, ""))) ?? [];
   jobSalaryMinInput.value = salaryNumbers[0] ?? "";
   jobSalaryMaxInput.value = salaryNumbers[1] ?? "";
-  jobSkillsInput.value = (job.tags ?? []).join(", ");
+  jobSkillsInput.value = (job.tags ?? []).join("\n");
   updateJobFormMode();
   showToast("Editando vacante.");
 }
@@ -2009,6 +2048,12 @@ companyJobsList.addEventListener("click", async (event) => {
 });
 
 receivedCandidatesList.addEventListener("click", async (event) => {
+  const profileButton = event.target.closest("[data-view-candidate]");
+  if (profileButton) {
+    openReceivedCandidateProfile(profileButton.dataset.viewCandidate);
+    return;
+  }
+
   const statusButton = event.target.closest("[data-application-status]");
   if (!statusButton) return;
 
@@ -2020,6 +2065,24 @@ receivedCandidatesList.addEventListener("click", async (event) => {
     showToast(friendlyError(error));
   } finally {
     statusButton.disabled = false;
+  }
+});
+
+document.querySelector("#closeCandidateProfileDialog").addEventListener("click", () => {
+  candidateProfileDialog.close();
+});
+
+receivedCandidateResume.addEventListener("click", async () => {
+  try {
+    if (!activeReceivedCandidate?.resume_path) {
+      showToast("Este candidato aun no subio curriculum.");
+      return;
+    }
+
+    const signedUrl = await createResumeSignedUrl(activeReceivedCandidate.resume_path);
+    window.open(signedUrl, "_blank", "noopener");
+  } catch (error) {
+    showToast(friendlyError(error));
   }
 });
 

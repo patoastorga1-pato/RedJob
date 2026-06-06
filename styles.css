@@ -724,6 +724,39 @@ textarea:focus {
   white-space: pre-line;
 }
 
+.requirements-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.requirements-list li {
+  position: relative;
+  border-bottom: 1px solid var(--line);
+  padding: 0 0 10px 22px;
+  color: var(--text);
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+.requirements-list li:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.requirements-list li::before {
+  position: absolute;
+  top: 0.68em;
+  left: 2px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--red);
+  content: "";
+}
+
 .companies-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
@@ -1229,6 +1262,10 @@ textarea:focus {
   justify-content: flex-end;
 }
 
+.candidate-profile-button {
+  flex: 0 0 auto;
+}
+
 .status-action {
   min-height: 34px;
   border: 1px solid var(--line);
@@ -1456,6 +1493,61 @@ textarea:focus {
   margin-bottom: 0;
 }
 
+.candidate-profile-dialog {
+  width: min(620px, calc(100% - 28px));
+}
+
+.candidate-profile-detail {
+  gap: 22px;
+}
+
+.candidate-profile-heading {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.candidate-profile-heading .profile-photo {
+  width: 70px;
+  height: 70px;
+  flex: 0 0 auto;
+}
+
+.candidate-profile-heading h2 {
+  font-size: 26px;
+}
+
+.candidate-profile-heading p,
+.candidate-profile-detail section p {
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.candidate-profile-context {
+  display: grid;
+  gap: 5px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px;
+  background: var(--light);
+}
+
+.candidate-profile-context span,
+.candidate-profile-context small {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.candidate-profile-detail section {
+  display: grid;
+  gap: 8px;
+}
+
+.candidate-profile-detail section h3 {
+  margin: 0;
+}
+
 .dialog-close {
   position: absolute;
   top: 14px;
@@ -1619,6 +1711,7 @@ textarea:focus {
   .auth-actions {
     grid-template-columns: 1fr 1fr;
   }
+
 }
 
 @media (min-width: 1020px) {
