@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./styles.css?v=20260606i" />
+    <link rel="stylesheet" href="./styles.css?v=20260606j" />
   </head>
   <body>
     <header class="site-header">
@@ -267,9 +267,16 @@
             <input class="is-hidden" id="resumeInput" type="file" accept=".pdf,.doc,.docx" />
           </section>
           <div class="profile-content">
-            <section class="info-card">
-              <h2>Perfil editable</h2>
-              <form class="entity-form" id="candidateProfileForm">
+            <details class="info-card profile-editor">
+              <summary>
+                <span>
+                  <strong>Editar perfil</strong>
+                  <small>Información personal, ubicación y habilidades</small>
+                </span>
+                <span class="profile-editor-chevron" aria-hidden="true"></span>
+              </summary>
+              <div class="profile-editor-content">
+                <form class="entity-form" id="candidateProfileForm">
                 <label>
                   Nombre completo
                   <input id="candidateFullName" type="text" placeholder="Tu nombre completo" />
@@ -299,8 +306,9 @@
                   <textarea id="candidateSkills" rows="6" placeholder="Escribe una habilidad por renglón.&#10;Ej. Atención al cliente&#10;Excel&#10;Logística"></textarea>
                 </label>
                 <button class="primary-button" type="submit">Guardar perfil</button>
-              </form>
-            </section>
+                </form>
+              </div>
+            </details>
             <section class="info-card">
               <h2>Experiencia</h2>
               <textarea id="candidateSummary" rows="4" placeholder="Resume tu experiencia, logros y tipo de oportunidad que buscas."></textarea>
@@ -607,6 +615,6 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script src="./config.js?v=20260605h"></script>
-    <script src="./app.js?v=20260606i"></script>
+    <script src="./app.js?v=20260606j"></script>
   </body>
 </html>
