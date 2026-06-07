@@ -1738,9 +1738,75 @@ textarea:focus {
   margin: 0;
 }
 
+.legal-copy ul {
+  display: grid;
+  gap: 8px;
+  margin: -6px 0 4px;
+  padding-left: 24px;
+}
+
+.legal-copy li::marker {
+  color: var(--red);
+}
+
+.legal-copy a {
+  color: var(--red);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.legal-copy a:hover {
+  color: #991b1b;
+}
+
 .contact-panel {
-  align-items: flex-start;
-  display: flex;
+  display: grid;
+  gap: 18px;
+  max-width: 900px;
+}
+
+.contact-option {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 26px;
+  background: var(--white);
+  box-shadow: var(--card-shadow);
+}
+
+.contact-option > span {
+  color: var(--red);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.contact-option h2,
+.contact-option p {
+  margin: 0;
+}
+
+.contact-option h2 {
+  color: var(--black);
+  font-size: 22px;
+}
+
+.contact-option p {
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.report-option {
+  border-color: var(--red-line);
+  background: #fffafa;
+}
+
+@media (min-width: 700px) {
+  .contact-panel {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .site-footer {
