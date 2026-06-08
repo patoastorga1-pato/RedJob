@@ -7,12 +7,12 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./styles.css?v=20260608b" />
+    <link rel="stylesheet" href="./styles.css?v=20260608d" />
   </head>
   <body>
     <header class="site-header">
       <a class="brand" href="#inicio" data-view-link="inicio" aria-label="RedJob inicio">
-        <img src="./assets/redjob-logo.png" alt="RedJob" />
+          <img src="./assets/redjob-logo-header.png" alt="RedJob" />
       </a>
 
       <nav class="desktop-nav" aria-label="Navegación principal">
@@ -97,8 +97,12 @@
               <input id="searchInput" type="search" placeholder="React, ventas, diseño..." />
             </label>
             <label>
-              <span>Ubicación</span>
+              <span>Estado</span>
               <select id="locationInput"></select>
+            </label>
+            <label>
+              <span>Ciudad</span>
+              <select id="locationCityInput"></select>
             </label>
             <label>
               <span>Modalidad</span>
@@ -200,6 +204,7 @@
             <div class="job-actions">
               <button class="save-button" type="button" id="detailSaveButton">Guardar</button>
               <button class="primary-button" type="button" id="detailApplyButton">Postularme</button>
+              <button class="text-danger-button compact" type="button" id="detailReportButton">Reportar vacante</button>
             </div>
           </article>
         </section>
@@ -293,8 +298,12 @@
                   <input id="candidateTargetRole" type="text" placeholder="Puesto o área que buscas" />
                 </label>
                 <label>
-                  Ubicación
+                  Estado
                   <select id="candidateLocation"></select>
+                </label>
+                <label>
+                  Ciudad
+                  <select id="candidateCity"></select>
                 </label>
                 <label>
                   Modalidad
@@ -389,8 +398,12 @@
                 <textarea id="jobDescriptionInput" rows="4" placeholder="Responsabilidades, equipo y expectativas."></textarea>
               </label>
               <label>
-                Ubicación
+                Estado
                 <select id="jobLocationInput"></select>
+              </label>
+              <label>
+                Ciudad
+                <select id="jobCityInput"></select>
               </label>
               <label>
                 Modalidad
@@ -674,7 +687,7 @@
           <p>Última actualización: junio de 2026</p>
         </section>
         <section class="section-block legal-copy">
-          <p>RedJob, accesible a través de <a href="http://www.redjob.com.mx" target="_blank" rel="noopener noreferrer">www.redjob.com.mx</a>, es una plataforma digital dedicada a conectar candidatos con empleadores y facilitar procesos de reclutamiento y selección de personal en México y otros países de América.</p>
+          <p>RedJob, accesible a través de <a href="https://www.redjob.com.mx" target="_blank" rel="noopener noreferrer">www.redjob.com.mx</a>, es una plataforma digital dedicada a conectar candidatos con empleadores y facilitar procesos de reclutamiento y selección de personal en México y otros países de América.</p>
 
           <p>La plataforma es operada actualmente por una persona física con domicilio en México. Para cualquier asunto relacionado con privacidad y protección de datos personales, los usuarios pueden comunicarse al correo electrónico: <a href="mailto:redjobmx@gmail.com">redjobmx@gmail.com</a>.</p>
 
@@ -753,7 +766,7 @@
         </section>
         <section class="section-block legal-copy">
           <h2>1. Aceptación de los términos</h2>
-          <p>Bienvenido a RedJob. Al acceder, registrarse o utilizar la plataforma disponible en <a href="http://www.redjob.com.mx" target="_blank" rel="noopener noreferrer">www.redjob.com.mx</a>, el usuario acepta estos Términos y Condiciones. Si no está de acuerdo con ellos, deberá abstenerse de utilizar la plataforma.</p>
+          <p>Bienvenido a RedJob. Al acceder, registrarse o utilizar la plataforma disponible en <a href="https://www.redjob.com.mx" target="_blank" rel="noopener noreferrer">www.redjob.com.mx</a>, el usuario acepta estos Términos y Condiciones. Si no está de acuerdo con ellos, deberá abstenerse de utilizar la plataforma.</p>
 
           <h2>2. Descripción del servicio</h2>
           <p>RedJob es una plataforma digital que facilita el contacto entre candidatos y empleadores mediante la publicación de vacantes laborales y la recepción de postulaciones.</p>
@@ -883,6 +896,6 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script src="./config.js?v=20260605h"></script>
-    <script src="./app.js?v=20260608b"></script>
+    <script src="./app.js?v=20260608c"></script>
   </body>
 </html>

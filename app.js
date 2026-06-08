@@ -5,6 +5,7 @@ const hiringCompaniesList = document.querySelector("#hiringCompaniesList");
 const resultCount = document.querySelector("#resultCount");
 const searchInput = document.querySelector("#searchInput");
 const locationInput = document.querySelector("#locationInput");
+const locationCityInput = document.querySelector("#locationCityInput");
 const modeFilter = document.querySelector("#modeFilter");
 const categoryFilter = document.querySelector("#categoryFilter");
 const signupMessage = document.querySelector("#signupMessage");
@@ -61,6 +62,7 @@ const candidateFullName = document.querySelector("#candidateFullName");
 const candidateAge = document.querySelector("#candidateAge");
 const candidateTargetRole = document.querySelector("#candidateTargetRole");
 const candidateLocation = document.querySelector("#candidateLocation");
+const candidateCity = document.querySelector("#candidateCity");
 const candidateWorkMode = document.querySelector("#candidateWorkMode");
 const candidateSkills = document.querySelector("#candidateSkills");
 const candidateSummary = document.querySelector("#candidateSummary");
@@ -71,6 +73,7 @@ const companyDescriptionInput = document.querySelector("#companyDescriptionInput
 const jobTitleInput = document.querySelector("#jobTitleInput");
 const jobDescriptionInput = document.querySelector("#jobDescriptionInput");
 const jobLocationInput = document.querySelector("#jobLocationInput");
+const jobCityInput = document.querySelector("#jobCityInput");
 const jobWorkModeInput = document.querySelector("#jobWorkModeInput");
 const jobCategoryInput = document.querySelector("#jobCategoryInput");
 const jobCustomCategoryLabel = document.querySelector("#jobCustomCategoryLabel");
@@ -104,6 +107,7 @@ const detailCompanyDescription = document.querySelector("#detailCompanyDescripti
 const detailRequirements = document.querySelector("#detailRequirements");
 const detailSaveButton = document.querySelector("#detailSaveButton");
 const detailApplyButton = document.querySelector("#detailApplyButton");
+const detailReportButton = document.querySelector("#detailReportButton");
 const adminRefreshButton = document.querySelector("#adminRefreshButton");
 const adminUsersCount = document.querySelector("#adminUsersCount");
 const adminJobsCount = document.querySelector("#adminJobsCount");
@@ -164,6 +168,7 @@ let activeReceivedCandidate = null;
 const receivedCandidateProfiles = new Map();
 let activeEditingJobId = null;
 let activeConversationJobId = null;
+let activeReportTarget = null;
 
 function isCurrentAdmin() {
   return currentUserRoles.includes("admin");
@@ -222,6 +227,41 @@ const mexicoStates = [
   "Zacatecas"
 ];
 
+const mexicoCitiesByState = {
+  Aguascalientes: ["Aguascalientes", "Calvillo", "Jesús María", "Pabellón de Arteaga", "Rincón de Romos"],
+  "Baja California": ["Tijuana", "Mexicali", "Ensenada", "Tecate", "Rosarito", "San Quintín"],
+  "Baja California Sur": ["La Paz", "Cabo San Lucas", "San José del Cabo", "Ciudad Constitución", "Loreto"],
+  Campeche: ["Campeche", "Ciudad del Carmen", "Champotón", "Escárcega", "Calkiní"],
+  Chiapas: ["Tuxtla Gutiérrez", "Tapachula", "San Cristóbal de las Casas", "Comitán", "Palenque", "Tonalá"],
+  Chihuahua: ["Chihuahua", "Ciudad Juárez", "Cuauhtémoc", "Delicias", "Hidalgo del Parral", "Nuevo Casas Grandes"],
+  "Ciudad de Mexico": ["Álvaro Obregón", "Azcapotzalco", "Benito Juárez", "Coyoacán", "Cuajimalpa", "Cuauhtémoc", "Gustavo A. Madero", "Iztacalco", "Iztapalapa", "Miguel Hidalgo", "Tlalpan", "Xochimilco"],
+  Coahuila: ["Saltillo", "Torreón", "Monclova", "Piedras Negras", "Acuña", "Sabinas"],
+  Colima: ["Colima", "Manzanillo", "Villa de Álvarez", "Tecomán", "Armería"],
+  Durango: ["Durango", "Gómez Palacio", "Lerdo", "Santiago Papasquiaro", "Pueblo Nuevo"],
+  "Estado de Mexico": ["Toluca", "Ecatepec", "Naucalpan", "Tlalnepantla", "Nezahualcóyotl", "Metepec", "Cuautitlán Izcalli", "Atizapán de Zaragoza", "Texcoco", "Chalco"],
+  Guanajuato: ["León", "Irapuato", "Celaya", "Guanajuato", "Salamanca", "San Miguel de Allende", "Silao"],
+  Guerrero: ["Acapulco", "Chilpancingo", "Iguala", "Zihuatanejo", "Taxco", "Tlapa"],
+  Hidalgo: ["Pachuca", "Tulancingo", "Tula de Allende", "Mineral de la Reforma", "Huejutla", "Ixmiquilpan"],
+  Jalisco: ["Guadalajara", "Zapopan", "Tlaquepaque", "Tonalá", "Puerto Vallarta", "Tlajomulco", "Lagos de Moreno", "Tepatitlán"],
+  Michoacan: ["Morelia", "Uruapan", "Zamora", "Lázaro Cárdenas", "Pátzcuaro", "La Piedad", "Zitácuaro"],
+  Morelos: ["Cuernavaca", "Jiutepec", "Cuautla", "Temixco", "Yautepec", "Jojutla"],
+  Nayarit: ["Tepic", "Bahía de Banderas", "Santiago Ixcuintla", "Compostela", "Ixtlán del Río"],
+  "Nuevo Leon": ["Monterrey", "Guadalupe", "San Nicolás de los Garza", "Apodaca", "Escobedo", "Santa Catarina", "San Pedro Garza García"],
+  Oaxaca: ["Oaxaca de Juárez", "Salina Cruz", "Juchitán", "Tuxtepec", "Huajuapan de León", "Puerto Escondido"],
+  Puebla: ["Puebla", "Tehuacán", "San Martín Texmelucan", "Atlixco", "Cholula", "Teziutlán"],
+  Queretaro: ["Querétaro", "San Juan del Río", "El Marqués", "Corregidora", "Tequisquiapan"],
+  "Quintana Roo": ["Cancún", "Playa del Carmen", "Chetumal", "Tulum", "Cozumel", "Bacalar"],
+  "San Luis Potosi": ["San Luis Potosí", "Soledad de Graciano Sánchez", "Ciudad Valles", "Matehuala", "Rioverde"],
+  Sinaloa: ["Culiacán", "Mazatlán", "Los Mochis", "Guasave", "Guamúchil"],
+  Sonora: ["Hermosillo", "Ciudad Obregón", "Nogales", "San Luis Río Colorado", "Guaymas", "Navojoa"],
+  Tabasco: ["Villahermosa", "Cárdenas", "Comalcalco", "Macuspana", "Paraíso"],
+  Tamaulipas: ["Reynosa", "Matamoros", "Nuevo Laredo", "Tampico", "Ciudad Victoria", "Ciudad Madero", "Altamira"],
+  Tlaxcala: ["Tlaxcala", "Apizaco", "Huamantla", "Chiautempan", "Calpulalpan"],
+  Veracruz: ["Veracruz", "Xalapa", "Coatzacoalcos", "Córdoba", "Orizaba", "Poza Rica", "Boca del Río", "Tuxpan"],
+  Yucatan: ["Mérida", "Valladolid", "Tizimín", "Progreso", "Umán"],
+  Zacatecas: ["Zacatecas", "Guadalupe", "Fresnillo", "Jerez", "Río Grande"]
+};
+
 function formatCategoryLabel(category) {
   return {
     Tecnologia: "Tecnología",
@@ -250,17 +290,72 @@ function formatWorkModeLabel(mode) {
   return mode === "Hibrido" ? "Híbrido" : mode;
 }
 
-function populateMexicoStateSelects() {
-  const stateSelects = [locationInput, candidateLocation, jobLocationInput];
+function cityOptionsForState(state, includeAll = false) {
+  if (!state || state === "Todo Mexico") {
+    return includeAll ? [{ value: "", label: "Todas las ciudades" }] : [];
+  }
+  if (state === "Remoto") return [{ value: "", label: "No aplica" }];
 
-  stateSelects.forEach((select) => {
-    select.innerHTML = mexicoStates
-      .map((state) => `<option value="${escapeHtml(state === "Todo Mexico" ? "" : state)}">${escapeHtml(formatLocationLabel(state))}</option>`)
+  const cities = mexicoCitiesByState[state] ?? [];
+  return [
+    { value: "", label: includeAll ? "Todas las ciudades" : "Selecciona una ciudad" },
+    ...cities.map((city) => ({ value: city, label: city }))
+  ];
+}
+
+function populateCitySelect(select, state, options = {}) {
+  const { includeAll = false, selectedCity = "" } = options;
+  const cityOptions = cityOptionsForState(state, includeAll);
+  select.innerHTML = cityOptions.length
+    ? cityOptions.map((city) => `<option value="${escapeHtml(city.value)}">${escapeHtml(city.label)}</option>`).join("")
+    : `<option value="">Selecciona un estado</option>`;
+  select.disabled = !state || state === "Todo Mexico" || state === "Remoto";
+
+  if (selectedCity && cityOptions.some((city) => city.value === selectedCity)) {
+    select.value = selectedCity;
+  }
+}
+
+function composeLocation(state, city) {
+  if (!state) return "";
+  if (state === "Remoto") return "Remoto";
+  const stateLabel = formatLocationLabel(state);
+  return city ? `${city}, ${stateLabel}` : stateLabel;
+}
+
+function parseStoredLocation(location) {
+  const normalized = String(location ?? "").trim();
+  if (!normalized) return { state: "Ciudad de Mexico", city: "" };
+  if (normalized === "Remoto") return { state: "Remoto", city: "" };
+
+  const parts = normalized.split(",").map((part) => part.trim()).filter(Boolean);
+  if (parts.length > 1) {
+    const stateLabel = parts.at(-1);
+    const state = mexicoStates.find((item) => formatLocationLabel(item) === stateLabel || item === stateLabel);
+    if (state) return { state, city: parts.slice(0, -1).join(", ") };
+  }
+
+  const state = mexicoStates.find((item) => item === normalized || formatLocationLabel(item) === normalized);
+  return state ? { state, city: "" } : { state: "Ciudad de Mexico", city: normalized };
+}
+
+function populateMexicoStateSelects() {
+  locationInput.innerHTML = mexicoStates
+    .map((state) => `<option value="${escapeHtml(state === "Todo Mexico" ? "" : state)}">${escapeHtml(formatLocationLabel(state))}</option>`)
+    .join("");
+
+  const formStates = mexicoStates.filter((state) => state !== "Todo Mexico");
+  [candidateLocation, jobLocationInput].forEach((select) => {
+    select.innerHTML = formStates
+      .map((state) => `<option value="${escapeHtml(state)}">${escapeHtml(formatLocationLabel(state))}</option>`)
       .join("");
   });
 
   candidateLocation.value = "Ciudad de Mexico";
   jobLocationInput.value = "Ciudad de Mexico";
+  populateCitySelect(locationCityInput, "", { includeAll: true });
+  populateCitySelect(candidateCity, candidateLocation.value);
+  populateCitySelect(jobCityInput, jobLocationInput.value);
 }
 
 function populateCategorySelects() {
@@ -649,6 +744,7 @@ async function openJobDetail(jobId) {
   detailSaveButton.textContent = isSavedJob(job.id) ? "Guardada" : "Guardar";
   detailSaveButton.classList.toggle("active", isSavedJob(job.id));
   detailApplyButton.textContent = hasApplication(job.id) ? "Postulada" : "Postularme";
+  detailReportButton.dataset.reportJobId = String(job.id);
   switchView("vacante");
 }
 
@@ -817,8 +913,12 @@ function calculateMatch(job) {
   const skillHits = jobSkills.filter((skill) => candidateSkillSet.has(skill.toLowerCase())).length;
   const skillScore = jobSkills.length ? Math.round((skillHits / jobSkills.length) * 60) : 20;
   const modeScore = mapUiModeToDb(job.mode) === candidateWorkMode.value ? 20 : 8;
+  const candidateLocationValue = composeLocation(candidateLocation.value, candidateCity.value).toLowerCase();
   const locationScore =
-    job.location.toLowerCase().includes(candidateLocation.value.trim().toLowerCase()) || job.mode === "Remoto"
+    !candidateLocationValue ||
+    job.location.toLowerCase().includes(candidateLocationValue) ||
+    job.location.toLowerCase().includes(formatLocationLabel(candidateLocation.value).toLowerCase()) ||
+    job.mode === "Remoto"
       ? 20
       : 8;
 
@@ -1081,7 +1181,7 @@ async function loadAdminDashboard() {
 
   const [stats, reports, adminJobs, users, companies, roleRows] = await Promise.all([
     supabaseRestRequest("/rpc/admin_dashboard_stats", { method: "POST", body: {} }),
-    supabaseRestRequest("/reports?select=id,reporter_user_id,category,subject,description,status,admin_note,created_at&order=created_at.desc&limit=100"),
+    supabaseRestRequest("/reports?select=id,reporter_user_id,category,target_type,target_id,subject,description,status,admin_note,created_at&order=created_at.desc&limit=500"),
     supabaseRestRequest("/jobs?select=id,title,status,created_at,company_profiles(company_name)&order=created_at.desc&limit=200"),
     supabaseRestRequest("/profiles?select=id,email,role,suspended_at,suspension_reason,created_at&order=created_at.desc&limit=200"),
     supabaseRestRequest("/company_profiles?select=id,user_id,company_name,is_verified,created_at&order=created_at.desc&limit=200"),
@@ -1110,6 +1210,7 @@ async function loadAdminDashboard() {
             <small>${escapeHtml(report.category)} · ${escapeHtml(formatMessageTime(report.created_at))}</small>
           </div>
           <div class="admin-row-actions">
+            ${report.target_type === "job" && report.target_id ? `<button class="admin-action" type="button" data-admin-open-job="${escapeHtml(report.target_id)}">Ver vacante</button>` : ""}
             <button class="admin-action" type="button" data-admin-report-status="reviewing" data-report-id="${escapeHtml(report.id)}">Revisar</button>
             <button class="admin-action success" type="button" data-admin-report-status="resolved" data-report-id="${escapeHtml(report.id)}">Resolver</button>
             <button class="admin-action" type="button" data-admin-report-status="dismissed" data-report-id="${escapeHtml(report.id)}">Descartar</button>
@@ -1204,12 +1305,15 @@ async function submitSafetyReport() {
     body: {
       reporter_user_id: session.user.id,
       category: reportCategory.value,
+      target_type: activeReportTarget?.type ?? null,
+      target_id: activeReportTarget?.id ?? null,
       subject,
       description
     }
   });
 
   reportForm.reset();
+  activeReportTarget = null;
   reportDialog.close();
   showToast("Reporte enviado. Gracias por ayudarnos a cuidar RedJob.");
 }
@@ -1437,10 +1541,12 @@ function renderCandidatePreview(candidate, isCompanyView) {
 }
 
 function hydrateCandidateForm(profile) {
+  const parsedLocation = parseStoredLocation(profile.location);
   candidateFullName.value = profile.full_name ?? "";
   candidateAge.value = profile.age ?? "";
   candidateTargetRole.value = profile.target_role ?? "";
-  candidateLocation.value = profile.location ?? "Ciudad de Mexico";
+  candidateLocation.value = parsedLocation.state;
+  populateCitySelect(candidateCity, parsedLocation.state, { selectedCity: parsedLocation.city });
   candidateWorkMode.value = profile.work_mode ?? "hybrid";
   candidateSummary.value = profile.summary ?? "";
   renderProfileHeader();
@@ -1518,6 +1624,9 @@ function mapSupabaseJob(row) {
 
 async function saveCandidateProfile() {
   const session = requireSession();
+  if (candidateLocation.value !== "Remoto" && !candidateCity.value) {
+    throw new Error("Selecciona tu ciudad.");
+  }
   const profileRows = await supabaseRestRequest("/candidate_profiles?on_conflict=user_id", {
     method: "POST",
     prefer: "resolution=merge-duplicates,return=representation",
@@ -1526,7 +1635,7 @@ async function saveCandidateProfile() {
       full_name: candidateFullName.value.trim(),
       age: candidateAge.value ? Number(candidateAge.value) : null,
       target_role: candidateTargetRole.value.trim(),
-      location: candidateLocation.value.trim(),
+      location: composeLocation(candidateLocation.value, candidateCity.value),
       work_mode: candidateWorkMode.value,
       salary_min: 38000,
       salary_max: 48000,
@@ -1615,6 +1724,10 @@ async function publishRealJob() {
     throw new Error("Primero guarda el perfil de empresa.");
   }
 
+  if (jobLocationInput.value !== "Remoto" && !jobCityInput.value) {
+    throw new Error("Selecciona la ciudad de la vacante.");
+  }
+
   const duplicateJob = jobs.find(
     (job) =>
       sameId(job.companyId, companyProfile.id) &&
@@ -1630,7 +1743,7 @@ async function publishRealJob() {
     company_id: companyProfile.id,
     title: jobTitle,
     description: jobDescription,
-    location: jobLocationInput.value.trim(),
+    location: composeLocation(jobLocationInput.value, jobCityInput.value),
     work_mode: jobWorkModeInput.value,
     category: getSelectedJobCategory(),
     salary_min: jobSalaryMinInput.value ? Number(jobSalaryMinInput.value) : null,
@@ -1699,6 +1812,7 @@ function resetJobForm() {
   companyNameInput.value = currentCompanyProfile?.company_name ?? "";
   companyDescriptionInput.value = currentCompanyProfile?.description ?? "";
   jobLocationInput.value = "Ciudad de Mexico";
+  populateCitySelect(jobCityInput, jobLocationInput.value);
   jobCategoryInput.value = "Tecnologia";
   renderCustomCategoryField();
   updateJobFormMode();
@@ -1712,9 +1826,11 @@ function editCompanyJob(jobId) {
   }
 
   activeEditingJobId = job.id;
+  const parsedLocation = parseStoredLocation(job.location);
   jobTitleInput.value = job.title;
   jobDescriptionInput.value = job.description ?? "";
-  jobLocationInput.value = job.location ?? "Ciudad de Mexico";
+  jobLocationInput.value = parsedLocation.state;
+  populateCitySelect(jobCityInput, parsedLocation.state, { selectedCity: parsedLocation.city });
   jobWorkModeInput.value = mapUiModeToDb(job.mode);
   if (jobCategories.includes(job.category)) {
     jobCategoryInput.value = job.category;
@@ -1952,7 +2068,8 @@ async function checkSupabaseSchema() {
 
 function renderJobs() {
   const query = searchInput.value.trim().toLowerCase();
-  const location = locationInput.value.trim().toLowerCase();
+  const locationState = formatLocationLabel(locationInput.value).trim().toLowerCase();
+  const locationCity = locationCityInput.value.trim().toLowerCase();
   const mode = modeFilter.value;
   const category = categoryFilter.value;
 
@@ -1961,7 +2078,9 @@ function renderJobs() {
       const searchable = `${job.title} ${job.company} ${job.category ?? ""} ${job.tags.join(" ")}`.toLowerCase();
       const jobLocation = `${job.location} ${job.mode}`.toLowerCase();
       const matchesQuery = !query || searchable.includes(query);
-      const matchesLocation = !location || jobLocation.includes(location);
+      const matchesLocation =
+        (!locationState || jobLocation.includes(locationState)) &&
+        (!locationCity || jobLocation.includes(locationCity));
       const matchesMode = mode === "all" || job.mode === mode;
       const matchesCategory = category === "all" || job.category === category;
 
@@ -2157,6 +2276,7 @@ hiringCompaniesList.addEventListener("click", (event) => {
 
   searchInput.value = companyButton.dataset.companySearch;
   locationInput.value = "";
+  populateCitySelect(locationCityInput, "", { includeAll: true });
   modeFilter.value = "all";
   categoryFilter.value = "all";
   renderJobs();
@@ -2273,9 +2393,22 @@ detailApplyButton.addEventListener("click", () => {
   openApplicationDialog(job);
 });
 
-[searchInput, locationInput, modeFilter].forEach((control) => {
+[searchInput, locationCityInput, modeFilter].forEach((control) => {
   control.addEventListener("input", renderJobs);
   control.addEventListener("change", renderJobs);
+});
+
+locationInput.addEventListener("change", () => {
+  populateCitySelect(locationCityInput, locationInput.value, { includeAll: true });
+  renderJobs();
+});
+
+candidateLocation.addEventListener("change", () => {
+  populateCitySelect(candidateCity, candidateLocation.value);
+});
+
+jobLocationInput.addEventListener("change", () => {
+  populateCitySelect(jobCityInput, jobLocationInput.value);
 });
 
 document.querySelectorAll(".role-option").forEach((button) => {
@@ -2415,12 +2548,23 @@ adminRefreshButton.addEventListener("click", async () => {
 document.querySelector("#administracion").addEventListener("click", async (event) => {
   const jobStatusButton = event.target.closest("[data-admin-job-status]");
   const deleteJobButton = event.target.closest("[data-admin-delete-job]");
+  const openJobButton = event.target.closest("[data-admin-open-job]");
   const userButton = event.target.closest("[data-admin-user-id]");
   const companyButton = event.target.closest("[data-admin-company-id]");
   const reportButton = event.target.closest("[data-admin-report-status]");
 
   try {
-    if (jobStatusButton) {
+    if (openJobButton) {
+      const rows = await supabaseRestRequest(
+        `/jobs?select=id,title,description,location,work_mode,category,salary_min,salary_max,status,company_profiles(id,user_id,company_name,description,is_verified),job_skills(skill_name)&id=eq.${openJobButton.dataset.adminOpenJob}&limit=1`
+      );
+      const job = mapSupabaseJob(rows?.[0]);
+      if (!job) throw new Error("Vacante no encontrada.");
+      const existingIndex = jobs.findIndex((item) => sameId(item.id, job.id));
+      if (existingIndex >= 0) jobs[existingIndex] = job;
+      else jobs.unshift(job);
+      await openJobDetail(job.id);
+    } else if (jobStatusButton) {
       await supabaseRestRequest("/rpc/admin_set_job_status", {
         method: "POST",
         body: {
@@ -2488,10 +2632,27 @@ openReportDialogButton.addEventListener("click", () => {
     switchView("acceso");
     return;
   }
+  activeReportTarget = null;
+  reportDialog.showModal();
+});
+
+detailReportButton.addEventListener("click", () => {
+  if (!getStoredSession()?.access_token) {
+    showToast("Inicia sesión para reportar una vacante.");
+    switchView("acceso");
+    return;
+  }
+
+  const job = getJobById(detailReportButton.dataset.reportJobId);
+  activeReportTarget = job ? { type: "job", id: job.id } : null;
+  reportCategory.value = "job";
+  reportSubject.value = job ? `Reporte sobre la vacante: ${job.title}` : "";
+  reportDescription.value = "";
   reportDialog.showModal();
 });
 
 document.querySelector("#closeReportDialog").addEventListener("click", () => {
+  activeReportTarget = null;
   reportDialog.close();
 });
 
@@ -2748,6 +2909,7 @@ companyJobForm.addEventListener("submit", async (event) => {
     if (publishedJob?.title) {
       searchInput.value = "";
       locationInput.value = "";
+      populateCitySelect(locationCityInput, "", { includeAll: true });
       modeFilter.value = "all";
       categoryFilter.value = "all";
       renderJobs();
