@@ -7,8 +7,39 @@ create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   email text not null,
   role text not null check (role in ('candidate', 'company')),
+  suspended_at timestamptz,
+  suspension_reason text,
   created_at timestamptz not null default now()
 );
+
+alter table public.profiles
+add column if not exists suspended_at timestamptz;
+
+alter table public.profiles
+add column if not exists suspension_reason text;
+
+create table if not exists public.user_roles (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  role text not null check (role in ('admin', 'moderator')),
+  granted_at timestamptz not null default now(),
+  granted_by uuid references auth.users(id) on delete set null,
+  primary key (user_id, role)
+);
+
+create or replace function public.is_admin(user_uuid uuid default auth.uid())
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.user_roles
+    where user_roles.user_id = user_uuid
+      and user_roles.role = 'admin'
+  );
+$$;
 
 create or replace function public.handle_new_auth_user()
 returns trigger
@@ -29,6 +60,12 @@ begin
   )
   on conflict (id) do nothing;
 
+  if lower(coalesce(new.email, '')) = 'redjobmx@gmail.com' then
+    insert into public.user_roles (user_id, role)
+    values (new.id, 'admin')
+    on conflict (user_id, role) do nothing;
+  end if;
+
   return new;
 end;
 $$;
@@ -38,6 +75,12 @@ drop trigger if exists auth_users_create_profile on auth.users;
 create trigger auth_users_create_profile
 after insert on auth.users
 for each row execute function public.handle_new_auth_user();
+
+insert into public.user_roles (user_id, role)
+select id, 'admin'
+from auth.users
+where lower(email) = 'redjobmx@gmail.com'
+on conflict (user_id, role) do nothing;
 
 create table if not exists public.candidate_profiles (
   id uuid primary key default gen_random_uuid(),
@@ -230,6 +273,24 @@ create table if not exists public.saved_jobs (
   unique (user_id, job_id)
 );
 
+create table if not exists public.reports (
+  id uuid primary key default gen_random_uuid(),
+  reporter_user_id uuid references auth.users(id) on delete set null,
+  category text not null check (category in ('job', 'user', 'company', 'message', 'application', 'other')),
+  target_type text,
+  target_id uuid,
+  subject text not null,
+  description text not null,
+  status text not null default 'pending' check (status in ('pending', 'reviewing', 'resolved', 'dismissed')),
+  admin_note text,
+  resolved_at timestamptz,
+  resolved_by uuid references auth.users(id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists reports_status_created_at_idx on public.reports(status, created_at desc);
+
 create table if not exists public.billing_events (
   id uuid primary key default gen_random_uuid(),
   company_id uuid references public.company_profiles(id) on delete set null,
@@ -317,6 +378,12 @@ create trigger applications_updated_at
 before update on public.applications
 for each row execute function public.set_updated_at();
 
+drop trigger if exists reports_updated_at on public.reports;
+
+create trigger reports_updated_at
+before update on public.reports
+for each row execute function public.set_updated_at();
+
 alter table public.jobs
 add column if not exists category text not null default 'Otra';
 
@@ -354,7 +421,7 @@ language plpgsql
 set search_path = public
 as $$
 begin
-  if auth.role() <> 'service_role' then
+  if auth.role() <> 'service_role' and not public.is_admin() then
     if tg_op = 'INSERT' then
       new.plan = 'free';
       new.plan_status = 'beta';
@@ -652,6 +719,236 @@ $$;
 revoke all on function public.archive_company_application(uuid) from public;
 grant execute on function public.archive_company_application(uuid) to authenticated;
 
+create or replace function public.is_account_active(user_uuid uuid default auth.uid())
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select coalesce((
+    select profiles.suspended_at is null
+    from public.profiles
+    where profiles.id = user_uuid
+  ), false);
+$$;
+
+create or replace function public.protect_profile_admin_fields()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not public.is_admin() then
+    new.suspended_at = old.suspended_at;
+    new.suspension_reason = old.suspension_reason;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists profiles_protect_admin_fields on public.profiles;
+
+create trigger profiles_protect_admin_fields
+before update on public.profiles
+for each row execute function public.protect_profile_admin_fields();
+
+create or replace function public.admin_dashboard_stats()
+returns jsonb
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select case
+    when not public.is_admin() then
+      jsonb_build_object('error', 'Acceso no autorizado')
+    else
+      jsonb_build_object(
+        'users', (select count(*) from public.profiles),
+        'suspended_users', (select count(*) from public.profiles where suspended_at is not null),
+        'companies', (select count(*) from public.company_profiles),
+        'verified_companies', (select count(*) from public.company_profiles where is_verified),
+        'jobs', (select count(*) from public.jobs),
+        'published_jobs', (select count(*) from public.jobs where status = 'published'),
+        'applications', (select count(*) from public.applications),
+        'pending_reports', (select count(*) from public.reports where status in ('pending', 'reviewing'))
+      )
+  end;
+$$;
+
+create or replace function public.admin_set_job_status(job_uuid uuid, next_status text)
+returns public.jobs
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  updated_job public.jobs;
+begin
+  if not public.is_admin() then
+    raise exception 'Acceso no autorizado.';
+  end if;
+
+  if next_status not in ('published', 'paused', 'closed') then
+    raise exception 'Estado de vacante no permitido.';
+  end if;
+
+  update public.jobs
+  set status = next_status
+  where id = job_uuid
+  returning * into updated_job;
+
+  if updated_job.id is null then
+    raise exception 'Vacante no encontrada.';
+  end if;
+
+  return updated_job;
+end;
+$$;
+
+create or replace function public.admin_delete_job(job_uuid uuid)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  deleted_id uuid;
+begin
+  if not public.is_admin() then
+    raise exception 'Acceso no autorizado.';
+  end if;
+
+  delete from public.jobs
+  where id = job_uuid
+  returning id into deleted_id;
+
+  if deleted_id is null then
+    raise exception 'Vacante no encontrada.';
+  end if;
+
+  return deleted_id;
+end;
+$$;
+
+create or replace function public.admin_set_user_suspension(
+  user_uuid uuid,
+  should_suspend boolean,
+  reason text default null
+)
+returns public.profiles
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  updated_profile public.profiles;
+begin
+  if not public.is_admin() then
+    raise exception 'Acceso no autorizado.';
+  end if;
+
+  if user_uuid = auth.uid() and should_suspend then
+    raise exception 'No puedes suspender tu propia cuenta.';
+  end if;
+
+  update public.profiles
+  set
+    suspended_at = case when should_suspend then now() else null end,
+    suspension_reason = case when should_suspend then nullif(trim(reason), '') else null end
+  where id = user_uuid
+  returning * into updated_profile;
+
+  if updated_profile.id is null then
+    raise exception 'Usuario no encontrado.';
+  end if;
+
+  return updated_profile;
+end;
+$$;
+
+create or replace function public.admin_set_company_verified(company_uuid uuid, verified boolean)
+returns public.company_profiles
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  updated_company public.company_profiles;
+begin
+  if not public.is_admin() then
+    raise exception 'Acceso no autorizado.';
+  end if;
+
+  update public.company_profiles
+  set is_verified = verified
+  where id = company_uuid
+  returning * into updated_company;
+
+  if updated_company.id is null then
+    raise exception 'Empresa no encontrada.';
+  end if;
+
+  return updated_company;
+end;
+$$;
+
+create or replace function public.admin_update_report(
+  report_uuid uuid,
+  next_status text,
+  note text default null
+)
+returns public.reports
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  updated_report public.reports;
+begin
+  if not public.is_admin() then
+    raise exception 'Acceso no autorizado.';
+  end if;
+
+  if next_status not in ('pending', 'reviewing', 'resolved', 'dismissed') then
+    raise exception 'Estado de reporte no permitido.';
+  end if;
+
+  update public.reports
+  set
+    status = next_status,
+    admin_note = nullif(trim(note), ''),
+    resolved_at = case when next_status in ('resolved', 'dismissed') then now() else null end,
+    resolved_by = case when next_status in ('resolved', 'dismissed') then auth.uid() else null end
+  where id = report_uuid
+  returning * into updated_report;
+
+  if updated_report.id is null then
+    raise exception 'Reporte no encontrado.';
+  end if;
+
+  return updated_report;
+end;
+$$;
+
+revoke all on function public.is_admin(uuid) from public;
+revoke all on function public.admin_dashboard_stats() from public;
+revoke all on function public.admin_set_job_status(uuid, text) from public;
+revoke all on function public.admin_delete_job(uuid) from public;
+revoke all on function public.admin_set_user_suspension(uuid, boolean, text) from public;
+revoke all on function public.admin_set_company_verified(uuid, boolean) from public;
+revoke all on function public.admin_update_report(uuid, text, text) from public;
+
+grant execute on function public.is_admin(uuid) to authenticated;
+grant execute on function public.admin_dashboard_stats() to authenticated;
+grant execute on function public.admin_set_job_status(uuid, text) to authenticated;
+grant execute on function public.admin_delete_job(uuid) to authenticated;
+grant execute on function public.admin_set_user_suspension(uuid, boolean, text) to authenticated;
+grant execute on function public.admin_set_company_verified(uuid, boolean) to authenticated;
+grant execute on function public.admin_update_report(uuid, text, text) to authenticated;
+
 create or replace function public.mark_conversation_read(conversation_uuid uuid)
 returns integer
 language plpgsql
@@ -692,6 +989,7 @@ as $$
     join public.candidate_profiles on candidate_profiles.id = conversations.candidate_id
     join public.company_profiles on company_profiles.id = conversations.company_id
     where conversations.id = conversation_uuid
+      and public.is_account_active()
       and (
         candidate_profiles.user_id = auth.uid()
         or company_profiles.user_id = auth.uid()
@@ -710,6 +1008,7 @@ as $$
     from public.candidate_profiles
     where candidate_profiles.id = candidate_uuid
       and candidate_profiles.user_id = auth.uid()
+      and public.is_account_active()
   );
 $$;
 
@@ -738,6 +1037,7 @@ as $$
     from public.company_profiles
     where company_profiles.id = company_uuid
       and company_profiles.user_id = auth.uid()
+      and public.is_account_active()
   );
 $$;
 
@@ -753,6 +1053,7 @@ as $$
     join public.company_profiles on company_profiles.id = jobs.company_id
     where jobs.id = job_uuid
       and company_profiles.user_id = auth.uid()
+      and public.is_account_active()
   );
 $$;
 
@@ -762,7 +1063,8 @@ language sql
 security definer
 set search_path = public
 as $$
-  select public.user_owns_candidate(candidate_uuid)
+  select public.is_admin()
+    or public.user_owns_candidate(candidate_uuid)
     or exists (
       select 1
       from public.applications
@@ -779,7 +1081,8 @@ language sql
 security definer
 set search_path = public
 as $$
-  select public.user_owns_company(company_uuid)
+  select public.is_admin()
+    or public.user_owns_company(company_uuid)
     or exists (
       select 1
       from public.jobs
@@ -799,6 +1102,8 @@ as $$
     from public.jobs
     where jobs.id = job_uuid
       and (
+        public.is_admin()
+        or
         jobs.status = 'published'
         or public.user_owns_company(jobs.company_id)
       )
@@ -817,6 +1122,8 @@ as $$
     join public.jobs on jobs.id = applications.job_id
     where applications.id = application_uuid
       and (
+        public.is_admin()
+        or
         public.user_owns_candidate(applications.candidate_id)
         or public.user_owns_company(jobs.company_id)
       )
@@ -835,6 +1142,8 @@ as $$
     join public.jobs on jobs.id = applications.job_id
     where applications.id = application_uuid
       and (
+        public.is_admin()
+        or
         public.user_owns_candidate(applications.candidate_id)
         or public.user_owns_company(jobs.company_id)
       )
@@ -842,6 +1151,7 @@ as $$
 $$;
 
 alter table public.profiles enable row level security;
+alter table public.user_roles enable row level security;
 alter table public.candidate_profiles enable row level security;
 alter table public.plan_catalog enable row level security;
 alter table public.company_profiles enable row level security;
@@ -853,12 +1163,13 @@ alter table public.saved_jobs enable row level security;
 alter table public.billing_events enable row level security;
 alter table public.conversations enable row level security;
 alter table public.messages enable row level security;
+alter table public.reports enable row level security;
 
 drop policy if exists "Users can read own base profile" on public.profiles;
 
 create policy "Users can read own base profile"
 on public.profiles for select
-using (id = auth.uid());
+using (id = auth.uid() or public.is_admin());
 
 drop policy if exists "Users can create own base profile" on public.profiles;
 
@@ -870,8 +1181,14 @@ drop policy if exists "Users can update own base profile" on public.profiles;
 
 create policy "Users can update own base profile"
 on public.profiles for update
-using (id = auth.uid())
-with check (id = auth.uid());
+using (id = auth.uid() and public.is_account_active())
+with check (id = auth.uid() and public.is_account_active());
+
+drop policy if exists "Users read own roles and admins read all roles" on public.user_roles;
+
+create policy "Users read own roles and admins read all roles"
+on public.user_roles for select
+using (user_id = auth.uid() or public.is_admin());
 
 drop policy if exists "Plan catalog is publicly readable" on public.plan_catalog;
 
@@ -883,8 +1200,8 @@ drop policy if exists "Candidates can manage own profile" on public.candidate_pr
 
 create policy "Candidates can manage own profile"
 on public.candidate_profiles for all
-using (user_id = auth.uid())
-with check (user_id = auth.uid());
+using (user_id = auth.uid() and public.is_account_active())
+with check (user_id = auth.uid() and public.is_account_active());
 
 drop policy if exists "Companies can read candidate profiles for applications" on public.candidate_profiles;
 
@@ -896,14 +1213,20 @@ drop policy if exists "Companies can manage own profile" on public.company_profi
 
 create policy "Companies can manage own profile"
 on public.company_profiles for all
-using (user_id = auth.uid())
-with check (user_id = auth.uid());
+using (user_id = auth.uid() and public.is_account_active())
+with check (user_id = auth.uid() and public.is_account_active());
 
 drop policy if exists "Candidates can read company profiles with published jobs" on public.company_profiles;
 
 create policy "Candidates can read company profiles with published jobs"
 on public.company_profiles for select
 using (public.can_read_company(id));
+
+drop policy if exists "Admins read all company profiles" on public.company_profiles;
+
+create policy "Admins read all company profiles"
+on public.company_profiles for select
+using (public.is_admin());
 
 drop policy if exists "Candidates manage own skills" on public.candidate_skills;
 
@@ -917,6 +1240,12 @@ drop policy if exists "Published jobs are readable" on public.jobs;
 create policy "Published jobs are readable"
 on public.jobs for select
 using (public.can_read_job(id));
+
+drop policy if exists "Admins read all jobs" on public.jobs;
+
+create policy "Admins read all jobs"
+on public.jobs for select
+using (public.is_admin());
 
 drop policy if exists "Companies manage own jobs" on public.jobs;
 
@@ -954,11 +1283,39 @@ drop policy if exists "Users manage own saved jobs" on public.saved_jobs;
 
 create policy "Users manage own saved jobs"
 on public.saved_jobs for all
-using (user_id = auth.uid())
+using (user_id = auth.uid() and public.is_account_active())
 with check (
   user_id = auth.uid()
+  and public.is_account_active()
   and public.can_read_job(job_id)
 );
+
+drop policy if exists "Authenticated users create reports" on public.reports;
+
+create policy "Authenticated users create reports"
+on public.reports for insert
+with check (
+  reporter_user_id = auth.uid()
+  and public.is_account_active()
+);
+
+drop policy if exists "Users read own reports" on public.reports;
+
+create policy "Users read own reports"
+on public.reports for select
+using (reporter_user_id = auth.uid() or public.is_admin());
+
+drop policy if exists "Admins read all reports" on public.reports;
+
+create policy "Admins read all reports"
+on public.reports for select
+using (public.is_admin());
+
+revoke all on table public.user_roles from anon, authenticated;
+grant select on table public.user_roles to authenticated;
+
+revoke all on table public.reports from anon, authenticated;
+grant select, insert on table public.reports to authenticated;
 
 drop policy if exists "Conversation participants can read conversations" on public.conversations;
 
@@ -993,6 +1350,7 @@ create policy "Candidates upload own resumes"
 on storage.objects for insert
 with check (
   bucket_id = 'resumes'
+  and public.is_account_active()
   and (storage.foldername(name))[1] = auth.uid()::text
 );
 
@@ -1002,10 +1360,12 @@ create policy "Candidates update own resumes"
 on storage.objects for update
 using (
   bucket_id = 'resumes'
+  and public.is_account_active()
   and (storage.foldername(name))[1] = auth.uid()::text
 )
 with check (
   bucket_id = 'resumes'
+  and public.is_account_active()
   and (storage.foldername(name))[1] = auth.uid()::text
 );
 
@@ -1015,6 +1375,7 @@ create policy "Candidates delete own resumes"
 on storage.objects for delete
 using (
   bucket_id = 'resumes'
+  and public.is_account_active()
   and (storage.foldername(name))[1] = auth.uid()::text
 );
 

@@ -20,6 +20,7 @@ const selectedRoleStatus = document.querySelector("#selectedRoleStatus");
 const headerSignInButton = document.querySelector("#headerSignInButton");
 const headerCreateAccountButton = document.querySelector("#headerCreateAccountButton");
 const headerProfileButton = document.querySelector("#headerProfileButton");
+const adminNavLink = document.querySelector("#adminNavLink");
 const unreadMessagesBadge = document.querySelector("#unreadMessagesBadge");
 const profileSignOutButton = document.querySelector("#profileSignOutButton");
 const profileAvatar = document.querySelector("#profileAvatar");
@@ -103,6 +104,31 @@ const detailCompanyDescription = document.querySelector("#detailCompanyDescripti
 const detailRequirements = document.querySelector("#detailRequirements");
 const detailSaveButton = document.querySelector("#detailSaveButton");
 const detailApplyButton = document.querySelector("#detailApplyButton");
+const adminRefreshButton = document.querySelector("#adminRefreshButton");
+const adminUsersCount = document.querySelector("#adminUsersCount");
+const adminJobsCount = document.querySelector("#adminJobsCount");
+const adminCompaniesCount = document.querySelector("#adminCompaniesCount");
+const adminApplicationsCount = document.querySelector("#adminApplicationsCount");
+const adminReportsCount = document.querySelector("#adminReportsCount");
+const adminReportsList = document.querySelector("#adminReportsList");
+const adminJobsList = document.querySelector("#adminJobsList");
+const adminUsersList = document.querySelector("#adminUsersList");
+const adminCompaniesList = document.querySelector("#adminCompaniesList");
+const adminReportsSearch = document.querySelector("#adminReportsSearch");
+const adminJobsSearch = document.querySelector("#adminJobsSearch");
+const adminUsersSearch = document.querySelector("#adminUsersSearch");
+const adminCompaniesSearch = document.querySelector("#adminCompaniesSearch");
+const adminReportsEmpty = document.querySelector("#adminReportsEmpty");
+const adminJobsEmpty = document.querySelector("#adminJobsEmpty");
+const adminUsersEmpty = document.querySelector("#adminUsersEmpty");
+const adminCompaniesEmpty = document.querySelector("#adminCompaniesEmpty");
+const reportDialog = document.querySelector("#reportDialog");
+const reportForm = document.querySelector("#reportForm");
+const reportCategory = document.querySelector("#reportCategory");
+const reportSubject = document.querySelector("#reportSubject");
+const reportDescription = document.querySelector("#reportDescription");
+const submitReportButton = document.querySelector("#submitReportButton");
+const openReportDialogButton = document.querySelector("#openReportDialog");
 
 const savedJobs = new Set();
 const applications = [];
@@ -127,6 +153,7 @@ const SESSION_STORAGE_KEY = "redjob_supabase_session";
 const SUPABASE_SCHEMA_MESSAGE =
   "Falta instalar la base de datos de RedJob en Supabase. Abre Supabase > SQL Editor y ejecuta outputs/RedJob/supabase-schema.sql.";
 let currentProfile = null;
+let currentUserRoles = [];
 let currentCandidateProfile = null;
 let currentCompanyProfile = null;
 let currentCompanyProfiles = [];
@@ -137,6 +164,10 @@ let activeReceivedCandidate = null;
 const receivedCandidateProfiles = new Map();
 let activeEditingJobId = null;
 let activeConversationJobId = null;
+
+function isCurrentAdmin() {
+  return currentUserRoles.includes("admin");
+}
 
 const jobCategories = [
   "Tecnologia",
@@ -285,6 +316,7 @@ function setStoredSession(session) {
 
 function clearExpiredSession(message = "Tu sesión expiró. Inicia sesión de nuevo.") {
   currentProfile = null;
+  currentUserRoles = [];
   currentCandidateProfile = null;
   currentCompanyProfile = null;
   activeConversationId = null;
@@ -358,7 +390,10 @@ function renderHeaderAuthState() {
   headerSignInButton.hidden = isSignedIn;
   headerCreateAccountButton.hidden = isSignedIn;
   headerProfileButton.hidden = !isSignedIn;
+  adminNavLink.classList.toggle("is-hidden", !isSignedIn || !isCurrentAdmin());
+  adminNavLink.hidden = !isSignedIn || !isCurrentAdmin();
   document.body.classList.toggle("is-signed-in", isSignedIn);
+  document.body.classList.toggle("is-admin", isSignedIn && isCurrentAdmin());
   document.querySelectorAll("[data-auth-create]").forEach((button) => {
     button.classList.toggle("is-hidden", isSignedIn);
     button.hidden = isSignedIn;
@@ -794,7 +829,13 @@ async function loadCurrentProfile() {
   const session = getStoredSession();
   if (!session?.user?.id) return;
 
-  const rows = await supabaseRestRequest(`/profiles?select=id,email,role&id=eq.${session.user.id}&limit=1`);
+  let rows;
+  try {
+    rows = await supabaseRestRequest(`/profiles?select=id,email,role,suspended_at,suspension_reason&id=eq.${session.user.id}&limit=1`);
+  } catch (error) {
+    if (!/suspended_at|suspension_reason|schema cache|column/i.test(error.message)) throw error;
+    rows = await supabaseRestRequest(`/profiles?select=id,email,role&id=eq.${session.user.id}&limit=1`);
+  }
   currentProfile = rows?.[0] ?? null;
 
   if (!currentProfile) {
@@ -811,8 +852,23 @@ async function loadCurrentProfile() {
     currentProfile = createdRows?.[0] ?? { id: session.user.id, email: session.user.email ?? "", role };
   }
 
+  if (currentProfile?.suspended_at) {
+    const reason = currentProfile.suspension_reason ? ` Motivo: ${currentProfile.suspension_reason}` : "";
+    await signOutFromSupabase();
+    throw new Error(`Esta cuenta está suspendida.${reason}`);
+  }
+
+  try {
+    const roleRows = await supabaseRestRequest(`/user_roles?select=role&user_id=eq.${session.user.id}`);
+    currentUserRoles = (roleRows ?? []).map((entry) => entry.role);
+  } catch (error) {
+    currentUserRoles = [];
+    if (!/user_roles|schema cache|relation/i.test(error.message)) throw error;
+  }
+
   selectedRoleStatus.textContent = currentProfile?.role ?? "candidate";
   applyRoleExperience();
+  renderHeaderAuthState();
 
   if (currentProfile?.role === "candidate") {
     const candidateRows = await supabaseRestRequest(`/candidate_profiles?select=*&user_id=eq.${session.user.id}&limit=1`);
@@ -969,6 +1025,193 @@ async function updateApplicationStatus(applicationId, nextStatus) {
     }
   });
   await loadReceivedCandidates();
+}
+
+function adminJobStatusLabel(status) {
+  return {
+    draft: "Borrador",
+    published: "Publicada",
+    paused: "Pausada",
+    closed: "Cerrada"
+  }[status] ?? status;
+}
+
+function adminReportStatusLabel(status) {
+  return {
+    pending: "Pendiente",
+    reviewing: "En revisión",
+    resolved: "Resuelto",
+    dismissed: "Descartado"
+  }[status] ?? status;
+}
+
+function normalizeAdminSearch(value) {
+  return String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+function filterAdminList(input, list, emptyMessage) {
+  const query = normalizeAdminSearch(input.value);
+  const rows = Array.from(list.querySelectorAll(".admin-row"));
+  let visibleCount = 0;
+
+  rows.forEach((row) => {
+    const matches = !query || normalizeAdminSearch(row.dataset.search).includes(query);
+    row.classList.toggle("is-hidden", !matches);
+    if (matches) visibleCount += 1;
+  });
+
+  emptyMessage.classList.toggle("is-hidden", !query || visibleCount > 0 || rows.length === 0);
+}
+
+function refreshAdminFilters() {
+  filterAdminList(adminReportsSearch, adminReportsList, adminReportsEmpty);
+  filterAdminList(adminJobsSearch, adminJobsList, adminJobsEmpty);
+  filterAdminList(adminUsersSearch, adminUsersList, adminUsersEmpty);
+  filterAdminList(adminCompaniesSearch, adminCompaniesList, adminCompaniesEmpty);
+}
+
+async function loadAdminDashboard() {
+  if (!isCurrentAdmin()) {
+    throw new Error("No tienes permisos de administración.");
+  }
+
+  const [stats, reports, adminJobs, users, companies, roleRows] = await Promise.all([
+    supabaseRestRequest("/rpc/admin_dashboard_stats", { method: "POST", body: {} }),
+    supabaseRestRequest("/reports?select=id,reporter_user_id,category,subject,description,status,admin_note,created_at&order=created_at.desc&limit=100"),
+    supabaseRestRequest("/jobs?select=id,title,status,created_at,company_profiles(company_name)&order=created_at.desc&limit=200"),
+    supabaseRestRequest("/profiles?select=id,email,role,suspended_at,suspension_reason,created_at&order=created_at.desc&limit=200"),
+    supabaseRestRequest("/company_profiles?select=id,user_id,company_name,is_verified,created_at&order=created_at.desc&limit=200"),
+    supabaseRestRequest("/user_roles?select=user_id,role")
+  ]);
+
+  if (stats?.error) throw new Error(stats.error);
+
+  adminUsersCount.textContent = String(stats?.users ?? 0);
+  adminJobsCount.textContent = String(stats?.published_jobs ?? 0);
+  adminCompaniesCount.textContent = String(stats?.companies ?? 0);
+  adminApplicationsCount.textContent = String(stats?.applications ?? 0);
+  adminReportsCount.textContent = String(stats?.pending_reports ?? 0);
+
+  const adminUserIds = new Set((roleRows ?? []).filter((entry) => entry.role === "admin").map((entry) => String(entry.user_id)));
+
+  adminReportsList.innerHTML = reports?.length
+    ? reports.map((report) => `
+        <article class="admin-row" data-search="${escapeHtml(`${report.subject} ${report.description} ${report.category} ${adminReportStatusLabel(report.status)}`)}">
+          <div class="admin-row-main">
+            <div class="admin-row-title">
+              <strong>${escapeHtml(report.subject)}</strong>
+              <span class="admin-status ${escapeHtml(report.status)}">${escapeHtml(adminReportStatusLabel(report.status))}</span>
+            </div>
+            <p>${escapeHtml(report.description)}</p>
+            <small>${escapeHtml(report.category)} · ${escapeHtml(formatMessageTime(report.created_at))}</small>
+          </div>
+          <div class="admin-row-actions">
+            <button class="admin-action" type="button" data-admin-report-status="reviewing" data-report-id="${escapeHtml(report.id)}">Revisar</button>
+            <button class="admin-action success" type="button" data-admin-report-status="resolved" data-report-id="${escapeHtml(report.id)}">Resolver</button>
+            <button class="admin-action" type="button" data-admin-report-status="dismissed" data-report-id="${escapeHtml(report.id)}">Descartar</button>
+          </div>
+        </article>
+      `).join("")
+    : `<p class="empty-list">No hay reportes registrados.</p>`;
+
+  adminJobsList.innerHTML = adminJobs?.length
+    ? adminJobs.map((job) => {
+        const company = Array.isArray(job.company_profiles) ? job.company_profiles[0] : job.company_profiles;
+        return `
+          <article class="admin-row" data-search="${escapeHtml(`${job.title} ${company?.company_name ?? ""} ${adminJobStatusLabel(job.status)}`)}">
+            <div class="admin-row-main">
+              <div class="admin-row-title">
+                <strong>${escapeHtml(job.title)}</strong>
+                <span class="admin-status ${escapeHtml(job.status)}">${escapeHtml(adminJobStatusLabel(job.status))}</span>
+              </div>
+              <p>${escapeHtml(company?.company_name ?? "Empresa sin nombre")}</p>
+              <small>${escapeHtml(formatMessageTime(job.created_at))}</small>
+            </div>
+            <div class="admin-row-actions">
+              <button class="admin-action success" type="button" data-admin-job-status="published" data-job-id="${escapeHtml(job.id)}">Aprobar</button>
+              <button class="admin-action" type="button" data-admin-job-status="paused" data-job-id="${escapeHtml(job.id)}">Pausar</button>
+              <button class="admin-action danger" type="button" data-admin-delete-job="${escapeHtml(job.id)}">Eliminar</button>
+            </div>
+          </article>
+        `;
+      }).join("")
+    : `<p class="empty-list">No hay vacantes disponibles.</p>`;
+
+  adminUsersList.innerHTML = users?.length
+    ? users.map((user) => `
+        <article class="admin-row" data-search="${escapeHtml(`${user.email} ${user.role} ${user.suspended_at ? "suspendido" : "activo"} ${adminUserIds.has(String(user.id)) ? "administrador" : ""}`)}">
+          <div class="admin-row-main">
+            <div class="admin-row-title">
+              <strong>${escapeHtml(user.email)}</strong>
+              ${adminUserIds.has(String(user.id)) ? `<span class="admin-status admin">Administrador</span>` : ""}
+              ${user.suspended_at ? `<span class="admin-status paused">Suspendido</span>` : `<span class="admin-status published">Activo</span>`}
+            </div>
+            <p>${escapeHtml(user.role === "company" ? "Cuenta de empresa" : "Cuenta de candidato")}</p>
+            <small>${user.suspension_reason ? `Motivo: ${escapeHtml(user.suspension_reason)}` : escapeHtml(formatMessageTime(user.created_at))}</small>
+          </div>
+          <div class="admin-row-actions">
+            <button class="admin-action ${user.suspended_at ? "success" : "danger"}" type="button"
+              data-admin-user-id="${escapeHtml(user.id)}"
+              data-admin-suspend="${user.suspended_at ? "false" : "true"}"
+              ${adminUserIds.has(String(user.id)) ? "disabled" : ""}>
+              ${user.suspended_at ? "Reactivar" : "Suspender"}
+            </button>
+          </div>
+        </article>
+      `).join("")
+    : `<p class="empty-list">No hay usuarios disponibles.</p>`;
+
+  adminCompaniesList.innerHTML = companies?.length
+    ? companies.map((company) => `
+        <article class="admin-row" data-search="${escapeHtml(`${company.company_name} ${company.is_verified ? "verificada" : "sin verificar"}`)}">
+          <div class="admin-row-main">
+            <div class="admin-row-title">
+              <strong>${escapeHtml(company.company_name)}</strong>
+              ${company.is_verified ? `<span class="admin-status verified">Verificada</span>` : `<span class="admin-status">Sin verificar</span>`}
+            </div>
+            <small>${escapeHtml(formatMessageTime(company.created_at))}</small>
+          </div>
+          <div class="admin-row-actions">
+            <button class="admin-action ${company.is_verified ? "" : "success"}" type="button"
+              data-admin-company-id="${escapeHtml(company.id)}"
+              data-admin-verified="${company.is_verified ? "false" : "true"}">
+              ${company.is_verified ? "Quitar verificación" : "Verificar"}
+            </button>
+          </div>
+        </article>
+      `).join("")
+    : `<p class="empty-list">No hay empresas disponibles.</p>`;
+
+  refreshAdminFilters();
+}
+
+async function submitSafetyReport() {
+  const session = requireSession();
+  const subject = reportSubject.value.trim();
+  const description = reportDescription.value.trim();
+
+  if (!subject || !description) {
+    throw new Error("Agrega el asunto y la descripción del reporte.");
+  }
+
+  await supabaseRestRequest("/reports", {
+    method: "POST",
+    prefer: "return=minimal",
+    body: {
+      reporter_user_id: session.user.id,
+      category: reportCategory.value,
+      subject,
+      description
+    }
+  });
+
+  reportForm.reset();
+  reportDialog.close();
+  showToast("Reporte enviado. Gracias por ayudarnos a cuidar RedJob.");
 }
 
 async function removeCandidateFromJob(applicationId) {
@@ -1668,6 +1911,7 @@ async function signOutFromSupabase() {
 
   setStoredSession(null);
   currentProfile = null;
+  currentUserRoles = [];
   currentCandidateProfile = null;
   currentCompanyProfile = null;
   activeConversationId = null;
@@ -1876,6 +2120,11 @@ function openApplicationDialog(job) {
 }
 
 function switchView(viewId) {
+  if (viewId === "administracion" && !isCurrentAdmin()) {
+    showToast("No tienes permisos para acceder a Administración.");
+    viewId = "inicio";
+  }
+
   document.querySelectorAll(".view").forEach((view) => {
     view.classList.toggle("active-view", view.id === viewId);
   });
@@ -1888,6 +2137,10 @@ function switchView(viewId) {
 
   if (viewId === "mensajes" && getStoredSession()?.access_token) {
     loadFirstConversation(true).catch((error) => showToast(`Mensajes: ${error.message}`));
+  }
+
+  if (viewId === "administracion") {
+    loadAdminDashboard().catch((error) => showToast(friendlyError(error)));
   }
 }
 
@@ -2143,6 +2396,111 @@ receivedCandidatesList.addEventListener("click", async (event) => {
     showToast(friendlyError(error));
   } finally {
     statusButton.disabled = false;
+  }
+});
+
+adminRefreshButton.addEventListener("click", async () => {
+  try {
+    await withButtonLoading(adminRefreshButton, "Actualizando...", loadAdminDashboard);
+    showToast("Panel actualizado.");
+  } catch (error) {
+    showToast(friendlyError(error));
+  }
+});
+
+[adminReportsSearch, adminJobsSearch, adminUsersSearch, adminCompaniesSearch].forEach((input) => {
+  input.addEventListener("input", refreshAdminFilters);
+});
+
+document.querySelector("#administracion").addEventListener("click", async (event) => {
+  const jobStatusButton = event.target.closest("[data-admin-job-status]");
+  const deleteJobButton = event.target.closest("[data-admin-delete-job]");
+  const userButton = event.target.closest("[data-admin-user-id]");
+  const companyButton = event.target.closest("[data-admin-company-id]");
+  const reportButton = event.target.closest("[data-admin-report-status]");
+
+  try {
+    if (jobStatusButton) {
+      await supabaseRestRequest("/rpc/admin_set_job_status", {
+        method: "POST",
+        body: {
+          job_uuid: jobStatusButton.dataset.jobId,
+          next_status: jobStatusButton.dataset.adminJobStatus
+        }
+      });
+      showToast("Estado de vacante actualizado.");
+    } else if (deleteJobButton) {
+      if (!window.confirm("¿Eliminar esta vacante definitivamente? También se eliminarán sus postulaciones y conversaciones relacionadas.")) return;
+      await supabaseRestRequest("/rpc/admin_delete_job", {
+        method: "POST",
+        body: { job_uuid: deleteJobButton.dataset.adminDeleteJob }
+      });
+      showToast("Vacante eliminada.");
+    } else if (userButton) {
+      const shouldSuspend = userButton.dataset.adminSuspend === "true";
+      const reason = shouldSuspend ? window.prompt("Motivo de la suspensión:") : "";
+      if (shouldSuspend && reason === null) return;
+      await supabaseRestRequest("/rpc/admin_set_user_suspension", {
+        method: "POST",
+        body: {
+          user_uuid: userButton.dataset.adminUserId,
+          should_suspend: shouldSuspend,
+          reason
+        }
+      });
+      showToast(shouldSuspend ? "Usuario suspendido." : "Usuario reactivado.");
+    } else if (companyButton) {
+      const verified = companyButton.dataset.adminVerified === "true";
+      await supabaseRestRequest("/rpc/admin_set_company_verified", {
+        method: "POST",
+        body: {
+          company_uuid: companyButton.dataset.adminCompanyId,
+          verified
+        }
+      });
+      showToast(verified ? "Empresa verificada." : "Verificación retirada.");
+    } else if (reportButton) {
+      const nextStatus = reportButton.dataset.adminReportStatus;
+      const note = window.prompt("Nota interna opcional para este reporte:") ?? "";
+      await supabaseRestRequest("/rpc/admin_update_report", {
+        method: "POST",
+        body: {
+          report_uuid: reportButton.dataset.reportId,
+          next_status: nextStatus,
+          note
+        }
+      });
+      showToast("Reporte actualizado.");
+    } else {
+      return;
+    }
+
+    await loadAdminDashboard();
+    await loadRealJobs();
+  } catch (error) {
+    showToast(friendlyError(error));
+  }
+});
+
+openReportDialogButton.addEventListener("click", () => {
+  if (!getStoredSession()?.access_token) {
+    showToast("Inicia sesión para enviar un reporte.");
+    switchView("acceso");
+    return;
+  }
+  reportDialog.showModal();
+});
+
+document.querySelector("#closeReportDialog").addEventListener("click", () => {
+  reportDialog.close();
+});
+
+reportForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  try {
+    await withButtonLoading(submitReportButton, "Enviando...", submitSafetyReport);
+  } catch (error) {
+    showToast(friendlyError(error));
   }
 });
 

@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./styles.css?v=20260607b" />
+    <link rel="stylesheet" href="./styles.css?v=20260608b" />
   </head>
   <body>
     <header class="site-header">
@@ -21,6 +21,9 @@
         <a class="nav-link messages-nav-link" href="#mensajes" data-view-link="mensajes">
           Mensajes
           <span class="unread-badge is-hidden" id="unreadMessagesBadge">0</span>
+        </a>
+        <a class="nav-link admin-nav-link is-hidden" href="#administracion" data-view-link="administracion" id="adminNavLink">
+          Administración
         </a>
       </nav>
 
@@ -437,6 +440,107 @@
         </section>
       </section>
 
+      <section class="view" id="administracion">
+        <section class="admin-shell">
+          <header class="admin-heading">
+            <div>
+              <span>RedJob</span>
+              <h1>Panel de administración</h1>
+              <p>Moderación, seguridad y estado general de la plataforma.</p>
+            </div>
+            <button class="secondary-button subtle" type="button" id="adminRefreshButton">Actualizar datos</button>
+          </header>
+
+          <section class="admin-stats" aria-label="Estadísticas globales">
+            <article><span>Usuarios</span><strong id="adminUsersCount">0</strong></article>
+            <article><span>Vacantes publicadas</span><strong id="adminJobsCount">0</strong></article>
+            <article><span>Empresas</span><strong id="adminCompaniesCount">0</strong></article>
+            <article><span>Postulaciones</span><strong id="adminApplicationsCount">0</strong></article>
+            <article><span>Reportes pendientes</span><strong id="adminReportsCount">0</strong></article>
+          </section>
+
+          <details class="admin-section">
+            <summary class="admin-section-heading">
+              <div>
+                <span>Seguridad</span>
+                <h2>Reportes</h2>
+              </div>
+              <span class="admin-section-chevron" aria-hidden="true"></span>
+            </summary>
+            <div class="admin-section-content">
+              <label class="admin-search">
+                <span>Buscar reporte</span>
+                <input id="adminReportsSearch" type="search" placeholder="Asunto, descripción o tipo de reporte" />
+              </label>
+              <p class="admin-search-result is-hidden" id="adminReportsEmpty">No encontramos reportes con esa búsqueda.</p>
+              <div class="admin-list" id="adminReportsList">
+                <p class="empty-list">No hay reportes pendientes.</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="admin-section">
+            <summary class="admin-section-heading">
+              <div>
+                <span>Contenido</span>
+                <h2>Vacantes</h2>
+              </div>
+              <span class="admin-section-chevron" aria-hidden="true"></span>
+            </summary>
+            <div class="admin-section-content">
+              <label class="admin-search">
+                <span>Buscar vacante</span>
+                <input id="adminJobsSearch" type="search" placeholder="Nombre de la vacante, empresa o estado" />
+              </label>
+              <p class="admin-search-result is-hidden" id="adminJobsEmpty">No encontramos vacantes con esa búsqueda.</p>
+              <div class="admin-list" id="adminJobsList">
+                <p class="empty-list">No hay vacantes disponibles.</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="admin-section">
+            <summary class="admin-section-heading">
+              <div>
+                <span>Acceso</span>
+                <h2>Usuarios</h2>
+              </div>
+              <span class="admin-section-chevron" aria-hidden="true"></span>
+            </summary>
+            <div class="admin-section-content">
+              <label class="admin-search">
+                <span>Buscar usuario</span>
+                <input id="adminUsersSearch" type="search" placeholder="Correo, tipo de cuenta o estado" />
+              </label>
+              <p class="admin-search-result is-hidden" id="adminUsersEmpty">No encontramos usuarios con esa búsqueda.</p>
+              <div class="admin-list" id="adminUsersList">
+                <p class="empty-list">No hay usuarios disponibles.</p>
+              </div>
+            </div>
+          </details>
+
+          <details class="admin-section">
+            <summary class="admin-section-heading">
+              <div>
+                <span>Confianza</span>
+                <h2>Empresas</h2>
+              </div>
+              <span class="admin-section-chevron" aria-hidden="true"></span>
+            </summary>
+            <div class="admin-section-content">
+              <label class="admin-search">
+                <span>Buscar empresa</span>
+                <input id="adminCompaniesSearch" type="search" placeholder="Nombre de empresa o verificación" />
+              </label>
+              <p class="admin-search-result is-hidden" id="adminCompaniesEmpty">No encontramos empresas con esa búsqueda.</p>
+              <div class="admin-list" id="adminCompaniesList">
+                <p class="empty-list">No hay empresas disponibles.</p>
+              </div>
+            </div>
+          </details>
+        </section>
+      </section>
+
       <section class="view" id="acceso">
         <section class="access-page">
           <div>
@@ -530,6 +634,36 @@
         </section>
         <button class="primary-button" type="button" id="receivedCandidateResume">Ver currículum</button>
       </article>
+    </dialog>
+
+    <dialog class="application-dialog" id="reportDialog">
+      <form method="dialog" class="dialog-card" id="reportForm">
+        <button class="dialog-close" type="button" id="closeReportDialog" aria-label="Cerrar">x</button>
+        <span>Seguridad RedJob</span>
+        <h2>Enviar un reporte</h2>
+        <p>Describe una vacante, cuenta, empresa, mensaje o actividad que consideres sospechosa.</p>
+        <label>
+          Tipo de reporte
+          <select id="reportCategory">
+            <option value="job">Vacante</option>
+            <option value="user">Cuenta de usuario</option>
+            <option value="company">Empresa</option>
+            <option value="message">Mensaje</option>
+            <option value="application">Postulación</option>
+            <option value="other">Otro</option>
+          </select>
+        </label>
+        <label>
+          Asunto
+          <input id="reportSubject" type="text" maxlength="140" placeholder="Ej. Vacante que solicita depósitos" />
+        </label>
+        <label>
+          Descripción
+          <textarea id="reportDescription" rows="6" maxlength="3000" placeholder="Incluye nombres, enlaces o detalles que ayuden a revisar el caso."></textarea>
+        </label>
+        <button class="primary-button" type="submit" id="submitReportButton">Enviar reporte</button>
+        <a class="link-button report-email-link" href="mailto:redjobmx@gmail.com?subject=Reporte%20de%20seguridad%20en%20RedJob">También puedes reportar por correo</a>
+      </form>
     </dialog>
 
     <section class="legal-pages" aria-label="Información legal">
@@ -734,7 +868,7 @@
             <span>Reportes y seguridad</span>
             <h2>¿Viste algo sospechoso?</h2>
             <p>Reporta una vacante, postulación, mensaje o cuenta que parezca falsa, fraudulenta, ofensiva o insegura.</p>
-            <a class="secondary-button" href="mailto:redjobmx@gmail.com?subject=Reporte%20de%20seguridad%20en%20RedJob&amp;body=Describe%20lo%20sucedido%20e%20incluye%20el%20nombre%20de%20la%20vacante%20o%20cuenta%20que%20deseas%20reportar%3A%0A%0A">Enviar un reporte</a>
+            <button class="secondary-button" type="button" id="openReportDialog">Enviar un reporte</button>
           </article>
         </section>
       </article>
@@ -749,6 +883,6 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script src="./config.js?v=20260605h"></script>
-    <script src="./app.js?v=20260606k"></script>
+    <script src="./app.js?v=20260608b"></script>
   </body>
 </html>
