@@ -1331,6 +1331,8 @@ async function removeCandidateFromJob(applicationId) {
 
 async function loadCandidateApplications() {
   if (!currentCandidateProfile?.id) {
+    applications.length = 0;
+    renderProfileActivity();
     return;
   }
 
@@ -1338,21 +1340,37 @@ async function loadCandidateApplications() {
     `/applications?select=id,job_id,status,match_score,created_at,jobs(title,company_profiles(company_name))&candidate_id=eq.${currentCandidateProfile.id}&order=created_at.desc`
   );
 
-  const existingRealApplicationIds = new Set(applications.filter((application) => application.source === "supabase").map((application) => application.id));
-
+  applications.length = 0;
   (rows ?? []).forEach((application) => {
-    if (existingRealApplicationIds.has(application.id)) return;
-
-    applications.unshift({
+    const job = Array.isArray(application.jobs) ? application.jobs[0] : application.jobs;
+    const company = Array.isArray(job?.company_profiles) ? job.company_profiles[0] : job?.company_profiles;
+    applications.push({
       id: application.id,
       source: "supabase",
       jobId: application.job_id,
-      status: mapApplicationStatus(application.status)
+      rawStatus: application.status,
+      status: mapApplicationStatus(application.status),
+      jobTitle: job?.title ?? "Vacante",
+      companyName: company?.company_name ?? "Empresa"
     });
   });
 
   renderProfileActivity();
   renderJobs();
+}
+
+async function withdrawCandidateApplication(applicationId) {
+  await supabaseRestRequest("/rpc/update_my_application", {
+    method: "POST",
+    prefer: "return=representation",
+    body: {
+      application_uuid: applicationId,
+      next_status: "withdrawn",
+      cover_note_value: null
+    }
+  });
+  await loadCandidateApplications();
+  await loadFirstConversation();
 }
 
 function mapApplicationStatus(status) {
@@ -2152,10 +2170,16 @@ function renderProfileActivity() {
     ? savedItems
         .map(
           (job) => `
-            <div>
-              <strong>${escapeHtml(job.title)}</strong>
-              <span>${escapeHtml(job.company)}</span>
-            </div>
+            <article class="profile-activity-row">
+              <div class="profile-activity-copy">
+                <strong>${escapeHtml(job.title)}</strong>
+                <span>${escapeHtml(job.company)} · ${escapeHtml(formatLocationLabel(job.location))}</span>
+              </div>
+              <div class="profile-activity-actions">
+                <button class="secondary-button subtle compact-button" type="button" data-open-saved-job="${escapeHtml(job.id)}">Ver vacante</button>
+                <button class="text-danger-button compact" type="button" data-remove-saved-job="${escapeHtml(job.id)}">Quitar</button>
+              </div>
+            </article>
           `
         )
         .join("")
@@ -2165,19 +2189,20 @@ function renderProfileActivity() {
     ? applications
         .map((application) => {
           const job = jobs.find((item) => sameId(item.id, application.jobId));
-          if (!job) {
-            return `
-              <div>
-                <strong>Vacante</strong>
-                <span>${escapeHtml(application.status)}</span>
-              </div>
-            `;
-          }
+          const jobTitle = job?.title ?? application.jobTitle ?? "Vacante";
+          const companyName = job?.company ?? application.companyName ?? "Empresa";
+          const canWithdraw = !["withdrawn", "hired"].includes(application.rawStatus);
           return `
-            <div>
-              <strong>${escapeHtml(job.title)}</strong>
-              <span>${escapeHtml(application.status)}</span>
-            </div>
+            <article class="profile-activity-row">
+              <div class="profile-activity-copy">
+                <strong>${escapeHtml(jobTitle)}</strong>
+                <span>${escapeHtml(companyName)} · ${escapeHtml(application.status)}</span>
+              </div>
+              <div class="profile-activity-actions">
+                <button class="secondary-button subtle compact-button" type="button" data-open-application-job="${escapeHtml(application.jobId)}">Ver vacante</button>
+                ${canWithdraw ? `<button class="text-danger-button compact" type="button" data-withdraw-application="${escapeHtml(application.id)}">Retirar</button>` : ""}
+              </div>
+            </article>
           `;
         })
         .join("")
@@ -2469,6 +2494,59 @@ profileSignOutButton.addEventListener("click", async () => {
     switchView("inicio");
   } catch (error) {
     showToast(error.message);
+  }
+});
+
+savedJobsList.addEventListener("click", async (event) => {
+  const openButton = event.target.closest("[data-open-saved-job]");
+  const removeButton = event.target.closest("[data-remove-saved-job]");
+
+  if (openButton) {
+    try {
+      await openJobDetail(openButton.dataset.openSavedJob);
+    } catch (error) {
+      showToast(friendlyError(error));
+    }
+    return;
+  }
+
+  if (!removeButton) return;
+
+  removeButton.disabled = true;
+  try {
+    await toggleSavedJob(removeButton.dataset.removeSavedJob);
+    renderJobs();
+    renderProfileActivity();
+    showToast("Vacante eliminada de tus guardadas.");
+  } catch (error) {
+    showToast(friendlyError(error));
+    removeButton.disabled = false;
+  }
+});
+
+applicationsList.addEventListener("click", async (event) => {
+  const openButton = event.target.closest("[data-open-application-job]");
+  const withdrawButton = event.target.closest("[data-withdraw-application]");
+
+  if (openButton) {
+    try {
+      await openJobDetail(openButton.dataset.openApplicationJob);
+    } catch (error) {
+      showToast(friendlyError(error));
+    }
+    return;
+  }
+
+  if (!withdrawButton) return;
+  if (!window.confirm("¿Quieres retirar esta postulación? La empresa verá que fue retirada y ya no podrás reactivarla.")) return;
+
+  withdrawButton.disabled = true;
+  try {
+    await withdrawCandidateApplication(withdrawButton.dataset.withdrawApplication);
+    showToast("Postulación retirada.");
+  } catch (error) {
+    showToast(friendlyError(error));
+    withdrawButton.disabled = false;
   }
 });
 
@@ -2831,14 +2909,18 @@ document.querySelector("#confirmApplication").addEventListener("click", async ()
     if (activeApplicationJob.source === "supabase") {
       realApplication = await createRealApplication(activeApplicationJob);
       await loadFirstConversation(true);
+      await loadCandidateApplications();
+    } else {
+      applications.unshift({
+        id: realApplication?.id,
+        source: "supabase",
+        jobId: activeApplicationJob.id,
+        rawStatus: "submitted",
+        status: "Enviada",
+        jobTitle: activeApplicationJob.title,
+        companyName: activeApplicationJob.company
+      });
     }
-
-    applications.unshift({
-      id: realApplication?.id,
-      source: "supabase",
-      jobId: activeApplicationJob.id,
-      status: activeApplicationJob.source === "supabase" ? "Enviada" : "Enviada"
-    });
 
     applicationDialog.close();
     renderJobs();

@@ -1279,8 +1279,9 @@ textarea:focus {
   gap: 12px;
 }
 
-.profile-list div {
+.profile-activity-row {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
   border: 1px solid var(--line);
@@ -1288,9 +1289,34 @@ textarea:focus {
   padding: 14px;
 }
 
-.profile-list span {
+.profile-activity-copy {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.profile-activity-copy strong,
+.profile-activity-copy span {
+  overflow-wrap: anywhere;
+}
+
+.profile-activity-copy span {
   color: var(--muted);
   font-weight: 700;
+}
+
+.profile-activity-actions {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.compact-button {
+  min-height: 38px;
+  padding: 0 14px;
+  font-size: 0.82rem;
 }
 
 .empty-list {
@@ -2353,6 +2379,20 @@ textarea:focus {
 
   .profile-editor-content {
     padding: 20px;
+  }
+
+  .profile-activity-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .profile-activity-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .profile-activity-actions button {
+    width: 100%;
   }
 
   .job-detail-head,
