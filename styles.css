@@ -1901,6 +1901,13 @@ textarea:focus {
   font-weight: 700;
 }
 
+.admin-stats small {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
 .admin-stats strong {
   color: var(--black);
   font-size: 32px;
