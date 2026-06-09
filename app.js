@@ -32,6 +32,7 @@ const resumeInput = document.querySelector("#resumeInput");
 const resumeStatus = document.querySelector("#resumeStatus");
 const savedCount = document.querySelector("#savedCount");
 const applicationCount = document.querySelector("#applicationCount");
+const profileMessagesCount = document.querySelector("#profileMessagesCount");
 const savedJobsList = document.querySelector("#savedJobsList");
 const applicationsList = document.querySelector("#applicationsList");
 const applicationDialog = document.querySelector("#applicationDialog");
@@ -133,11 +134,16 @@ const reportSubject = document.querySelector("#reportSubject");
 const reportDescription = document.querySelector("#reportDescription");
 const submitReportButton = document.querySelector("#submitReportButton");
 const openReportDialogButton = document.querySelector("#openReportDialog");
+const installAppButton = document.querySelector("#installAppButton");
 
 const savedJobs = new Set();
 const applications = [];
 let activeApplicationJob = null;
 let toastTimer = null;
+let deferredInstallPrompt = null;
+const isIosDevice =
+  /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+  (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 
 const runtimeConfig = window.REDJOB_CONFIG ?? {};
 const SUPABASE_URL =
@@ -262,6 +268,43 @@ const mexicoCitiesByState = {
   Zacatecas: ["Zacatecas", "Guadalupe", "Fresnillo", "Jerez", "Río Grande"]
 };
 
+const mexicoStateCodes = {
+  Aguascalientes: "01",
+  "Baja California": "02",
+  "Baja California Sur": "03",
+  Campeche: "04",
+  Coahuila: "05",
+  Colima: "06",
+  Chiapas: "07",
+  Chihuahua: "08",
+  "Ciudad de Mexico": "09",
+  Durango: "10",
+  Guanajuato: "11",
+  Guerrero: "12",
+  Hidalgo: "13",
+  Jalisco: "14",
+  "Estado de Mexico": "15",
+  Michoacan: "16",
+  Morelos: "17",
+  Nayarit: "18",
+  "Nuevo Leon": "19",
+  Oaxaca: "20",
+  Puebla: "21",
+  Queretaro: "22",
+  "Quintana Roo": "23",
+  "San Luis Potosi": "24",
+  Sinaloa: "25",
+  Sonora: "26",
+  Tabasco: "27",
+  Tamaulipas: "28",
+  Tlaxcala: "29",
+  Veracruz: "30",
+  Yucatan: "31",
+  Zacatecas: "32"
+};
+
+const municipalityCache = new Map();
+
 function formatCategoryLabel(category) {
   return {
     Tecnologia: "Tecnología",
@@ -292,20 +335,55 @@ function formatWorkModeLabel(mode) {
 
 function cityOptionsForState(state, includeAll = false) {
   if (!state || state === "Todo Mexico") {
-    return includeAll ? [{ value: "", label: "Todas las ciudades" }] : [];
+    return includeAll ? [{ value: "", label: "Todos los municipios" }] : [];
   }
   if (state === "Remoto") return [{ value: "", label: "No aplica" }];
 
   const cities = mexicoCitiesByState[state] ?? [];
   return [
-    { value: "", label: includeAll ? "Todas las ciudades" : "Selecciona una ciudad" },
+    { value: "", label: includeAll ? "Todos los municipios" : "Selecciona un municipio" },
     ...cities.map((city) => ({ value: city, label: city }))
   ];
 }
 
-function populateCitySelect(select, state, options = {}) {
+function renderMunicipalityOptions(select, municipalities, includeAll, selectedCity = "") {
+  const availableMunicipalities =
+    selectedCity && !municipalities.includes(selectedCity)
+      ? [selectedCity, ...municipalities]
+      : municipalities;
+  const municipalityOptions = [
+    { value: "", label: includeAll ? "Todos los municipios" : "Selecciona un municipio" },
+    ...availableMunicipalities.map((municipality) => ({ value: municipality, label: municipality }))
+  ];
+  select.innerHTML = municipalityOptions
+    .map((option) => `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</option>`)
+    .join("");
+  if (selectedCity && municipalityOptions.some((option) => option.value === selectedCity)) {
+    select.value = selectedCity;
+  }
+}
+
+async function loadMunicipalities(state) {
+  if (municipalityCache.has(state)) return municipalityCache.get(state);
+  const stateCode = mexicoStateCodes[state];
+  if (!stateCode) return mexicoCitiesByState[state] ?? [];
+
+  const response = await fetch(`https://gaia.inegi.org.mx/wscatgeo/v2/mgem/${stateCode}`);
+  if (!response.ok) throw new Error("No se pudo consultar el catálogo de municipios.");
+  const payload = await response.json();
+  const municipalities = (payload?.datos ?? payload ?? [])
+    .map((entry) => entry.nomgeo ?? entry.nom_agem ?? entry.nom_mun)
+    .filter(Boolean)
+    .sort((left, right) => left.localeCompare(right, "es-MX"));
+  if (!municipalities.length) throw new Error("El catálogo no devolvió municipios.");
+  municipalityCache.set(state, municipalities);
+  return municipalities;
+}
+
+async function populateCitySelect(select, state, options = {}) {
   const { includeAll = false, selectedCity = "" } = options;
   const cityOptions = cityOptionsForState(state, includeAll);
+  select.dataset.stateRequest = state;
   select.innerHTML = cityOptions.length
     ? cityOptions.map((city) => `<option value="${escapeHtml(city.value)}">${escapeHtml(city.label)}</option>`).join("")
     : `<option value="">Selecciona un estado</option>`;
@@ -313,6 +391,18 @@ function populateCitySelect(select, state, options = {}) {
 
   if (selectedCity && cityOptions.some((city) => city.value === selectedCity)) {
     select.value = selectedCity;
+  }
+
+  if (select.disabled) return;
+  select.setAttribute("aria-busy", "true");
+  try {
+    const municipalities = await loadMunicipalities(state);
+    if (select.dataset.stateRequest !== state) return;
+    renderMunicipalityOptions(select, municipalities, includeAll, selectedCity);
+  } catch (error) {
+    // The local shortlist remains usable when INEGI is temporarily unavailable.
+  } finally {
+    if (select.dataset.stateRequest === state) select.removeAttribute("aria-busy");
   }
 }
 
@@ -624,18 +714,6 @@ function isSavedJob(jobId) {
   return Array.from(savedJobs).some((savedId) => sameId(savedId, jobId));
 }
 
-function toggleSavedJobLocal(jobId) {
-  const existing = Array.from(savedJobs).find((savedId) => sameId(savedId, jobId));
-
-  if (existing !== undefined) {
-    savedJobs.delete(existing);
-    return false;
-  }
-
-  savedJobs.add(jobId);
-  return true;
-}
-
 async function loadSavedJobs() {
   const session = getStoredSession();
   savedJobs.clear();
@@ -661,7 +739,8 @@ async function toggleSavedJob(jobId) {
   const isSaved = isSavedJob(jobId);
 
   if (!session?.user?.id) {
-    return toggleSavedJobLocal(jobId);
+    switchView("acceso");
+    throw new Error("Inicia sesión para guardar vacantes en tu perfil.");
   }
 
   if (isSaved) {
@@ -1388,6 +1467,7 @@ async function loadFirstConversation(openFirst = false) {
   const session = getStoredSession();
   if (!session?.user?.id) {
     renderUnreadMessagesBadge(0);
+    profileMessagesCount.textContent = "0";
     return;
   }
 
@@ -1469,6 +1549,7 @@ async function markConversationMessagesAsRead(conversationId) {
 
 function renderConversationList(conversations) {
   conversationCount.textContent = String(conversations.length);
+  profileMessagesCount.textContent = String(conversations.length);
   conversationList.innerHTML = conversations.length
     ? conversations
         .map((conversation) => {
@@ -2040,7 +2121,11 @@ async function signOutFromSupabase() {
   const session = getStoredSession();
 
   if (session?.access_token) {
-    await supabaseAuthRequest("/auth/v1/logout", {}, session.access_token);
+    try {
+      await supabaseAuthRequest("/auth/v1/logout", {}, session.access_token);
+    } catch (error) {
+      // Local session data must still be removed if the network logout fails.
+    }
   }
 
   setStoredSession(null);
@@ -2048,12 +2133,28 @@ async function signOutFromSupabase() {
   currentUserRoles = [];
   currentCandidateProfile = null;
   currentCompanyProfile = null;
+  currentCompanyProfiles = [];
+  savedJobs.clear();
+  applications.length = 0;
+  jobs = [];
+  receivedCandidateProfiles.clear();
   activeConversationId = null;
   activeConversationJobId = null;
+  activeApplicationJob = null;
+  activeDetailJobId = null;
+  conversationList.innerHTML = `<p class="empty-list">Inicia sesión para ver tus conversaciones.</p>`;
+  chatBody.innerHTML = `<p class="empty-list">Selecciona una conversación.</p>`;
+  conversationCount.textContent = "0";
+  profileMessagesCount.textContent = "0";
   applyRoleExperience();
   renderProfileHeader();
   renderResumeStatus();
   renderUnreadMessagesBadge(0);
+  renderJobs();
+  renderHiringCompanies();
+  renderProfileActivity();
+  renderCompanyProfileSelect();
+  renderCompanyJobs();
   signupMessage.textContent = "Sesión cerrada.";
   showToast("Sesión cerrada.");
 }
@@ -3001,6 +3102,48 @@ companyJobForm.addEventListener("submit", async (event) => {
     showToast(friendlyError(error));
   }
 });
+
+window.addEventListener("beforeinstallprompt", (event) => {
+  event.preventDefault();
+  deferredInstallPrompt = event;
+  installAppButton.classList.remove("is-hidden");
+});
+
+installAppButton.addEventListener("click", async () => {
+  if (!deferredInstallPrompt) {
+    if (isIosDevice) {
+      showToast("En Safari toca Compartir y después Agregar a pantalla de inicio.");
+    }
+    return;
+  }
+  deferredInstallPrompt.prompt();
+  const choice = await deferredInstallPrompt.userChoice;
+  if (choice.outcome === "accepted") {
+    showToast("RedJob se está instalando.");
+  }
+  deferredInstallPrompt = null;
+  installAppButton.classList.add("is-hidden");
+});
+
+window.addEventListener("appinstalled", () => {
+  deferredInstallPrompt = null;
+  installAppButton.classList.add("is-hidden");
+  showToast("RedJob quedó instalada.");
+});
+
+if (window.matchMedia("(display-mode: standalone)").matches) {
+  installAppButton.classList.add("is-hidden");
+} else if (isIosDevice) {
+  installAppButton.classList.remove("is-hidden");
+}
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/service-worker.js").catch(() => {
+      // The website remains fully usable if service worker registration is unavailable.
+    });
+  });
+}
 
 populateMexicoStateSelects();
 populateCategorySelects();

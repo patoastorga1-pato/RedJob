@@ -4,13 +4,33 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#dc2626" />
-    <title>RedJob</title>
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="RedJob" />
+    <meta name="description" content="Encuentra empleo en México, publica vacantes y conversa directamente con candidatos y empresas en RedJob." />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="es_MX" />
+    <meta property="og:site_name" content="RedJob" />
+    <meta property="og:title" content="RedJob | Tu próxima oportunidad" />
+    <meta property="og:description" content="Vacantes, postulaciones y contacto directo entre candidatos y empresas en México." />
+    <meta property="og:url" content="https://redjob.com.mx/" />
+    <meta property="og:image" content="https://redjob.com.mx/assets/redjob-social-preview.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="RedJob | Tu próxima oportunidad" />
+    <meta name="twitter:description" content="Encuentra empleo y conecta directamente con empresas en México." />
+    <meta name="twitter:image" content="https://redjob.com.mx/assets/redjob-social-preview.png" />
+    <link rel="canonical" href="https://redjob.com.mx/" />
+    <title>RedJob | Empleos y vacantes en México</title>
+    <link rel="manifest" href="./manifest.json?v=20260609a" />
     <link rel="icon" type="image/png" sizes="512x512" href="./assets/redjob-favicon.png?v=20260609a" />
-    <link rel="apple-touch-icon" href="./assets/redjob-favicon.png?v=20260609a" />
+    <link rel="apple-touch-icon" href="./assets/redjob-icon-192.png?v=20260609a" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./styles.css?v=20260608e" />
+    <link rel="stylesheet" href="./styles.css?v=20260609c" />
   </head>
   <body>
     <header class="site-header">
@@ -104,7 +124,7 @@
               <select id="locationInput"></select>
             </label>
             <label>
-              <span>Ciudad</span>
+              <span>Municipio o alcaldía</span>
               <select id="locationCityInput"></select>
             </label>
             <label>
@@ -305,7 +325,7 @@
                   <select id="candidateLocation"></select>
                 </label>
                 <label>
-                  Ciudad
+                  Municipio o alcaldía
                   <select id="candidateCity"></select>
                 </label>
                 <label>
@@ -331,7 +351,7 @@
             <section class="profile-stats">
               <article><strong id="savedCount">0</strong><span>Vacantes guardadas</span></article>
               <article><strong id="applicationCount">0</strong><span>Postulaciones</span></article>
-              <article><strong>2</strong><span>Mensajes activos</span></article>
+              <article><strong id="profileMessagesCount">0</strong><span>Mensajes activos</span></article>
             </section>
             <section class="info-card">
               <h2>Vacantes guardadas</h2>
@@ -405,7 +425,7 @@
                 <select id="jobLocationInput"></select>
               </label>
               <label>
-                Ciudad
+                Municipio o alcaldía
                 <select id="jobCityInput"></select>
               </label>
               <label>
@@ -894,11 +914,12 @@
       <button type="button" data-view-link="privacidad">Privacidad</button>
       <button type="button" data-view-link="terminos">Términos</button>
       <button type="button" data-view-link="contacto">Contacto</button>
+      <button class="install-app-button is-hidden" type="button" id="installAppButton">Instalar RedJob</button>
     </footer>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script src="./config.js?v=20260605h"></script>
-    <script src="./app.js?v=20260608e"></script>
+    <script src="./app.js?v=20260609d"></script>
   </body>
 </html>
