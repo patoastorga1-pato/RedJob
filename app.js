@@ -3139,9 +3139,12 @@ if (window.matchMedia("(display-mode: standalone)").matches) {
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/service-worker.js").catch(() => {
-      // The website remains fully usable if service worker registration is unavailable.
-    });
+    navigator.serviceWorker
+      .register("/service-worker.js")
+      .then((registration) => registration.update())
+      .catch(() => {
+        // The website remains fully usable if service worker registration is unavailable.
+      });
   });
 }
 
