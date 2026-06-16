@@ -1429,14 +1429,28 @@ textarea:focus {
   color: #991b1b;
 }
 
-.legal-note {
+.legal-consent {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px;
+  background: #fffafa;
   color: var(--muted);
   font-size: 0.82rem;
   line-height: 1.6;
-  text-align: center;
 }
 
-.legal-note button {
+.legal-consent input {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  accent-color: var(--red);
+}
+
+.legal-consent button {
   border: 0;
   background: transparent;
   color: var(--red);
@@ -1444,6 +1458,7 @@ textarea:focus {
   font: inherit;
   font-weight: 900;
   padding: 0;
+  text-align: left;
 }
 
 .auth-status-panel {

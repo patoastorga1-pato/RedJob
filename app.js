@@ -13,6 +13,7 @@ const accountNameLabel = document.querySelector("#accountNameLabel");
 const authEmail = document.querySelector("#authEmail");
 const authPassword = document.querySelector("#authPassword");
 const authName = document.querySelector("#authName");
+const legalConsent = document.querySelector("#legalConsent");
 const signInButton = document.querySelector("#signInButton");
 const signOutButton = document.querySelector("#signOutButton");
 const forgotPasswordButton = document.querySelector("#forgotPasswordButton");
@@ -160,6 +161,8 @@ window.REDJOB_CONFIG = {
   NEXT_PUBLIC_SUPABASE_ANON_KEY: SUPABASE_ANON_KEY
 };
 const SESSION_STORAGE_KEY = "redjob_supabase_session";
+const LEGAL_TERMS_VERSION = "Junio 2026";
+const LEGAL_PRIVACY_VERSION = "Junio 2026";
 const SUPABASE_SCHEMA_MESSAGE =
   "Falta instalar la base de datos de RedJob en Supabase. Abre Supabase > SQL Editor y ejecuta outputs/RedJob/supabase-schema.sql.";
 let currentProfile = null;
@@ -2064,23 +2067,53 @@ async function createSupabaseAccount() {
     throw new Error(role === "company" ? "Agrega el nombre de la empresa." : "Agrega tu nombre completo.");
   }
 
+  if (!legalConsent.checked) {
+    throw new Error("Debes aceptar los Términos y Condiciones y el Aviso de Privacidad para crear tu cuenta.");
+  }
+
   signupMessage.textContent = "Creando tu cuenta...";
 
   const payload = await supabaseAuthRequest("/auth/v1/signup", {
     email,
     password,
-    data: { role, full_name: name }
+    data: {
+      role,
+      full_name: name,
+      legal_terms_version: LEGAL_TERMS_VERSION,
+      legal_privacy_version: LEGAL_PRIVACY_VERSION,
+      legal_accepted_at: new Date().toISOString()
+    }
   });
 
   if (payload.access_token) {
     setStoredSession(payload);
     await loadCurrentProfile();
+    await recordLegalAcceptance();
     signupMessage.textContent = "Cuenta creada y sesión iniciada.";
   } else {
     signupMessage.textContent = "Cuenta creada. Si se requiere confirmación, revisa tu correo.";
   }
 
   showToast("Cuenta creada. Revisa tu correo si necesitas confirmarla.");
+}
+
+async function recordLegalAcceptance() {
+  const session = getStoredSession();
+  if (!session?.user?.id) return;
+
+  try {
+    await supabaseRestRequest(`/profiles?id=eq.${session.user.id}`, {
+      method: "PATCH",
+      prefer: "return=minimal",
+      body: {
+        legal_terms_version: LEGAL_TERMS_VERSION,
+        legal_privacy_version: LEGAL_PRIVACY_VERSION,
+        legal_accepted_at: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    if (!/legal_|schema cache|column/i.test(error.message)) throw error;
+  }
 }
 
 async function signInWithSupabase() {

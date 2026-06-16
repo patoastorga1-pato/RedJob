@@ -30,7 +30,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./styles.css?v=20260613a" />
+    <link rel="stylesheet" href="./styles.css?v=20260616a" />
   </head>
   <body>
     <header class="site-header">
@@ -582,18 +582,22 @@
               Nombre completo <span class="field-note">Solo para crear cuenta</span>
               <input id="authName" type="text" placeholder="Nombre completo o empresa" autocomplete="name" />
             </label>
+            <label class="legal-consent">
+              <input id="legalConsent" type="checkbox" />
+              <span>
+                He leído y acepto los
+                <button type="button" data-view-link="terminos">Términos y Condiciones</button>
+                y el
+                <button type="button" data-view-link="privacidad">Aviso de Privacidad</button>
+                de RedJob.
+              </span>
+            </label>
             <div class="auth-actions">
               <button class="primary-button" type="button" id="simulateSignup" data-auth-create>Crear cuenta</button>
               <button class="secondary-button" type="button" id="signInButton">Iniciar sesión</button>
             </div>
             <button class="link-button" type="button" id="forgotPasswordButton">Recuperar contraseña</button>
             <button class="text-danger-button" type="button" id="signOutButton">Cerrar sesión</button>
-            <p class="legal-note">
-              Al crear cuenta aceptas los
-              <button type="button" data-view-link="terminos">Términos y Condiciones</button>
-              y el
-              <button type="button" data-view-link="privacidad">Aviso de Privacidad</button>.
-            </p>
             <p id="signupMessage">Puedes crear una cuenta o iniciar sesión.</p>
           </form>
           <aside class="auth-status-panel is-hidden" aria-hidden="true">
@@ -901,6 +905,6 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script src="./config.js?v=20260605h"></script>
-    <script src="./app.js?v=20260613b"></script>
+    <script src="./app.js?v=20260616a"></script>
   </body>
 </html>

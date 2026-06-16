@@ -9,6 +9,9 @@ create table if not exists public.profiles (
   role text not null check (role in ('candidate', 'company')),
   suspended_at timestamptz,
   suspension_reason text,
+  legal_terms_version text,
+  legal_privacy_version text,
+  legal_accepted_at timestamptz,
   created_at timestamptz not null default now()
 );
 
@@ -17,6 +20,15 @@ add column if not exists suspended_at timestamptz;
 
 alter table public.profiles
 add column if not exists suspension_reason text;
+
+alter table public.profiles
+add column if not exists legal_terms_version text;
+
+alter table public.profiles
+add column if not exists legal_privacy_version text;
+
+alter table public.profiles
+add column if not exists legal_accepted_at timestamptz;
 
 create table if not exists public.user_roles (
   user_id uuid not null references auth.users(id) on delete cascade,
@@ -48,7 +60,14 @@ security definer
 set search_path = public
 as $$
 begin
-  insert into public.profiles (id, email, role)
+  insert into public.profiles (
+    id,
+    email,
+    role,
+    legal_terms_version,
+    legal_privacy_version,
+    legal_accepted_at
+  )
   values (
     new.id,
     coalesce(new.email, ''),
@@ -56,7 +75,10 @@ begin
       when new.raw_user_meta_data->>'role' in ('candidate', 'company')
       then new.raw_user_meta_data->>'role'
       else 'candidate'
-    end
+    end,
+    nullif(new.raw_user_meta_data->>'legal_terms_version', ''),
+    nullif(new.raw_user_meta_data->>'legal_privacy_version', ''),
+    nullif(new.raw_user_meta_data->>'legal_accepted_at', '')::timestamptz
   )
   on conflict (id) do nothing;
 
@@ -290,6 +312,28 @@ create table if not exists public.reports (
 );
 
 create index if not exists reports_status_created_at_idx on public.reports(status, created_at desc);
+create index if not exists reports_target_idx on public.reports(target_type, target_id);
+
+alter table public.reports
+drop constraint if exists reports_subject_length_check;
+
+alter table public.reports
+add constraint reports_subject_length_check
+check (char_length(trim(subject)) between 3 and 140);
+
+alter table public.reports
+drop constraint if exists reports_description_length_check;
+
+alter table public.reports
+add constraint reports_description_length_check
+check (char_length(trim(description)) between 10 and 3000);
+
+alter table public.reports
+drop constraint if exists reports_target_type_check;
+
+alter table public.reports
+add constraint reports_target_type_check
+check (target_type is null or target_type in ('job', 'user', 'company', 'message', 'application'));
 
 create table if not exists public.billing_events (
   id uuid primary key default gen_random_uuid(),
@@ -548,6 +592,10 @@ declare
 begin
   if auth.uid() is null then
     raise exception 'Debes iniciar sesion para postularte.';
+  end if;
+
+  if not public.is_account_active() then
+    raise exception 'Tu cuenta esta suspendida.';
   end if;
 
   if not exists (
@@ -977,6 +1025,16 @@ begin
 end;
 $$;
 
+revoke all on function public.apply_to_job(uuid, uuid, integer, text) from public;
+revoke all on function public.update_my_application(uuid, text, text) from public;
+revoke all on function public.update_company_application_status(uuid, text) from public;
+revoke all on function public.mark_conversation_read(uuid) from public;
+
+grant execute on function public.apply_to_job(uuid, uuid, integer, text) to authenticated;
+grant execute on function public.update_my_application(uuid, text, text) to authenticated;
+grant execute on function public.update_company_application_status(uuid, text) to authenticated;
+grant execute on function public.mark_conversation_read(uuid) to authenticated;
+
 create or replace function public.is_conversation_participant(conversation_uuid uuid)
 returns boolean
 language sql
@@ -1385,6 +1443,7 @@ create policy "Relevant companies read candidate resumes"
 on storage.objects for select
 using (
   bucket_id = 'resumes'
+  and public.is_account_active()
   and (
     (storage.foldername(name))[1] = auth.uid()::text
     or exists (
