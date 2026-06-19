@@ -12,11 +12,15 @@ const signupMessage = document.querySelector("#signupMessage");
 const accountNameLabel = document.querySelector("#accountNameLabel");
 const authEmail = document.querySelector("#authEmail");
 const authPassword = document.querySelector("#authPassword");
+const signupEmail = document.querySelector("#signupEmail");
+const signupPassword = document.querySelector("#signupPassword");
 const authName = document.querySelector("#authName");
 const legalConsent = document.querySelector("#legalConsent");
 const signInButton = document.querySelector("#signInButton");
 const signOutButton = document.querySelector("#signOutButton");
 const forgotPasswordButton = document.querySelector("#forgotPasswordButton");
+const signInPanel = document.querySelector("#signInPanel");
+const createAccountPanel = document.querySelector("#createAccountPanel");
 const sessionStatus = document.querySelector("#sessionStatus");
 const selectedRoleStatus = document.querySelector("#selectedRoleStatus");
 const headerSignInButton = document.querySelector("#headerSignInButton");
@@ -72,6 +76,9 @@ const companyJobEditor = document.querySelector("#companyJobEditor");
 const companyJobForm = document.querySelector("#companyJobForm");
 const companyNameInput = document.querySelector("#companyNameInput");
 const companyDescriptionInput = document.querySelector("#companyDescriptionInput");
+const companyLogoButton = document.querySelector("#companyLogoButton");
+const companyLogoInput = document.querySelector("#companyLogoInput");
+const companyLogoStatus = document.querySelector("#companyLogoStatus");
 const jobTitleInput = document.querySelector("#jobTitleInput");
 const jobDescriptionInput = document.querySelector("#jobDescriptionInput");
 const jobLocationInput = document.querySelector("#jobLocationInput");
@@ -106,6 +113,8 @@ const detailMatch = document.querySelector("#detailMatch");
 const detailMatchBar = document.querySelector("#detailMatchBar");
 const detailDescription = document.querySelector("#detailDescription");
 const detailCompanyDescription = document.querySelector("#detailCompanyDescription");
+const detailCompanyRatingSummary = document.querySelector("#detailCompanyRatingSummary");
+const detailCompanyRatingActions = document.querySelector("#detailCompanyRatingActions");
 const detailRequirements = document.querySelector("#detailRequirements");
 const detailSaveButton = document.querySelector("#detailSaveButton");
 const detailApplyButton = document.querySelector("#detailApplyButton");
@@ -139,6 +148,8 @@ const installAppButton = document.querySelector("#installAppButton");
 
 const savedJobs = new Set();
 const applications = [];
+const companyRatingSummary = new Map();
+const ownCompanyRatings = new Map();
 let activeApplicationJob = null;
 let toastTimer = null;
 let deferredInstallPrompt = null;
@@ -597,13 +608,52 @@ function applyRoleExperience() {
   document.body.dataset.role = role;
 }
 
+function getCompanyLogoUrl(path) {
+  if (!path) return "";
+  if (/^https?:\/\//i.test(path)) return path;
+  return `${SUPABASE_URL}/storage/v1/object/public/company-logos/${encodeURIComponent(path).replace(/%2F/g, "/")}`;
+}
+
+function setLogoElement(element, name, logoPath) {
+  if (!element) return;
+
+  const logoUrl = getCompanyLogoUrl(logoPath);
+  element.textContent = "";
+  element.classList.toggle("has-image", Boolean(logoUrl));
+
+  if (logoUrl) {
+    const image = document.createElement("img");
+    image.src = logoUrl;
+    image.alt = `Logo de ${name || "empresa"}`;
+    image.loading = "lazy";
+    image.onerror = () => {
+      element.classList.remove("has-image");
+      element.textContent = getInitials(name || "RJ");
+    };
+    element.appendChild(image);
+    return;
+  }
+
+  element.textContent = getInitials(name || "RJ");
+}
+
+function renderCompanyLogoMarkup(name, logoPath, extraClass = "") {
+  const logoUrl = getCompanyLogoUrl(logoPath);
+  const classes = `company-logo ${extraClass} ${logoUrl ? "has-image" : ""}`.trim();
+  if (!logoUrl) return `<span class="${classes}">${escapeHtml(getInitials(name || "RJ"))}</span>`;
+  return `<span class="${classes}"><img src="${escapeHtml(logoUrl)}" alt="Logo de ${escapeHtml(name || "empresa")}" loading="lazy" /></span>`;
+}
+
 function renderCompanyHeader() {
   const name = currentCompanyProfile?.company_name || "Tu empresa";
   const description = currentCompanyProfile?.description || "Completa el perfil de empresa para publicar vacantes reales.";
 
-  companyHeroLogo.textContent = getInitials(name);
+  setLogoElement(companyHeroLogo, name, currentCompanyProfile?.logo_path);
   companyHeroName.textContent = name;
   companyHeroDescription.textContent = description;
+  companyLogoStatus.textContent = currentCompanyProfile?.logo_name
+    ? `Logo cargado: ${currentCompanyProfile.logo_name}`
+    : "Sin logo cargado";
   companyVerifiedBadge.classList.toggle("is-hidden", !currentCompanyProfile?.is_verified);
 }
 
@@ -618,6 +668,69 @@ function renderCommercialBadges(job) {
   if (isJobFeatured(job)) badges.push(`<span class="featured-badge">Destacada</span>`);
   if (job.companyVerified) badges.push(`<span class="verified-badge">Empresa verificada</span>`);
   return badges.join("");
+}
+
+function getCompanyRating(companyId) {
+  return companyRatingSummary.get(String(companyId)) ?? { average: 0, count: 0 };
+}
+
+function renderStars(value, interactive = false, selected = 0) {
+  const rating = Number(value) || 0;
+  return Array.from({ length: 5 }, (_, index) => {
+    const starValue = index + 1;
+    const filled = interactive ? starValue <= selected : starValue <= Math.round(rating);
+    const className = filled ? "star filled" : "star";
+    if (!interactive) return `<span class="${className}" aria-hidden="true">★</span>`;
+    return `<button class="${className}" type="button" data-rate-company="${starValue}" aria-label="Calificar con ${starValue} estrellas">★</button>`;
+  }).join("");
+}
+
+function renderRatingSummary(companyId) {
+  const rating = getCompanyRating(companyId);
+  if (!rating.count) {
+    return `<span class="company-rating empty">${renderStars(0)} <small>Sin calificaciones</small></span>`;
+  }
+  return `
+    <span class="company-rating" aria-label="${rating.average} de 5 estrellas con ${rating.count} calificaciones">
+      ${renderStars(rating.average)}
+      <small>${rating.average.toFixed(1)} (${rating.count})</small>
+    </span>
+  `;
+}
+
+function canRateCompany(companyId) {
+  if (!currentCandidateProfile?.id || !companyId) return false;
+  return applications.some((application) => {
+    const job = getJobById(application.jobId);
+    return sameId(application.companyId, companyId) || sameId(job?.companyId, companyId);
+  });
+}
+
+function renderCompanyRatingControls(job) {
+  if (!detailCompanyRatingSummary || !detailCompanyRatingActions) return;
+
+  const rating = getCompanyRating(job.companyId);
+  detailCompanyRatingSummary.innerHTML = rating.count
+    ? `${renderStars(rating.average)} <span>${rating.average.toFixed(1)} de 5 · ${rating.count} calificación${rating.count === 1 ? "" : "es"}</span>`
+    : "Sin calificaciones todavía";
+
+  if (!getStoredSession()?.access_token) {
+    detailCompanyRatingActions.innerHTML = `<small>Inicia sesión para calificar después de postularte.</small>`;
+    return;
+  }
+
+  if (!canRateCompany(job.companyId)) {
+    detailCompanyRatingActions.innerHTML = `<small>Podrás calificar esta empresa cuando te postules a una de sus vacantes.</small>`;
+    return;
+  }
+
+  const selectedRating = ownCompanyRatings.get(String(job.companyId)) ?? 0;
+  detailCompanyRatingActions.innerHTML = `
+    <span>Tu calificación</span>
+    <div class="interactive-stars" data-rating-company-id="${escapeHtml(job.companyId)}">
+      ${renderStars(0, true, selectedRating)}
+    </div>
+  `;
 }
 
 function renderCompanyProfileSelect() {
@@ -671,12 +784,15 @@ function renderHiringCompanies() {
     if (existing) {
       existing.activeJobs += 1;
       existing.isVerified ||= Boolean(job.companyVerified);
+      existing.logoPath ||= job.companyLogoPath;
       return;
     }
 
     companies.set(key, {
+      id: job.companyId,
       name: job.company,
       activeJobs: 1,
+      logoPath: job.companyLogoPath,
       isVerified: Boolean(job.companyVerified)
     });
   });
@@ -690,11 +806,12 @@ function renderHiringCompanies() {
         .map(
           (company) => `
             <button class="company-card" type="button" data-company-search="${escapeHtml(company.name)}">
-              <span class="company-logo">${escapeHtml(getInitials(company.name))}</span>
+              ${renderCompanyLogoMarkup(company.name, company.logoPath)}
               <span class="company-card-title">
                 <strong>${escapeHtml(company.name)}</strong>
                 ${company.isVerified ? '<span class="verified-badge">Verificada</span>' : ""}
               </span>
+              ${renderRatingSummary(company.id)}
               <p>${company.activeJobs} vacante${company.activeJobs === 1 ? "" : "s"} activa${company.activeJobs === 1 ? "" : "s"}</p>
             </button>
           `
@@ -702,7 +819,7 @@ function renderHiringCompanies() {
         .join("")
     : `
         <article class="company-card company-card-empty">
-          <span class="company-logo">RJ</span>
+          ${renderCompanyLogoMarkup("RedJob", "")}
           <strong>Aún no hay empresas contratando</strong>
           <p>Las empresas aparecerán aquí cuando publiquen una vacante activa.</p>
         </article>
@@ -776,7 +893,7 @@ async function fetchJobById(jobId) {
   let rows = null;
   try {
     rows = await supabaseRestRequest(
-      `/jobs?select=id,title,description,location,work_mode,category,salary_min,salary_max,is_featured,featured_priority,featured_until,promotion_source,status,company_profiles(id,user_id,company_name,description,plan,plan_status,is_verified),job_skills(skill_name)&id=eq.${jobId}&status=eq.published&limit=1`
+      `/jobs?select=id,title,description,location,work_mode,category,salary_min,salary_max,is_featured,featured_priority,featured_until,promotion_source,status,company_profiles(id,user_id,company_name,description,logo_path,logo_name,plan,plan_status,is_verified),job_skills(skill_name)&id=eq.${jobId}&status=eq.published&limit=1`
     );
   } catch (error) {
     if (!/category|schema cache|column|Falta instalar/i.test(error.message)) throw error;
@@ -809,7 +926,7 @@ async function openJobDetail(jobId) {
   }
 
   activeDetailJobId = job.id;
-  detailCompanyLogo.textContent = job.company.charAt(0);
+  setLogoElement(detailCompanyLogo, job.company, job.companyLogoPath);
   detailCompany.textContent = job.company;
   detailTitle.textContent = job.title;
   detailCommercialBadges.innerHTML = renderCommercialBadges(job);
@@ -820,6 +937,7 @@ async function openJobDetail(jobId) {
     job.description || "La empresa aún no agregó una descripción extensa para esta vacante.";
   detailCompanyDescription.textContent =
     job.companyDescription || "Esta empresa aún no agregó una descripción a su perfil.";
+  renderCompanyRatingControls(job);
   detailRequirements.innerHTML = job.tags.length
     ? job.tags.map((tag) => `<li>${escapeHtml(tag)}</li>`).join("")
     : `<li>Sin requisitos publicados</li>`;
@@ -903,6 +1021,25 @@ async function supabaseStorageUpload(path, file) {
   }
 }
 
+async function supabaseStorageUploadToBucket(bucket, path, file, errorMessage) {
+  const session = requireSession();
+  const response = await fetch(`${SUPABASE_URL}/storage/v1/object/${bucket}/${path}`, {
+    method: "PUT",
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${session.access_token}`,
+      "Content-Type": file.type || "application/octet-stream",
+      "x-upsert": "true"
+    },
+    body: file
+  });
+
+  if (!response.ok) {
+    const payload = await response.json().catch(() => ({}));
+    throw new Error(payload.message || payload.error || errorMessage);
+  }
+}
+
 async function createResumeSignedUrl(path) {
   const session = requireSession();
   const response = await fetch(`${SUPABASE_URL}/storage/v1/object/sign/resumes/${path}`, {
@@ -922,6 +1059,34 @@ async function createResumeSignedUrl(path) {
   }
 
   return `${SUPABASE_URL}/storage/v1${payload.signedURL}`;
+}
+
+async function loadCompanyRatingSummary() {
+  companyRatingSummary.clear();
+  ownCompanyRatings.clear();
+
+  try {
+    const rows = await supabaseRestRequest("/company_rating_summary?select=company_id,average_rating,rating_count");
+    (rows ?? []).forEach((row) => {
+      companyRatingSummary.set(String(row.company_id), {
+        average: Number(row.average_rating) || 0,
+        count: Number(row.rating_count) || 0
+      });
+    });
+  } catch (error) {
+    if (!/company_rating_summary|company_ratings|schema cache|relation|Falta instalar/i.test(error.message)) throw error;
+  }
+
+  if (!currentCandidateProfile?.id) return;
+
+  try {
+    const rows = await supabaseRestRequest(
+      `/company_ratings?select=company_id,rating&candidate_id=eq.${currentCandidateProfile.id}`
+    );
+    (rows ?? []).forEach((row) => ownCompanyRatings.set(String(row.company_id), Number(row.rating) || 0));
+  } catch (error) {
+    if (!/company_ratings|schema cache|relation|Falta instalar/i.test(error.message)) throw error;
+  }
 }
 
 function requireSession() {
@@ -1067,6 +1232,7 @@ async function loadCurrentProfile() {
       candidateSummary.value = candidateSummary.value.trim();
     }
     await loadCandidateApplications();
+    await loadCompanyRatingSummary();
   }
 
   const companyRows = await supabaseRestRequest(`/company_profiles?select=*&user_id=eq.${session.user.id}&order=created_at.asc`);
@@ -1419,7 +1585,7 @@ async function loadCandidateApplications() {
   }
 
   const rows = await supabaseRestRequest(
-    `/applications?select=id,job_id,status,match_score,created_at,jobs(title,company_profiles(company_name))&candidate_id=eq.${currentCandidateProfile.id}&order=created_at.desc`
+    `/applications?select=id,job_id,status,match_score,created_at,jobs(title,company_id,company_profiles(company_name))&candidate_id=eq.${currentCandidateProfile.id}&order=created_at.desc`
   );
 
   applications.length = 0;
@@ -1430,6 +1596,7 @@ async function loadCandidateApplications() {
       id: application.id,
       source: "supabase",
       jobId: application.job_id,
+      companyId: job?.company_id,
       rawStatus: application.status,
       status: mapApplicationStatus(application.status),
       jobTitle: job?.title ?? "Vacante",
@@ -1453,6 +1620,41 @@ async function withdrawCandidateApplication(applicationId) {
   });
   await loadCandidateApplications();
   await loadFirstConversation();
+}
+
+async function rateCompany(companyId, rating) {
+  const session = requireSession();
+
+  if (!currentCandidateProfile?.id) {
+    await loadCurrentProfile();
+  }
+
+  if (!currentCandidateProfile?.id) {
+    throw new Error("Guarda tu perfil de candidato antes de calificar una empresa.");
+  }
+
+  if (!canRateCompany(companyId)) {
+    throw new Error("Solo puedes calificar empresas a las que ya te postulaste.");
+  }
+
+  await supabaseRestRequest("/company_ratings?on_conflict=company_id,candidate_id", {
+    method: "POST",
+    prefer: "resolution=merge-duplicates",
+    body: {
+      company_id: companyId,
+      candidate_id: currentCandidateProfile.id,
+      user_id: session.user.id,
+      rating: Number(rating)
+    }
+  });
+
+  ownCompanyRatings.set(String(companyId), Number(rating));
+  await loadCompanyRatingSummary();
+  renderJobs();
+  renderHiringCompanies();
+
+  const job = getJobById(activeDetailJobId);
+  if (job) renderCompanyRatingControls(job);
 }
 
 function mapApplicationStatus(status) {
@@ -1666,7 +1868,7 @@ async function loadRealJobs() {
     let rows = null;
     try {
       rows = await supabaseRestRequest(
-        "/jobs?select=id,title,description,location,work_mode,category,salary_min,salary_max,is_featured,featured_priority,featured_until,promotion_source,status,company_profiles(id,user_id,company_name,description,plan,plan_status,is_verified),job_skills(skill_name)&status=eq.published"
+        "/jobs?select=id,title,description,location,work_mode,category,salary_min,salary_max,is_featured,featured_priority,featured_until,promotion_source,status,company_profiles(id,user_id,company_name,description,logo_path,logo_name,plan,plan_status,is_verified),job_skills(skill_name)&status=eq.published"
       );
     } catch (error) {
       if (!/category|schema cache|column|Falta instalar/i.test(error.message)) throw error;
@@ -1678,6 +1880,7 @@ async function loadRealJobs() {
     const realJobs = (rows ?? []).map(mapSupabaseJob).filter(Boolean);
 
     jobs = realJobs;
+    await loadCompanyRatingSummary();
     renderJobs();
     renderHiringCompanies();
     renderProfileActivity();
@@ -1711,6 +1914,8 @@ function mapSupabaseJob(row) {
     companyUserId: company?.user_id,
     company: company?.company_name ?? "Empresa",
     companyDescription: company?.description ?? "",
+    companyLogoPath: company?.logo_path ?? "",
+    companyLogoName: company?.logo_name ?? "",
     companyPlan: company?.plan ?? "free",
     companyPlanStatus: company?.plan_status ?? "beta",
     companyVerified: Boolean(company?.is_verified),
@@ -1811,6 +2016,49 @@ async function saveCompanyProfile() {
   renderProfileHeader();
   renderCompanyProfileSelect();
   return currentCompanyProfile;
+}
+
+async function uploadCompanyLogo(file) {
+  if (!file) return;
+
+  if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
+    throw new Error("Sube un logo en PNG, JPG o WebP.");
+  }
+
+  if (file.size > 3 * 1024 * 1024) {
+    throw new Error("El logo debe pesar menos de 3 MB.");
+  }
+
+  if (!currentCompanyProfile?.id) {
+    await saveCompanyProfile();
+  }
+
+  if (!currentCompanyProfile?.id) {
+    throw new Error("Primero guarda el perfil de empresa.");
+  }
+
+  const session = requireSession();
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+  const logoPath = `${session.user.id}/${currentCompanyProfile.id}/${Date.now()}-${safeName}`;
+
+  companyLogoStatus.textContent = "Subiendo logo...";
+  await supabaseStorageUploadToBucket("company-logos", logoPath, file, "No se pudo subir el logo.");
+
+  const rows = await supabaseRestRequest(`/company_profiles?id=eq.${currentCompanyProfile.id}`, {
+    method: "PATCH",
+    prefer: "return=representation",
+    body: {
+      logo_path: logoPath,
+      logo_name: file.name
+    }
+  });
+
+  currentCompanyProfile = rows?.[0] ?? currentCompanyProfile;
+  currentCompanyProfiles = currentCompanyProfiles.map((company) =>
+    sameId(company.id, currentCompanyProfile.id) ? currentCompanyProfile : company
+  );
+  renderCompanyProfileSelect();
+  await loadRealJobs();
 }
 
 async function publishRealJob() {
@@ -2037,8 +2285,8 @@ async function sendRealMessage(body) {
 }
 
 function getAuthFormValues() {
-  const email = authEmail.value.trim();
-  const password = authPassword.value;
+  const email = signupEmail.value.trim();
+  const password = signupPassword.value;
   const name = authName.value.trim();
   const role = document.querySelector(".role-option.active").dataset.role;
 
@@ -2256,15 +2504,16 @@ function renderJobs() {
             <div>
               <div class="job-commercial-badges">${renderCommercialBadges(job)}</div>
               <h3>${escapeHtml(job.title)}</h3>
-              <div class="job-meta">
-                <span>${escapeHtml(formatCategoryLabel(job.category ?? "Otra"))}</span>
-                <span>${escapeHtml(job.company)}</span>
-                <span>${escapeHtml(formatLocationLabel(job.location))}</span>
-                <span>${escapeHtml(job.salary)}</span>
-                <span>${escapeHtml(formatWorkModeLabel(job.mode))}</span>
-              </div>
+            <div class="job-meta">
+              <span>${escapeHtml(formatCategoryLabel(job.category ?? "Otra"))}</span>
+              <span>${escapeHtml(job.company)}</span>
+              ${renderRatingSummary(job.companyId)}
+              <span>${escapeHtml(formatLocationLabel(job.location))}</span>
+              <span>${escapeHtml(job.salary)}</span>
+              <span>${escapeHtml(formatWorkModeLabel(job.mode))}</span>
             </div>
-            <span class="company-logo">${escapeHtml(job.company.charAt(0))}</span>
+          </div>
+            ${renderCompanyLogoMarkup(job.company, job.companyLogoPath)}
           </div>
           <div class="tags">
             ${job.tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}
@@ -2411,7 +2660,12 @@ function switchView(viewId) {
     link.classList.toggle("active", link.dataset.viewLink === viewId);
   });
 
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  window.requestAnimationFrame(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    if (viewId === "contacto") {
+      document.querySelector("#contacto")?.scrollIntoView({ block: "start", behavior: "auto" });
+    }
+  });
 
   if (viewId === "mensajes" && getStoredSession()?.access_token) {
     loadFirstConversation(true).catch((error) => showToast(`Mensajes: ${error.message}`));
@@ -2422,11 +2676,31 @@ function switchView(viewId) {
   }
 }
 
+function openAuthPanel(mode) {
+  if (!signInPanel || !createAccountPanel) return;
+  const createMode = mode === "create";
+  createAccountPanel.open = createMode;
+  signInPanel.open = !createMode;
+}
+
 document.querySelectorAll("[data-view-link]").forEach((trigger) => {
   trigger.addEventListener("click", (event) => {
     event.preventDefault();
     switchView(trigger.dataset.viewLink);
+    if (trigger.dataset.authCreate !== undefined) {
+      openAuthPanel("create");
+    } else if (trigger.dataset.viewLink === "acceso") {
+      openAuthPanel("signin");
+    }
   });
+});
+
+signInPanel.addEventListener("toggle", () => {
+  if (signInPanel.open) createAccountPanel.open = false;
+});
+
+createAccountPanel.addEventListener("toggle", () => {
+  if (createAccountPanel.open) signInPanel.open = false;
 });
 
 hiringCompaniesList.addEventListener("click", (event) => {
@@ -2550,6 +2824,24 @@ detailApplyButton.addEventListener("click", () => {
   }
 
   openApplicationDialog(job);
+});
+
+detailCompanyRatingActions.addEventListener("click", async (event) => {
+  const ratingButton = event.target.closest("[data-rate-company]");
+  if (!ratingButton) return;
+
+  const job = getJobById(activeDetailJobId);
+  if (!job?.companyId) return;
+
+  ratingButton.disabled = true;
+  try {
+    await rateCompany(job.companyId, ratingButton.dataset.rateCompany);
+    showToast("Calificación guardada. Gracias por ayudar a otros candidatos.");
+  } catch (error) {
+    showToast(friendlyError(error));
+  } finally {
+    ratingButton.disabled = false;
+  }
 });
 
 [searchInput, locationCityInput, modeFilter].forEach((control) => {
@@ -2768,7 +3060,7 @@ document.querySelector("#administracion").addEventListener("click", async (event
   try {
     if (openJobButton) {
       const rows = await supabaseRestRequest(
-        `/jobs?select=id,title,description,location,work_mode,category,salary_min,salary_max,status,company_profiles(id,user_id,company_name,description,is_verified),job_skills(skill_name)&id=eq.${openJobButton.dataset.adminOpenJob}&limit=1`
+        `/jobs?select=id,title,description,location,work_mode,category,salary_min,salary_max,status,company_profiles(id,user_id,company_name,description,logo_path,logo_name,is_verified),job_skills(skill_name)&id=eq.${openJobButton.dataset.adminOpenJob}&limit=1`
       );
       const job = mapSupabaseJob(rows?.[0]);
       if (!job) throw new Error("Vacante no encontrada.");
@@ -2892,6 +3184,30 @@ receivedCandidateResume.addEventListener("click", async () => {
     window.open(signedUrl, "_blank", "noopener");
   } catch (error) {
     showToast(friendlyError(error));
+  }
+});
+
+companyLogoButton.addEventListener("click", () => {
+  if (!getStoredSession()?.access_token) {
+    showToast("Inicia sesión para subir el logo de tu empresa.");
+    switchView("acceso");
+    return;
+  }
+  companyLogoInput.click();
+});
+
+companyLogoInput.addEventListener("change", async () => {
+  const file = companyLogoInput.files?.[0];
+  if (!file) return;
+
+  try {
+    await uploadCompanyLogo(file);
+    showToast("Logo de empresa actualizado.");
+  } catch (error) {
+    renderCompanyHeader();
+    showToast(friendlyError(error));
+  } finally {
+    companyLogoInput.value = "";
   }
 });
 
@@ -3049,6 +3365,7 @@ document.querySelector("#confirmApplication").addEventListener("click", async ()
         id: realApplication?.id,
         source: "supabase",
         jobId: activeApplicationJob.id,
+        companyId: activeApplicationJob.companyId,
         rawStatus: "submitted",
         status: "Enviada",
         jobTitle: activeApplicationJob.title,

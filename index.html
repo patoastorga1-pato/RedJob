@@ -30,7 +30,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./styles.css?v=20260616a" />
+    <link rel="stylesheet" href="./styles.css?v=20260619b" />
   </head>
   <body>
     <header class="site-header">
@@ -188,6 +188,13 @@
             <section class="company-about-section">
               <h2>Sobre la empresa</h2>
               <p id="detailCompanyDescription">Información de la empresa.</p>
+              <div class="company-rating-panel" id="detailCompanyRating">
+                <div>
+                  <span>Calificación de empresa</span>
+                  <strong id="detailCompanyRatingSummary">Sin calificaciones todavía</strong>
+                </div>
+                <div class="rating-actions" id="detailCompanyRatingActions"></div>
+              </div>
             </section>
             <section>
               <h2>Requisitos</h2>
@@ -381,6 +388,14 @@
                 Descripción de empresa
                 <textarea id="companyDescriptionInput" rows="3" placeholder="Qué hace tu empresa y qué tipo de talento busca."></textarea>
               </label>
+              <div class="logo-upload-field">
+                <div>
+                  <span>Logo de empresa</span>
+                  <small id="companyLogoStatus">Sin logo cargado</small>
+                </div>
+                <button class="secondary-button subtle" type="button" id="companyLogoButton">Subir logo</button>
+                <input class="is-hidden" id="companyLogoInput" type="file" accept="image/png,image/jpeg,image/webp" />
+              </div>
               <label>
                 Puesto
                 <input id="jobTitleInput" type="text" placeholder="Nombre del puesto" />
@@ -562,24 +577,57 @@
         <section class="access-page">
           <div>
             <span>Acceso</span>
-            <h1>Crea tu cuenta RedJob</h1>
-            <p>Regístrate como candidato o empresa para comenzar.</p>
+            <h1>Accede a RedJob</h1>
+            <p>Inicia sesión rápido o crea una cuenta nueva cuando quieras comenzar.</p>
           </div>
-          <form class="access-card">
+          <div class="access-card access-accordion">
+            <details class="auth-panel" id="signInPanel" open>
+              <summary>
+                <span>
+                  <strong>Iniciar sesión</strong>
+                  <small>Entra con tu correo y contraseña.</small>
+                </span>
+                <span class="auth-panel-chevron" aria-hidden="true"></span>
+              </summary>
+              <div class="auth-panel-content">
+                <label>
+                  Correo electrónico
+                  <input id="authEmail" type="email" placeholder="tu@correo.com" autocomplete="email" />
+                </label>
+                <label>
+                  Contraseña
+                  <input id="authPassword" type="password" placeholder="Tu contraseña" autocomplete="current-password" />
+                </label>
+                <div class="auth-actions">
+                  <button class="primary-button" type="button" id="signInButton">Iniciar sesión</button>
+                </div>
+                <button class="link-button" type="button" id="forgotPasswordButton">Recuperar contraseña</button>
+              </div>
+            </details>
+
+            <details class="auth-panel" id="createAccountPanel">
+              <summary>
+                <span>
+                  <strong>Crear cuenta</strong>
+                  <small>Elige tu tipo de cuenta y acepta los términos.</small>
+                </span>
+                <span class="auth-panel-chevron" aria-hidden="true"></span>
+              </summary>
+              <div class="auth-panel-content">
             <div class="role-toggle">
               <button class="role-option active" type="button" data-role="candidate">Candidato</button>
               <button class="role-option" type="button" data-role="company">Empresa</button>
             </div>
             <label>
               Correo electrónico
-              <input id="authEmail" type="email" placeholder="tu@correo.com" autocomplete="email" />
+              <input id="signupEmail" type="email" placeholder="tu@correo.com" autocomplete="email" />
             </label>
             <label>
               Contraseña
-              <input id="authPassword" type="password" placeholder="Mínimo 8 caracteres" autocomplete="current-password" />
+              <input id="signupPassword" type="password" placeholder="Mínimo 8 caracteres" autocomplete="new-password" />
             </label>
             <label id="accountNameLabel">
-              Nombre completo <span class="field-note">Solo para crear cuenta</span>
+              Nombre completo
               <input id="authName" type="text" placeholder="Nombre completo o empresa" autocomplete="name" />
             </label>
             <label class="legal-consent">
@@ -592,14 +640,12 @@
                 de RedJob.
               </span>
             </label>
-            <div class="auth-actions">
-              <button class="primary-button" type="button" id="simulateSignup" data-auth-create>Crear cuenta</button>
-              <button class="secondary-button" type="button" id="signInButton">Iniciar sesión</button>
-            </div>
-            <button class="link-button" type="button" id="forgotPasswordButton">Recuperar contraseña</button>
+            <button class="primary-button" type="button" id="simulateSignup" data-auth-create>Crear cuenta</button>
+              </div>
+            </details>
             <button class="text-danger-button" type="button" id="signOutButton">Cerrar sesión</button>
-            <p id="signupMessage">Puedes crear una cuenta o iniciar sesión.</p>
-          </form>
+            <p id="signupMessage">Puedes iniciar sesión o crear una cuenta nueva.</p>
+          </div>
           <aside class="auth-status-panel is-hidden" aria-hidden="true">
             <h2>Estado</h2>
             <div>
@@ -872,8 +918,8 @@
         </section>
       </article>
 
-      <article class="view legal-view" id="contacto">
-        <section class="page-hero compact">
+      <article class="view legal-view contact-view" id="contacto">
+        <section class="page-hero compact contact-hero">
           <span>Contacto</span>
           <h1>Contacto RedJob</h1>
           <p>Estamos disponibles para ayudarte con soporte, privacidad, empresas y seguridad dentro de RedJob.</p>
@@ -905,6 +951,6 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script src="./config.js?v=20260605h"></script>
-    <script src="./app.js?v=20260616a"></script>
+    <script src="./app.js?v=20260619b"></script>
   </body>
 </html>

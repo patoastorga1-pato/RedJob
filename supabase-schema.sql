@@ -207,6 +207,12 @@ alter table public.company_profiles
 add column if not exists plan_expires_at timestamptz;
 
 alter table public.company_profiles
+add column if not exists logo_path text;
+
+alter table public.company_profiles
+add column if not exists logo_name text;
+
+alter table public.company_profiles
 drop constraint if exists company_profiles_plan_check;
 
 alter table public.company_profiles
@@ -295,6 +301,25 @@ create table if not exists public.saved_jobs (
   unique (user_id, job_id)
 );
 
+create table if not exists public.company_ratings (
+  id uuid primary key default gen_random_uuid(),
+  company_id uuid not null references public.company_profiles(id) on delete cascade,
+  candidate_id uuid not null references public.candidate_profiles(id) on delete cascade,
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  rating integer not null check (rating between 1 and 5),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (company_id, candidate_id)
+);
+
+create or replace view public.company_rating_summary as
+select
+  company_id,
+  round(avg(rating)::numeric, 1) as average_rating,
+  count(*)::integer as rating_count
+from public.company_ratings
+group by company_id;
+
 create table if not exists public.reports (
   id uuid primary key default gen_random_uuid(),
   reporter_user_id uuid references auth.users(id) on delete set null,
@@ -376,6 +401,8 @@ create index if not exists applications_candidate_id_idx on public.applications(
 create index if not exists applications_job_id_idx on public.applications(job_id);
 create index if not exists saved_jobs_user_id_idx on public.saved_jobs(user_id);
 create index if not exists saved_jobs_job_id_idx on public.saved_jobs(job_id);
+create index if not exists company_ratings_company_id_idx on public.company_ratings(company_id);
+create index if not exists company_ratings_candidate_id_idx on public.company_ratings(candidate_id);
 create index if not exists billing_events_company_id_idx on public.billing_events(company_id);
 create index if not exists billing_events_status_idx on public.billing_events(status);
 create index if not exists conversations_candidate_id_idx on public.conversations(candidate_id);
@@ -420,6 +447,12 @@ drop trigger if exists applications_updated_at on public.applications;
 
 create trigger applications_updated_at
 before update on public.applications
+for each row execute function public.set_updated_at();
+
+drop trigger if exists company_ratings_updated_at on public.company_ratings;
+
+create trigger company_ratings_updated_at
+before update on public.company_ratings
 for each row execute function public.set_updated_at();
 
 drop trigger if exists reports_updated_at on public.reports;
@@ -1208,6 +1241,24 @@ as $$
   );
 $$;
 
+create or replace function public.can_rate_company(company_uuid uuid, candidate_uuid uuid)
+returns boolean
+language sql
+security definer
+set search_path = public
+as $$
+  select
+    public.is_account_active()
+    and public.user_owns_candidate(candidate_uuid)
+    and exists (
+      select 1
+      from public.applications
+      join public.jobs on jobs.id = applications.job_id
+      where applications.candidate_id = candidate_uuid
+        and jobs.company_id = company_uuid
+    );
+$$;
+
 alter table public.profiles enable row level security;
 alter table public.user_roles enable row level security;
 alter table public.candidate_profiles enable row level security;
@@ -1218,6 +1269,7 @@ alter table public.jobs enable row level security;
 alter table public.job_skills enable row level security;
 alter table public.applications enable row level security;
 alter table public.saved_jobs enable row level security;
+alter table public.company_ratings enable row level security;
 alter table public.billing_events enable row level security;
 alter table public.conversations enable row level security;
 alter table public.messages enable row level security;
@@ -1348,6 +1400,44 @@ with check (
   and public.can_read_job(job_id)
 );
 
+drop policy if exists "Users read own company ratings" on public.company_ratings;
+
+create policy "Users read own company ratings"
+on public.company_ratings for select
+using (
+  user_id = auth.uid()
+  or public.user_owns_company(company_id)
+  or public.is_admin()
+);
+
+drop policy if exists "Candidates create company ratings after applying" on public.company_ratings;
+
+create policy "Candidates create company ratings after applying"
+on public.company_ratings for insert
+with check (
+  user_id = auth.uid()
+  and public.can_rate_company(company_id, candidate_id)
+);
+
+drop policy if exists "Candidates update own company ratings" on public.company_ratings;
+
+create policy "Candidates update own company ratings"
+on public.company_ratings for update
+using (
+  user_id = auth.uid()
+  and public.can_rate_company(company_id, candidate_id)
+)
+with check (
+  user_id = auth.uid()
+  and public.can_rate_company(company_id, candidate_id)
+);
+
+drop policy if exists "Candidates delete own company ratings" on public.company_ratings;
+
+create policy "Candidates delete own company ratings"
+on public.company_ratings for delete
+using (user_id = auth.uid() or public.is_admin());
+
 drop policy if exists "Authenticated users create reports" on public.reports;
 
 create policy "Authenticated users create reports"
@@ -1375,6 +1465,9 @@ grant select on table public.user_roles to authenticated;
 revoke all on table public.reports from anon, authenticated;
 grant select, insert on table public.reports to authenticated;
 
+grant select on table public.company_rating_summary to anon, authenticated;
+grant select, insert, update, delete on table public.company_ratings to authenticated;
+
 drop policy if exists "Conversation participants can read conversations" on public.conversations;
 
 create policy "Conversation participants can read conversations"
@@ -1401,6 +1494,10 @@ drop policy if exists "Conversation participants can mark messages as read" on p
 insert into storage.buckets (id, name, public)
 values ('resumes', 'resumes', false)
 on conflict (id) do update set public = false;
+
+insert into storage.buckets (id, name, public)
+values ('company-logos', 'company-logos', true)
+on conflict (id) do update set public = true;
 
 drop policy if exists "Candidates upload own resumes" on storage.objects;
 
@@ -1456,4 +1553,45 @@ using (
         and company_profiles.user_id = auth.uid()
     )
   )
+);
+
+drop policy if exists "Public can read company logos" on storage.objects;
+
+create policy "Public can read company logos"
+on storage.objects for select
+using (bucket_id = 'company-logos');
+
+drop policy if exists "Companies upload own logos" on storage.objects;
+
+create policy "Companies upload own logos"
+on storage.objects for insert
+with check (
+  bucket_id = 'company-logos'
+  and public.is_account_active()
+  and (storage.foldername(name))[1] = auth.uid()::text
+);
+
+drop policy if exists "Companies update own logos" on storage.objects;
+
+create policy "Companies update own logos"
+on storage.objects for update
+using (
+  bucket_id = 'company-logos'
+  and public.is_account_active()
+  and (storage.foldername(name))[1] = auth.uid()::text
+)
+with check (
+  bucket_id = 'company-logos'
+  and public.is_account_active()
+  and (storage.foldername(name))[1] = auth.uid()::text
+);
+
+drop policy if exists "Companies delete own logos" on storage.objects;
+
+create policy "Companies delete own logos"
+on storage.objects for delete
+using (
+  bucket_id = 'company-logos'
+  and public.is_account_active()
+  and (storage.foldername(name))[1] = auth.uid()::text
 );
