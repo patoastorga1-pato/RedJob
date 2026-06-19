@@ -611,7 +611,11 @@ function applyRoleExperience() {
 function getCompanyLogoUrl(path) {
   if (!path) return "";
   if (/^https?:\/\//i.test(path)) return path;
-  return `${SUPABASE_URL}/storage/v1/object/public/company-logos/${encodeURIComponent(path).replace(/%2F/g, "/")}`;
+  const safePath = String(path)
+    .split("/")
+    .map((part) => encodeURIComponent(part))
+    .join("/");
+  return `${SUPABASE_URL}/storage/v1/object/public/company-logos/${safePath}`;
 }
 
 function setLogoElement(element, name, logoPath) {
@@ -619,6 +623,7 @@ function setLogoElement(element, name, logoPath) {
 
   const logoUrl = getCompanyLogoUrl(logoPath);
   element.textContent = "";
+  element.dataset.logoFallback = getInitials(name || "RJ");
   element.classList.toggle("has-image", Boolean(logoUrl));
 
   if (logoUrl) {
@@ -641,7 +646,7 @@ function renderCompanyLogoMarkup(name, logoPath, extraClass = "") {
   const logoUrl = getCompanyLogoUrl(logoPath);
   const classes = `company-logo ${extraClass} ${logoUrl ? "has-image" : ""}`.trim();
   if (!logoUrl) return `<span class="${classes}">${escapeHtml(getInitials(name || "RJ"))}</span>`;
-  return `<span class="${classes}"><img src="${escapeHtml(logoUrl)}" alt="Logo de ${escapeHtml(name || "empresa")}" loading="lazy" /></span>`;
+  return `<span class="${classes}" data-logo-fallback="${escapeHtml(getInitials(name || "RJ"))}"><img src="${escapeHtml(logoUrl)}" alt="Logo de ${escapeHtml(name || "empresa")}" loading="lazy" /></span>`;
 }
 
 function renderCompanyHeader() {
@@ -3168,6 +3173,20 @@ reportForm.addEventListener("submit", async (event) => {
     showToast(friendlyError(error));
   }
 });
+
+document.addEventListener(
+  "error",
+  (event) => {
+    const image = event.target;
+    if (!(image instanceof HTMLImageElement)) return;
+    const logo = image.closest(".company-logo.has-image");
+    if (!logo) return;
+
+    logo.classList.remove("has-image");
+    logo.textContent = logo.dataset.logoFallback || "RJ";
+  },
+  true
+);
 
 document.querySelector("#closeCandidateProfileDialog").addEventListener("click", () => {
   candidateProfileDialog.close();
