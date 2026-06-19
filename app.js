@@ -2023,6 +2023,100 @@ async function saveCompanyProfile() {
   return currentCompanyProfile;
 }
 
+function loadImageFromFile(file) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    const url = URL.createObjectURL(file);
+
+    image.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(image);
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("No se pudo leer la imagen del logo."));
+    };
+    image.src = url;
+  });
+}
+
+function isLogoWhitespace(red, green, blue, alpha) {
+  const brightness = (red + green + blue) / 3;
+  const colorRange = Math.max(red, green, blue) - Math.min(red, green, blue);
+  return alpha < 32 || (brightness > 222 && colorRange < 34);
+}
+
+function findLogoContentBounds(imageData, width, height) {
+  const data = imageData.data;
+  let minX = width;
+  let minY = height;
+  let maxX = -1;
+  let maxY = -1;
+
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const index = (y * width + x) * 4;
+      if (isLogoWhitespace(data[index], data[index + 1], data[index + 2], data[index + 3])) continue;
+      minX = Math.min(minX, x);
+      minY = Math.min(minY, y);
+      maxX = Math.max(maxX, x);
+      maxY = Math.max(maxY, y);
+    }
+  }
+
+  if (maxX < 0 || maxY < 0) return { x: 0, y: 0, width, height };
+
+  return {
+    x: minX,
+    y: minY,
+    width: maxX - minX + 1,
+    height: maxY - minY + 1
+  };
+}
+
+async function prepareCompanyLogoFile(file) {
+  const image = await loadImageFromFile(file);
+  const scanCanvas = document.createElement("canvas");
+  const scanSize = 700;
+  const scanScale = Math.min(1, scanSize / Math.max(image.naturalWidth, image.naturalHeight));
+  scanCanvas.width = Math.max(1, Math.round(image.naturalWidth * scanScale));
+  scanCanvas.height = Math.max(1, Math.round(image.naturalHeight * scanScale));
+
+  const scanContext = scanCanvas.getContext("2d", { willReadFrequently: true });
+  scanContext.drawImage(image, 0, 0, scanCanvas.width, scanCanvas.height);
+  const bounds = findLogoContentBounds(
+    scanContext.getImageData(0, 0, scanCanvas.width, scanCanvas.height),
+    scanCanvas.width,
+    scanCanvas.height
+  );
+
+  const sourceX = bounds.x / scanScale;
+  const sourceY = bounds.y / scanScale;
+  const sourceWidth = bounds.width / scanScale;
+  const sourceHeight = bounds.height / scanScale;
+  const zoom = 1.42;
+  const sourceSize = Math.max(sourceWidth, sourceHeight) / zoom;
+  const cropX = Math.max(0, Math.min(image.naturalWidth - sourceSize, sourceX + sourceWidth / 2 - sourceSize / 2));
+  const cropY = Math.max(0, Math.min(image.naturalHeight - sourceSize, sourceY + sourceHeight / 2 - sourceSize / 2));
+
+  const outputCanvas = document.createElement("canvas");
+  outputCanvas.width = 512;
+  outputCanvas.height = 512;
+  const outputContext = outputCanvas.getContext("2d");
+  outputContext.clearRect(0, 0, outputCanvas.width, outputCanvas.height);
+  outputContext.save();
+  outputContext.beginPath();
+  outputContext.arc(256, 256, 256, 0, Math.PI * 2);
+  outputContext.clip();
+  outputContext.drawImage(image, cropX, cropY, sourceSize, sourceSize, 0, 0, 512, 512);
+  outputContext.restore();
+
+  const blob = await new Promise((resolve) => outputCanvas.toBlob(resolve, "image/webp", 0.92));
+  if (!blob) throw new Error("No se pudo preparar el logo.");
+
+  return new File([blob], `${file.name.replace(/\.[^.]+$/, "")}-redjob.webp`, { type: "image/webp" });
+}
+
 async function uploadCompanyLogo(file) {
   if (!file) return;
 
@@ -2043,11 +2137,13 @@ async function uploadCompanyLogo(file) {
   }
 
   const session = requireSession();
-  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+  companyLogoStatus.textContent = "Ajustando logo...";
+  const preparedLogo = await prepareCompanyLogoFile(file);
+  const safeName = preparedLogo.name.replace(/[^a-zA-Z0-9._-]/g, "_");
   const logoPath = `${session.user.id}/${currentCompanyProfile.id}/${Date.now()}-${safeName}`;
 
   companyLogoStatus.textContent = "Subiendo logo...";
-  await supabaseStorageUploadToBucket("company-logos", logoPath, file, "No se pudo subir el logo.");
+  await supabaseStorageUploadToBucket("company-logos", logoPath, preparedLogo, "No se pudo subir el logo.");
 
   const rows = await supabaseRestRequest(`/company_profiles?id=eq.${currentCompanyProfile.id}`, {
     method: "PATCH",
