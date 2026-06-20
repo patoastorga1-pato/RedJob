@@ -2641,22 +2641,30 @@ function renderJobs() {
 
   jobsList.innerHTML = filteredJobs
     .map(
-      (job) => `
+      (job) => {
+        const verifiedMark = job.companyVerified
+          ? `<span class="job-company-verified" title="Empresa verificada" aria-label="Empresa verificada">✓</span>`
+          : "";
+
+        return `
         <article class="job-card">
           <div class="job-card-top">
+            ${renderCompanyLogoMarkup(job.company, job.companyLogoPath)}
             <div>
               <div class="job-commercial-badges">${renderCommercialBadges(job)}</div>
               <h3>${escapeHtml(job.title)}</h3>
-            <div class="job-meta">
-              <span>${escapeHtml(formatCategoryLabel(job.category ?? "Otra"))}</span>
-              <span>${escapeHtml(job.company)}</span>
+              <div class="job-company-line">
+                <span>${escapeHtml(job.company)}</span>
+                ${verifiedMark}
+              </div>
+              <div class="job-meta">
+                <span>${escapeHtml(formatCategoryLabel(job.category ?? "Otra"))}</span>
+                <span>${escapeHtml(formatLocationLabel(job.location))}</span>
+                <span>${escapeHtml(formatWorkModeLabel(job.mode))}</span>
+              </div>
+              <div class="job-salary">${escapeHtml(job.salary)}</div>
               ${renderRatingSummary(job.companyId)}
-              <span>${escapeHtml(formatLocationLabel(job.location))}</span>
-              <span>${escapeHtml(job.salary)}</span>
-              <span>${escapeHtml(formatWorkModeLabel(job.mode))}</span>
             </div>
-          </div>
-            ${renderCompanyLogoMarkup(job.company, job.companyLogoPath)}
           </div>
           <div class="tags">
             ${job.tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}
@@ -2682,7 +2690,8 @@ function renderJobs() {
             </button>
           </div>
         </article>
-      `
+      `;
+      }
     )
     .join("");
 }
