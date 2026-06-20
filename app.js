@@ -158,14 +158,10 @@ const isIosDevice =
   (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 
 const runtimeConfig = window.REDJOB_CONFIG ?? {};
-const SUPABASE_URL =
-  runtimeConfig.NEXT_PUBLIC_SUPABASE_URL ??
-  runtimeConfig.SUPABASE_URL ??
-  "https://tkfexxkbdkvpwhcqkvwp.supabase.co";
-const SUPABASE_ANON_KEY =
-  runtimeConfig.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
-  runtimeConfig.SUPABASE_ANON_KEY ??
-  "sb_publishable_H0QIgf8EpEnl6A086dp-9Q_NddTLvWy";
+const SUPABASE_URL = String(runtimeConfig.NEXT_PUBLIC_SUPABASE_URL ?? runtimeConfig.SUPABASE_URL ?? "")
+  .trim()
+  .replace(/\/$/, "");
+const SUPABASE_ANON_KEY = String(runtimeConfig.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? runtimeConfig.SUPABASE_ANON_KEY ?? "").trim();
 window.REDJOB_CONFIG = {
   ...runtimeConfig,
   NEXT_PUBLIC_SUPABASE_URL: SUPABASE_URL,
@@ -176,6 +172,8 @@ const LEGAL_TERMS_VERSION = "Junio 2026";
 const LEGAL_PRIVACY_VERSION = "Junio 2026";
 const SUPABASE_SCHEMA_MESSAGE =
   "Falta instalar la base de datos de RedJob en Supabase. Abre Supabase > SQL Editor y ejecuta outputs/RedJob/supabase-schema.sql.";
+const SUPABASE_CONFIG_MESSAGE =
+  "Falta configurar Supabase. Copia config.example.js como config.js y agrega la URL y la llave anon de tu proyecto.";
 let currentProfile = null;
 let currentUserRoles = [];
 let currentCandidateProfile = null;
@@ -603,6 +601,16 @@ function getCurrentRole() {
   return currentProfile?.role ?? document.querySelector(".role-option.active")?.dataset.role ?? "candidate";
 }
 
+function hasSupabaseConfig() {
+  return Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
+}
+
+function requireSupabaseConfig() {
+  if (!hasSupabaseConfig()) {
+    throw new Error(SUPABASE_CONFIG_MESSAGE);
+  }
+}
+
 function applyRoleExperience() {
   const role = getCurrentRole();
   document.body.dataset.role = role;
@@ -611,6 +619,7 @@ function applyRoleExperience() {
 function getCompanyLogoUrl(path) {
   if (!path) return "";
   if (/^https?:\/\//i.test(path)) return path;
+  if (!hasSupabaseConfig()) return "";
   const safePath = String(path)
     .split("/")
     .map((part) => encodeURIComponent(part))
@@ -974,6 +983,7 @@ async function openJobDetail(jobId) {
 }
 
 async function supabaseAuthRequest(path, body, accessToken) {
+  requireSupabaseConfig();
   const response = await fetch(`${SUPABASE_URL}${path}`, {
     method: "POST",
     headers: {
@@ -998,6 +1008,7 @@ async function supabaseAuthRequest(path, body, accessToken) {
 }
 
 async function supabaseRestRequest(path, options = {}) {
+  requireSupabaseConfig();
   const session = getStoredSession();
   const response = await fetch(`${SUPABASE_URL}/rest/v1${path}`, {
     method: options.method ?? "GET",
@@ -1028,6 +1039,7 @@ async function supabaseRestRequest(path, options = {}) {
 }
 
 async function supabaseStorageUpload(path, file) {
+  requireSupabaseConfig();
   const session = requireSession();
   const response = await fetch(`${SUPABASE_URL}/storage/v1/object/resumes/${path}`, {
     method: "PUT",
@@ -1047,6 +1059,7 @@ async function supabaseStorageUpload(path, file) {
 }
 
 async function supabaseStorageUploadToBucket(bucket, path, file, errorMessage) {
+  requireSupabaseConfig();
   const session = requireSession();
   const response = await fetch(`${SUPABASE_URL}/storage/v1/object/${bucket}/${path}`, {
     method: "PUT",
@@ -1066,6 +1079,7 @@ async function supabaseStorageUploadToBucket(bucket, path, file, errorMessage) {
 }
 
 async function createResumeSignedUrl(path) {
+  requireSupabaseConfig();
   const session = requireSession();
   const response = await fetch(`${SUPABASE_URL}/storage/v1/object/sign/resumes/${path}`, {
     method: "POST",
@@ -2015,7 +2029,9 @@ async function saveCompanyProfile() {
     industry: "General",
     location: "Mexico",
     website: "",
-    description: companyDescriptionInput.value.trim()
+    description: companyDescriptionInput.value.trim(),
+    logo_path: currentCompanyProfile?.logo_path ?? null,
+    logo_name: currentCompanyProfile?.logo_name ?? null
   };
 
   const rows = currentCompanyProfile?.id

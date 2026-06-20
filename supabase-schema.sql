@@ -82,12 +82,6 @@ begin
   )
   on conflict (id) do nothing;
 
-  if lower(coalesce(new.email, '')) = 'redjobmx@gmail.com' then
-    insert into public.user_roles (user_id, role)
-    values (new.id, 'admin')
-    on conflict (user_id, role) do nothing;
-  end if;
-
   return new;
 end;
 $$;
@@ -97,12 +91,6 @@ drop trigger if exists auth_users_create_profile on auth.users;
 create trigger auth_users_create_profile
 after insert on auth.users
 for each row execute function public.handle_new_auth_user();
-
-insert into public.user_roles (user_id, role)
-select id, 'admin'
-from auth.users
-where lower(email) = 'redjobmx@gmail.com'
-on conflict (user_id, role) do nothing;
 
 create table if not exists public.candidate_profiles (
   id uuid primary key default gen_random_uuid(),
