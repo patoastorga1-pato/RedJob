@@ -842,9 +842,11 @@ function renderHiringCompanies() {
           (company) => `
             <button class="company-card" type="button" data-company-search="${escapeHtml(company.name)}">
               ${renderCompanyLogoMarkup(company.name, company.logoPath)}
-              <span class="company-card-title">
-                <strong>${escapeHtml(company.name)}</strong>
-                ${company.isVerified ? '<span class="verified-badge">Verificada</span>' : ""}
+              <span class="company-card-main">
+                <span class="company-card-title">
+                  <strong>${escapeHtml(company.name)}</strong>
+                  ${company.isVerified ? '<span class="verified-check" title="Empresa verificada" aria-label="Empresa verificada">✓</span>' : ""}
+                </span>
               </span>
               ${renderRatingSummary(company.id)}
               <p>${company.activeJobs} vacante${company.activeJobs === 1 ? "" : "s"} activa${company.activeJobs === 1 ? "" : "s"}</p>
