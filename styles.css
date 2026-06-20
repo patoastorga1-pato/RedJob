@@ -818,15 +818,20 @@ textarea:focus {
 
 .job-card-top {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: start;
   gap: 18px;
+}
+
+.job-card-main {
+  min-width: 0;
 }
 
 .job-card-top .company-logo {
   width: 64px;
   height: 64px;
   border-radius: 18px;
+  justify-self: end;
   --company-logo-padding: 6px;
 }
 
@@ -2747,13 +2752,13 @@ textarea:focus {
   }
 
   .job-card-top {
-    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) auto;
     gap: 14px;
   }
 
   .job-card-top .company-logo {
-    width: 56px;
-    height: 56px;
+    width: 58px;
+    height: 58px;
     border-radius: 17px;
     --company-logo-padding: 5px;
   }

@@ -2649,8 +2649,7 @@ function renderJobs() {
         return `
         <article class="job-card">
           <div class="job-card-top">
-            ${renderCompanyLogoMarkup(job.company, job.companyLogoPath)}
-            <div>
+            <div class="job-card-main">
               <div class="job-commercial-badges">${renderCommercialBadges(job)}</div>
               <h3>${escapeHtml(job.title)}</h3>
               <div class="job-company-line">
@@ -2665,6 +2664,7 @@ function renderJobs() {
               <div class="job-salary">${escapeHtml(job.salary)}</div>
               ${renderRatingSummary(job.companyId)}
             </div>
+            ${renderCompanyLogoMarkup(job.company, job.companyLogoPath)}
           </div>
           <div class="tags">
             ${job.tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}
