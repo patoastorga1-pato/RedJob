@@ -718,12 +718,12 @@ textarea:focus {
 
 .company-card {
   display: grid;
-  grid-template-columns: 72px minmax(0, 1fr);
+  grid-template-columns: 64px minmax(0, 1fr);
   grid-template-rows: minmax(78px, auto) auto auto;
-  gap: 12px 18px;
+  gap: 12px 16px;
   align-items: center;
-  min-height: 190px;
-  padding: 26px 24px;
+  min-height: 178px;
+  padding: 24px;
   color: var(--black);
   cursor: pointer;
   font: inherit;
@@ -741,10 +741,12 @@ textarea:focus {
 .company-card strong {
   display: block;
   max-width: 100%;
-  font-size: clamp(20px, 2.2vw, 28px);
+  font-size: clamp(17px, 1.35vw, 21px);
   font-weight: 900;
-  line-height: 1.05;
-  overflow-wrap: anywhere;
+  line-height: 1.16;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
 }
 
 .company-card-main {
@@ -759,11 +761,12 @@ textarea:focus {
   align-items: center;
   gap: 9px;
   min-width: 0;
+  max-width: 100%;
 }
 
 .company-card .company-logo {
-  width: 64px;
-  height: 64px;
+  width: 58px;
+  height: 58px;
   border-radius: 18px;
   align-self: center;
 }
@@ -771,13 +774,13 @@ textarea:focus {
 .verified-check {
   display: inline-grid;
   flex: 0 0 auto;
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   place-items: center;
   border-radius: 999px;
   background: #ecfdf5;
   color: #059669;
-  font-size: 0.86rem;
+  font-size: 0.78rem;
   font-weight: 900;
   line-height: 1;
 }
@@ -2590,10 +2593,10 @@ textarea:focus {
   }
 
   .company-card {
-    grid-template-columns: 62px minmax(0, 1fr);
+    grid-template-columns: 58px minmax(0, 1fr);
     align-items: center;
     min-height: 160px;
-    padding: 22px;
+    padding: 20px;
   }
 
   .company-card p {
@@ -2601,12 +2604,12 @@ textarea:focus {
   }
 
   .company-card strong {
-    font-size: clamp(19px, 6vw, 25px);
+    font-size: clamp(17px, 5vw, 21px);
   }
 
   .company-card .company-logo {
-    width: 58px;
-    height: 58px;
+    width: 52px;
+    height: 52px;
     border-radius: 16px;
   }
 
