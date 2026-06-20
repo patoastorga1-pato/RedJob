@@ -827,13 +827,24 @@ function renderCompanyJobs() {
   companyJobsList.innerHTML = companyJobs.length
     ? companyJobs
         .map(
-          (job) => `
+          (job) => {
+            const verifiedMark = job.companyVerified
+              ? `<span class="company-job-verified" title="Empresa verificada" aria-label="Empresa verificada">✓</span>`
+              : "";
+
+            return `
             <article class="company-job-row">
               ${renderCompanyLogoMarkup(job.company, job.companyLogoPath, "compact")}
               <div class="company-job-info">
-                <div class="job-commercial-badges">${renderCommercialBadges(job)}</div>
-                <strong>${escapeHtml(job.title)}</strong>
-                <span>${escapeHtml(job.company)} - ${escapeHtml(formatLocationLabel(job.location))} - ${escapeHtml(formatWorkModeLabel(job.mode))}</span>
+                <strong class="company-job-title">${escapeHtml(job.title)}</strong>
+                <div class="company-job-meta">
+                  <span class="company-job-company">${escapeHtml(job.company)}</span>
+                  ${verifiedMark}
+                  <span aria-hidden="true">·</span>
+                  <span>${escapeHtml(formatLocationLabel(job.location))}</span>
+                  <span aria-hidden="true">·</span>
+                  <span>${escapeHtml(formatWorkModeLabel(job.mode))}</span>
+                </div>
               </div>
               <div class="company-job-actions">
                 <button class="secondary-button subtle" type="button" data-edit-job="${escapeHtml(job.id)}">
@@ -844,7 +855,8 @@ function renderCompanyJobs() {
                 </button>
               </div>
             </article>
-          `
+          `;
+          }
         )
         .join("")
     : `<p class="empty-list">Aún no hay vacantes publicadas en tus empresas.</p>`;
