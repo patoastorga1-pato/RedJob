@@ -2113,19 +2113,9 @@ async function uploadCompanyLogo(file) {
   companyLogoStatus.textContent = "Subiendo imagen...";
   await supabaseStorageUploadToBucket("company-logos", logoPath, file, "No se pudo subir la imagen de empresa.");
 
-  let updatedCompany = null;
+  let rows = null;
   try {
-    updatedCompany = await supabaseRestRequest("/rpc/update_company_image", {
-      method: "POST",
-      body: {
-        company_uuid: currentCompanyProfile.id,
-        image_path: logoPath,
-        image_name: file.name
-      }
-    });
-  } catch (error) {
-    if (!/update_company_image|schema cache|function/i.test(error.message)) throw error;
-    const rows = await supabaseRestRequest(`/company_profiles?id=eq.${currentCompanyProfile.id}`, {
+    rows = await supabaseRestRequest(`/company_profiles?id=eq.${currentCompanyProfile.id}`, {
       method: "PATCH",
       prefer: "return=representation",
       body: {
@@ -2133,14 +2123,21 @@ async function uploadCompanyLogo(file) {
         logo_name: file.name
       }
     });
-    updatedCompany = rows?.[0] ?? null;
+  } catch (error) {
+    if (/logo_path|logo_name|schema cache|column/i.test(error.message)) {
+      throw new Error("Falta actualizar la base de datos para guardar imagenes de empresa. Ejecuta el SQL completo actualizado en Supabase.");
+    }
+    throw error;
+  }
+
+  const updatedCompany = rows?.[0] ?? null;
+  if (!updatedCompany?.logo_path) {
+    throw new Error("La imagen se subio, pero Supabase no guardo la ruta en el perfil de empresa. Revisa que tu cuenta sea dueña de esta empresa y que el SQL actualizado este instalado.");
   }
 
   currentCompanyProfile = {
     ...currentCompanyProfile,
-    ...(Array.isArray(updatedCompany) ? updatedCompany[0] ?? {} : updatedCompany ?? {}),
-    logo_path: logoPath,
-    logo_name: file.name
+    ...updatedCompany
   };
   currentCompanyProfiles = currentCompanyProfiles.map((company) =>
     sameId(company.id, currentCompanyProfile.id) ? currentCompanyProfile : company
@@ -2702,6 +2699,7 @@ function showToast(message) {
 function friendlyError(error) {
   const message = error?.message ?? "No se pudo completar la acción.";
 
+  if (/imagen|imagenes|empresa|SQL completo actualizado|ruta en el perfil/i.test(message)) return message;
   if (/duplicate key|unique/i.test(message)) return "Ese registro ya existe.";
   if (/row-level security|violates row-level security/i.test(message)) return "No tienes permiso para hacer esta acción con esta cuenta.";
   if (/failed to fetch|network/i.test(message)) return "No se pudo conectar. Revisa tu internet e intenta de nuevo.";
