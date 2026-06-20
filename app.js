@@ -788,6 +788,7 @@ function renderCompanyJobs() {
         .map(
           (job) => `
             <article class="company-job-row">
+              ${renderCompanyLogoMarkup(job.company, job.companyLogoPath, "compact")}
               <div class="company-job-info">
                 <div class="job-commercial-badges">${renderCommercialBadges(job)}</div>
                 <strong>${escapeHtml(job.title)}</strong>
@@ -1716,7 +1717,7 @@ async function loadFirstConversation(openFirst = false) {
   }
 
   const rows = await supabaseRestRequest(
-    "/conversations?select=id,job_id,last_message_at,jobs(title),company_profiles(company_name),candidate_profiles(full_name,age,target_role,location,summary,resume_name,resume_path)&status=eq.open&order=last_message_at.desc.nullslast,created_at.desc"
+    "/conversations?select=id,job_id,last_message_at,jobs(title),company_profiles(company_name,logo_path),candidate_profiles(full_name,age,target_role,location,summary,resume_name,resume_path)&status=eq.open&order=last_message_at.desc.nullslast,created_at.desc"
   );
 
   renderConversationList(rows ?? []);
@@ -1758,7 +1759,7 @@ async function openConversation(conversationId, conversationData) {
     conversationData ??
     (
       await supabaseRestRequest(
-        `/conversations?select=id,job_id,last_message_at,jobs(title),company_profiles(company_name),candidate_profiles(full_name,age,target_role,location,summary,resume_name,resume_path)&id=eq.${conversationId}&limit=1`
+        `/conversations?select=id,job_id,last_message_at,jobs(title),company_profiles(company_name,logo_path),candidate_profiles(full_name,age,target_role,location,summary,resume_name,resume_path)&id=eq.${conversationId}&limit=1`
       )
     )?.[0];
 
@@ -1791,6 +1792,31 @@ async function markConversationMessagesAsRead(conversationId) {
   }
 }
 
+function getConversationCompanyRecord(conversation) {
+  return Array.isArray(conversation.company_profiles)
+    ? conversation.company_profiles[0]
+    : conversation.company_profiles;
+}
+
+function getConversationDisplay(conversation) {
+  const companyRecord = getConversationCompanyRecord(conversation);
+  const companyName = companyRecord?.company_name;
+  const candidate = Array.isArray(conversation.candidate_profiles)
+    ? conversation.candidate_profiles[0]
+    : conversation.candidate_profiles;
+  const jobTitle = Array.isArray(conversation.jobs) ? conversation.jobs[0]?.title : conversation.jobs?.title;
+  const isCompanyView = currentCompanyProfiles.some((company) => company.company_name === companyName);
+
+  return {
+    isCompanyView,
+    primaryName: isCompanyView ? candidate?.full_name || "Candidato" : companyName || "Empresa",
+    secondaryLabel: isCompanyView
+      ? `${companyName ?? "Empresa"} - ${jobTitle ?? "Vacante"}`
+      : `${jobTitle ?? "Vacante"} - conversación`,
+    logoPath: isCompanyView ? "" : companyRecord?.logo_path
+  };
+}
+
 function renderConversationList(conversations) {
   conversationCount.textContent = String(conversations.length);
   profileMessagesCount.textContent = String(conversations.length);
@@ -1804,14 +1830,15 @@ function renderConversationList(conversations) {
             ? conversation.candidate_profiles[0]
             : conversation.candidate_profiles;
           const jobTitle = Array.isArray(conversation.jobs) ? conversation.jobs[0]?.title : conversation.jobs?.title;
+          const conversationDisplay = getConversationDisplay(conversation);
           const primaryName = candidate?.full_name || company || "Conversación";
           const secondaryLabel = candidate?.full_name ? `${company ?? "Empresa"} - ${jobTitle ?? "Vacante"}` : jobTitle ?? "Vacante";
           return `
             <button class="conversation-item ${sameId(conversation.id, activeConversationId) ? "active" : ""}" type="button" data-conversation-id="${escapeHtml(conversation.id)}">
-              <span class="company-logo">${escapeHtml(getInitials(primaryName))}</span>
+              ${renderCompanyLogoMarkup(conversationDisplay.primaryName, conversationDisplay.logoPath)}
               <div>
-                <strong>${escapeHtml(primaryName)}</strong>
-                <small>${escapeHtml(secondaryLabel)}</small>
+                <strong>${escapeHtml(conversationDisplay.primaryName)}</strong>
+                <small>${escapeHtml(conversationDisplay.secondaryLabel)}</small>
               </div>
               <em>${escapeHtml(conversation.last_message_at ? formatMessageTime(conversation.last_message_at) : "Nueva")}</em>
             </button>
@@ -1838,11 +1865,12 @@ function renderChatMessages(messages, conversation) {
     : conversation.candidate_profiles;
   const isCompanyView = currentCompanyProfiles.some((company) => company.company_name === companyName);
   const chatTitle = isCompanyView ? candidate?.full_name ?? "Candidato" : companyName ?? "Empresa";
+  const conversationDisplay = getConversationDisplay(conversation);
   const chatSubtitle = isCompanyView
     ? `${candidate?.target_role ?? "Perfil candidato"} - ${jobTitle ?? "Vacante"}`
     : `${jobTitle ?? "Vacante"} - conversación real`;
 
-  document.querySelector(".chat-head .company-logo").textContent = getInitials(chatTitle);
+  setLogoElement(document.querySelector(".chat-head .company-logo"), chatTitle, conversationDisplay.logoPath);
   document.querySelector(".chat-head strong").textContent = chatTitle;
   document.querySelector(".chat-head small").textContent = chatSubtitle;
   activeConversationJobId = conversation.job_id;
