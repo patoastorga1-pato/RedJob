@@ -384,6 +384,7 @@ p {
   border: 1px solid rgba(226, 232, 240, 0.95);
   background: #ffffff;
   box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
+  padding: 0;
 }
 
 .avatar img,
@@ -402,9 +403,10 @@ p {
   height: 100%;
   margin: 0;
   display: block;
-  object-fit: contain;
+  object-fit: cover;
   object-position: center;
-  transform: none;
+  transform: scale(var(--company-logo-image-scale, 1.1));
+  transform-origin: center;
 }
 
 .company-logo.compact {
