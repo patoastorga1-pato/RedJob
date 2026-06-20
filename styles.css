@@ -365,7 +365,7 @@ p {
 .company-logo {
   display: grid;
   place-items: center;
-  background: #ffffff;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
   color: var(--black);
   font-weight: 900;
   box-shadow: 0 10px 22px rgba(220, 38, 38, 0.18);
@@ -396,9 +396,9 @@ p {
 .company-logo img {
   position: relative;
   z-index: 1;
-  width: calc(100% - 8px);
-  height: calc(100% - 8px);
-  margin: 4px;
+  width: calc(100% - 10px);
+  height: calc(100% - 10px);
+  margin: 5px;
   display: block;
   object-fit: contain;
   object-position: center;

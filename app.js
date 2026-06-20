@@ -638,13 +638,13 @@ function setLogoElement(element, name, logoPath) {
   if (logoUrl) {
     const image = document.createElement("img");
     image.src = logoUrl;
-    image.alt = `Logo de ${name || "empresa"}`;
+    image.alt = `Imagen de ${name || "empresa"}`;
     image.loading = "lazy";
     image.onerror = () => {
       element.classList.remove("has-image");
       element.innerHTML = "";
       element.textContent = getInitials(name || "RJ");
-      console.warn(`No se pudo cargar el logo de ${name || "empresa"}: ${logoUrl}`);
+      console.warn(`No se pudo cargar la imagen de ${name || "empresa"}: ${logoUrl}`);
     };
     element.appendChild(image);
     return;
@@ -657,7 +657,7 @@ function renderCompanyLogoMarkup(name, logoPath, extraClass = "") {
   const logoUrl = getCompanyLogoUrl(logoPath);
   const classes = `company-logo ${extraClass} ${logoUrl ? "has-image" : ""}`.trim();
   if (!logoUrl) return `<span class="${classes}">${escapeHtml(getInitials(name || "RJ"))}</span>`;
-  return `<span class="${classes}" data-logo-fallback="${escapeHtml(getInitials(name || "RJ"))}"><img src="${escapeHtml(logoUrl)}" alt="Logo de ${escapeHtml(name || "empresa")}" loading="lazy" /></span>`;
+  return `<span class="${classes}" data-logo-fallback="${escapeHtml(getInitials(name || "RJ"))}"><img src="${escapeHtml(logoUrl)}" alt="Imagen de ${escapeHtml(name || "empresa")}" loading="lazy" /></span>`;
 }
 
 function renderCompanyHeader() {
@@ -668,8 +668,8 @@ function renderCompanyHeader() {
   companyHeroName.textContent = name;
   companyHeroDescription.textContent = description;
   companyLogoStatus.textContent = currentCompanyProfile?.logo_name
-    ? `Logo cargado: ${currentCompanyProfile.logo_name}`
-    : "Sin logo cargado";
+    ? `Imagen cargada: ${currentCompanyProfile.logo_name}`
+    : "Sin imagen cargada";
   companyVerifiedBadge.classList.toggle("is-hidden", !currentCompanyProfile?.is_verified);
 }
 
@@ -2092,12 +2092,12 @@ async function saveCompanyProfile() {
 async function uploadCompanyLogo(file) {
   if (!file) return;
 
-  if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
-    throw new Error("Sube un logo en PNG, JPG o WebP.");
+  if (!["image/png", "image/jpeg"].includes(file.type)) {
+    throw new Error("Sube una imagen de empresa en PNG, JPG o JPEG.");
   }
 
   if (file.size > 3 * 1024 * 1024) {
-    throw new Error("El logo debe pesar menos de 3 MB.");
+    throw new Error("La imagen de empresa debe pesar menos de 3 MB.");
   }
 
   if (!currentCompanyProfile?.id) {
@@ -2112,8 +2112,8 @@ async function uploadCompanyLogo(file) {
   const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
   const logoPath = `${session.user.id}/${currentCompanyProfile.id}/${Date.now()}-${safeName}`;
 
-  companyLogoStatus.textContent = "Subiendo logo...";
-  await supabaseStorageUploadToBucket("company-logos", logoPath, file, "No se pudo subir el logo.");
+  companyLogoStatus.textContent = "Subiendo imagen...";
+  await supabaseStorageUploadToBucket("company-logos", logoPath, file, "No se pudo subir la imagen de empresa.");
 
   const rows = await supabaseRestRequest(`/company_profiles?id=eq.${currentCompanyProfile.id}`, {
     method: "PATCH",
