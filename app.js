@@ -618,6 +618,7 @@ function applyRoleExperience() {
 
 function getCompanyLogoUrl(path) {
   if (!path) return "";
+  if (/^data:image\/(png|jpe?g|webp);base64,/i.test(path)) return path;
   if (/^https?:\/\//i.test(path)) return path;
   if (!hasSupabaseConfig()) return "";
   const safePath = String(path)
@@ -625,6 +626,46 @@ function getCompanyLogoUrl(path) {
     .map((part) => encodeURIComponent(part))
     .join("/");
   return `${SUPABASE_URL}/storage/v1/object/public/company-logos/${safePath}`;
+}
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(new Error("No se pudo leer la imagen de empresa."));
+    reader.readAsDataURL(file);
+  });
+}
+
+function loadImageElement(src) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("No se pudo preparar la imagen de empresa."));
+    image.src = src;
+  });
+}
+
+async function createCompanyImageDataUrl(file) {
+  const sourceUrl = await readFileAsDataUrl(file);
+  const image = await loadImageElement(sourceUrl);
+  const canvas = document.createElement("canvas");
+  const size = 512;
+  canvas.width = size;
+  canvas.height = size;
+
+  const context = canvas.getContext("2d");
+  context.fillStyle = "#ffffff";
+  context.fillRect(0, 0, size, size);
+
+  const scale = Math.min(size / image.naturalWidth, size / image.naturalHeight);
+  const width = Math.round(image.naturalWidth * scale);
+  const height = Math.round(image.naturalHeight * scale);
+  const x = Math.round((size - width) / 2);
+  const y = Math.round((size - height) / 2);
+  context.drawImage(image, x, y, width, height);
+
+  return canvas.toDataURL("image/jpeg", 0.86);
 }
 
 function setLogoElement(element, name, logoPath) {
@@ -2106,12 +2147,8 @@ async function uploadCompanyLogo(file) {
     throw new Error("Primero guarda el perfil de empresa.");
   }
 
-  const session = requireSession();
-  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-  const logoPath = `${session.user.id}/${currentCompanyProfile.id}/${Date.now()}-${safeName}`;
-
-  companyLogoStatus.textContent = "Subiendo imagen...";
-  await supabaseStorageUploadToBucket("company-logos", logoPath, file, "No se pudo subir la imagen de empresa.");
+  companyLogoStatus.textContent = "Preparando imagen...";
+  const imageDataUrl = await createCompanyImageDataUrl(file);
 
   let rows = null;
   try {
@@ -2119,7 +2156,7 @@ async function uploadCompanyLogo(file) {
       method: "PATCH",
       prefer: "return=representation",
       body: {
-        logo_path: logoPath,
+        logo_path: imageDataUrl,
         logo_name: file.name
       }
     });
@@ -2132,7 +2169,7 @@ async function uploadCompanyLogo(file) {
 
   const updatedCompany = rows?.[0] ?? null;
   if (!updatedCompany?.logo_path) {
-    throw new Error("La imagen se subio, pero Supabase no guardo la ruta en el perfil de empresa. Revisa que tu cuenta sea dueña de esta empresa y que el SQL actualizado este instalado.");
+    throw new Error("La imagen se preparo, pero Supabase no la guardo en el perfil de empresa. Revisa que tu cuenta sea dueña de esta empresa.");
   }
 
   currentCompanyProfile = {
@@ -2144,7 +2181,7 @@ async function uploadCompanyLogo(file) {
   );
   jobs = jobs.map((job) =>
     sameId(job.companyId, currentCompanyProfile.id)
-      ? { ...job, companyLogoPath: logoPath, companyLogoName: file.name }
+      ? { ...job, companyLogoPath: imageDataUrl, companyLogoName: file.name }
       : job
   );
   renderCompanyProfileSelect();
