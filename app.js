@@ -2059,9 +2059,7 @@ async function saveCompanyProfile() {
     industry: "General",
     location: "Mexico",
     website: "",
-    description: companyDescriptionInput.value.trim(),
-    logo_path: currentCompanyProfile?.logo_path ?? null,
-    logo_name: currentCompanyProfile?.logo_name ?? null
+    description: companyDescriptionInput.value.trim()
   };
 
   const rows = currentCompanyProfile?.id
@@ -2115,27 +2113,48 @@ async function uploadCompanyLogo(file) {
   companyLogoStatus.textContent = "Subiendo imagen...";
   await supabaseStorageUploadToBucket("company-logos", logoPath, file, "No se pudo subir la imagen de empresa.");
 
-  const rows = await supabaseRestRequest(`/company_profiles?id=eq.${currentCompanyProfile.id}`, {
-    method: "PATCH",
-    prefer: "return=representation",
-    body: {
-      logo_path: logoPath,
-      logo_name: file.name
-    }
-  });
+  let updatedCompany = null;
+  try {
+    updatedCompany = await supabaseRestRequest("/rpc/update_company_image", {
+      method: "POST",
+      body: {
+        company_uuid: currentCompanyProfile.id,
+        image_path: logoPath,
+        image_name: file.name
+      }
+    });
+  } catch (error) {
+    if (!/update_company_image|schema cache|function/i.test(error.message)) throw error;
+    const rows = await supabaseRestRequest(`/company_profiles?id=eq.${currentCompanyProfile.id}`, {
+      method: "PATCH",
+      prefer: "return=representation",
+      body: {
+        logo_path: logoPath,
+        logo_name: file.name
+      }
+    });
+    updatedCompany = rows?.[0] ?? null;
+  }
 
-  currentCompanyProfile = rows?.[0] ?? currentCompanyProfile;
   currentCompanyProfile = {
     ...currentCompanyProfile,
+    ...(Array.isArray(updatedCompany) ? updatedCompany[0] ?? {} : updatedCompany ?? {}),
     logo_path: logoPath,
     logo_name: file.name
   };
   currentCompanyProfiles = currentCompanyProfiles.map((company) =>
     sameId(company.id, currentCompanyProfile.id) ? currentCompanyProfile : company
   );
-  await refreshCurrentCompanyProfile();
+  jobs = jobs.map((job) =>
+    sameId(job.companyId, currentCompanyProfile.id)
+      ? { ...job, companyLogoPath: logoPath, companyLogoName: file.name }
+      : job
+  );
   renderCompanyProfileSelect();
   renderCompanyHeader();
+  renderJobs();
+  renderHiringCompanies();
+  renderCompanyJobs();
   await loadRealJobs();
 }
 

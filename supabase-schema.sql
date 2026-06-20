@@ -518,6 +518,45 @@ create trigger company_profiles_protect_monetization
 before insert or update on public.company_profiles
 for each row execute function public.protect_company_monetization_fields();
 
+create or replace function public.update_company_image(
+  company_uuid uuid,
+  image_path text,
+  image_name text
+)
+returns public.company_profiles
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  updated_company public.company_profiles;
+begin
+  if auth.uid() is null then
+    raise exception 'Debes iniciar sesion.';
+  end if;
+
+  if not public.is_account_active() then
+    raise exception 'Tu cuenta esta suspendida.';
+  end if;
+
+  update public.company_profiles
+  set
+    logo_path = nullif(trim(image_path), ''),
+    logo_name = nullif(trim(image_name), '')
+  where id = company_uuid
+    and user_id = auth.uid()
+  returning * into updated_company;
+
+  if updated_company.id is null then
+    raise exception 'No puedes actualizar la imagen de esta empresa.';
+  end if;
+
+  return updated_company;
+end;
+$$;
+
+grant execute on function public.update_company_image(uuid, text, text) to authenticated;
+
 create or replace function public.protect_job_promotion_fields()
 returns trigger
 language plpgsql
