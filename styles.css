@@ -1393,6 +1393,33 @@ textarea:focus {
   padding: 16px;
 }
 
+.company-job-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.company-job-info {
+  min-width: 0;
+}
+
+.company-job-info strong,
+.company-job-info span {
+  display: inline;
+}
+
+.company-job-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  min-width: 168px;
+}
+
+.company-job-actions button {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
 .candidate-row-card {
   align-items: center;
   flex-wrap: wrap;
@@ -2563,10 +2590,15 @@ textarea:focus {
 
   .company-job-row {
     align-items: stretch;
-    flex-direction: column;
+    grid-template-columns: 1fr;
   }
 
-  .company-job-row button {
+  .company-job-actions {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .company-job-actions button {
     width: 100%;
   }
 

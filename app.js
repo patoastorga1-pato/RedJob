@@ -625,19 +625,17 @@ function setLogoElement(element, name, logoPath) {
   element.textContent = "";
   element.dataset.logoFallback = getInitials(name || "RJ");
   element.classList.toggle("has-image", Boolean(logoUrl));
-  element.style.removeProperty("--company-logo-image");
 
   if (logoUrl) {
-    element.style.setProperty("--company-logo-image", `url("${logoUrl.replace(/"/g, "%22")}")`);
     const image = document.createElement("img");
     image.src = logoUrl;
     image.alt = `Logo de ${name || "empresa"}`;
     image.loading = "lazy";
     image.onerror = () => {
       element.classList.remove("has-image");
-      element.style.removeProperty("--company-logo-image");
       element.innerHTML = "";
       element.textContent = getInitials(name || "RJ");
+      console.warn(`No se pudo cargar el logo de ${name || "empresa"}: ${logoUrl}`);
     };
     element.appendChild(image);
     return;
@@ -650,8 +648,7 @@ function renderCompanyLogoMarkup(name, logoPath, extraClass = "") {
   const logoUrl = getCompanyLogoUrl(logoPath);
   const classes = `company-logo ${extraClass} ${logoUrl ? "has-image" : ""}`.trim();
   if (!logoUrl) return `<span class="${classes}">${escapeHtml(getInitials(name || "RJ"))}</span>`;
-  const logoStyle = `--company-logo-image: url(&quot;${escapeHtml(logoUrl).replace(/"/g, "%22")}&quot;)`;
-  return `<span class="${classes}" data-logo-fallback="${escapeHtml(getInitials(name || "RJ"))}" style="${logoStyle}"><img src="${escapeHtml(logoUrl)}" alt="Logo de ${escapeHtml(name || "empresa")}" loading="lazy" /></span>`;
+  return `<span class="${classes}" data-logo-fallback="${escapeHtml(getInitials(name || "RJ"))}"><img src="${escapeHtml(logoUrl)}" alt="Logo de ${escapeHtml(name || "empresa")}" loading="lazy" /></span>`;
 }
 
 function renderCompanyHeader() {
@@ -754,6 +751,22 @@ function renderCompanyProfileSelect() {
   renderCompanyHeader();
 }
 
+async function refreshCurrentCompanyProfile() {
+  if (!currentCompanyProfile?.id) return currentCompanyProfile;
+
+  const rows = await supabaseRestRequest(`/company_profiles?select=*&id=eq.${currentCompanyProfile.id}&limit=1`);
+  const refreshedCompany = rows?.[0];
+  if (!refreshedCompany) return currentCompanyProfile;
+
+  currentCompanyProfile = refreshedCompany;
+  currentCompanyProfiles = currentCompanyProfiles.map((company) =>
+    sameId(company.id, refreshedCompany.id) ? refreshedCompany : company
+  );
+  hydrateCompanyForm(currentCompanyProfile);
+  renderCompanyProfileSelect();
+  return currentCompanyProfile;
+}
+
 function renderCompanyJobs() {
   const companyIds = new Set(currentCompanyProfiles.map((company) => String(company.id)));
   const companyJobs = companyIds.size
@@ -766,17 +779,19 @@ function renderCompanyJobs() {
         .map(
           (job) => `
             <article class="company-job-row">
-              <div>
+              <div class="company-job-info">
                 <div class="job-commercial-badges">${renderCommercialBadges(job)}</div>
                 <strong>${escapeHtml(job.title)}</strong>
                 <span>${escapeHtml(job.company)} - ${escapeHtml(formatLocationLabel(job.location))} - ${escapeHtml(formatWorkModeLabel(job.mode))}</span>
               </div>
-              <button class="secondary-button subtle" type="button" data-edit-job="${escapeHtml(job.id)}">
-                Editar
-              </button>
-              <button class="delete-job-button" type="button" data-delete-job="${escapeHtml(job.id)}">
-                Borrar
-              </button>
+              <div class="company-job-actions">
+                <button class="secondary-button subtle" type="button" data-edit-job="${escapeHtml(job.id)}">
+                  Editar
+                </button>
+                <button class="delete-job-button" type="button" data-delete-job="${escapeHtml(job.id)}">
+                  Borrar
+                </button>
+              </div>
             </article>
           `
         )
@@ -2072,7 +2087,9 @@ async function uploadCompanyLogo(file) {
   currentCompanyProfiles = currentCompanyProfiles.map((company) =>
     sameId(company.id, currentCompanyProfile.id) ? currentCompanyProfile : company
   );
+  await refreshCurrentCompanyProfile();
   renderCompanyProfileSelect();
+  renderCompanyHeader();
   await loadRealJobs();
 }
 
