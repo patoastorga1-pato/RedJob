@@ -30,7 +30,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./styles.css?v=20260620i" />
+    <link rel="stylesheet" href="./styles.css?v=20260622a" />
   </head>
   <body>
     <header class="site-header">
@@ -133,6 +133,17 @@
         <section class="section-block">
           <div class="section-title split">
             <div>
+              <span>Vacantes recomendadas</span>
+              <h2>Ordenadas por compatibilidad</h2>
+            </div>
+            <p class="result-count" id="resultCount">0 resultados</p>
+          </div>
+          <div class="jobs-grid" id="jobsList" aria-live="polite"></div>
+        </section>
+
+        <section class="section-block">
+          <div class="section-title split">
+            <div>
               <span>Empresas destacadas</span>
               <h2>Compañías contratando ahora</h2>
             </div>
@@ -145,17 +156,6 @@
               <p>Publica una vacante real para empezar a mostrar empresas aquí.</p>
             </article>
           </div>
-        </section>
-
-        <section class="section-block">
-          <div class="section-title split">
-            <div>
-              <span>Vacantes recomendadas</span>
-              <h2>Ordenadas por compatibilidad</h2>
-            </div>
-            <p class="result-count" id="resultCount">0 resultados</p>
-          </div>
-          <div class="jobs-grid" id="jobsList" aria-live="polite"></div>
         </section>
       </section>
 
@@ -951,6 +951,6 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script src="./config.js?v=20260605h"></script>
-    <script src="./app.js?v=20260620i"></script>
+    <script src="./app.js?v=20260622a"></script>
   </body>
 </html>
