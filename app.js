@@ -1021,8 +1021,10 @@ async function openJobDetail(jobId) {
   detailTitle.textContent = job.title;
   detailCommercialBadges.innerHTML = renderCommercialBadges(job);
   detailMeta.textContent = `${formatLocationLabel(job.location)} - ${formatWorkModeLabel(job.mode)} - ${job.salary} - ${formatCategoryLabel(job.category ?? "Otra")}`;
-  detailMatch.textContent = `${safePercent(job.match)}% Compatible`;
-  detailMatchBar.style.width = `${safePercent(job.match)}%`;
+  const detailMatchValue = getJobMatch(job);
+  detailMatch.textContent = detailMatchValue === null ? "Completa tu perfil" : `${safePercent(detailMatchValue)}% Compatible`;
+  detailMatchBar.style.width = detailMatchValue === null ? "0%" : `${safePercent(detailMatchValue)}%`;
+  detailMatchBar.closest(".match-block")?.classList.toggle("match-block-incomplete", detailMatchValue === null);
   detailDescription.textContent =
     job.description || "La empresa aún no agregó una descripción extensa para esta vacante.";
   detailCompanyDescription.textContent =
@@ -1250,6 +1252,8 @@ function splitSkills(value) {
 }
 
 function calculateMatch(job) {
+  if (!isCandidateMatchReady()) return null;
+
   const candidateSkillSet = new Set(splitSkills(candidateSkills.value).map((skill) => skill.toLowerCase()));
   const jobSkills = job.tags ?? [];
   const skillHits = jobSkills.filter((skill) => candidateSkillSet.has(skill.toLowerCase())).length;
@@ -1265,6 +1269,51 @@ function calculateMatch(job) {
       : 8;
 
   return Math.min(99, skillScore + modeScore + locationScore);
+}
+
+function isCandidateMatchReady() {
+  const session = getStoredSession();
+  const hasCandidateSession = Boolean(session?.user?.id) && (!currentProfile?.role || currentProfile.role === "candidate");
+  const hasRole = Boolean(candidateTargetRole.value.trim());
+  const hasSkills = splitSkills(candidateSkills.value).length > 0;
+  const hasLocation = Boolean(candidateLocation.value);
+  const hasMode = Boolean(candidateWorkMode.value);
+
+  return hasCandidateSession && hasRole && hasSkills && hasLocation && hasMode;
+}
+
+function getJobMatch(job) {
+  const calculated = calculateMatch(job);
+  if (calculated === null) return null;
+  return calculated;
+}
+
+function renderMatchBlock(job) {
+  const match = getJobMatch(job);
+
+  if (match === null) {
+    return `
+          <div class="match-block match-block-incomplete">
+            <div class="match-label">
+              <span>Compatibilidad</span>
+              <strong>Perfil pendiente</strong>
+            </div>
+            <p>Completa tu perfil de candidato para calcular una compatibilidad real.</p>
+          </div>
+    `;
+  }
+
+  return `
+          <div class="match-block">
+            <div class="match-label">
+              <span>Compatibilidad</span>
+              <strong>${safePercent(match)}% Compatible</strong>
+            </div>
+            <div class="match-bar">
+              <span style="width: ${safePercent(match)}%"></span>
+            </div>
+          </div>
+  `;
 }
 
 async function loadCurrentProfile() {
@@ -2367,7 +2416,7 @@ async function createRealApplication(job) {
       body: {
         job_uuid: job.id,
         candidate_uuid: currentCandidateProfile.id,
-        match_score_value: job.match,
+        match_score_value: getJobMatch(job),
         cover_note_value: coverNote.value.trim() || null
       }
     });
@@ -2634,7 +2683,7 @@ function renderJobs() {
       if (featuredDifference) return featuredDifference;
       const priorityDifference = (b.featuredPriority ?? 0) - (a.featuredPriority ?? 0);
       if (priorityDifference) return priorityDifference;
-      return b.match - a.match;
+      return safePercent(getJobMatch(b) ?? b.match) - safePercent(getJobMatch(a) ?? a.match);
     });
 
   resultCount.textContent = `${filteredJobs.length} resultado${filteredJobs.length === 1 ? "" : "s"}`;
@@ -2669,15 +2718,7 @@ function renderJobs() {
           <div class="tags">
             ${job.tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}
           </div>
-          <div class="match-block">
-            <div class="match-label">
-              <span>Compatibilidad</span>
-              <strong>${safePercent(job.match)}% Compatible</strong>
-            </div>
-            <div class="match-bar">
-              <span style="width: ${safePercent(job.match)}%"></span>
-            </div>
-          </div>
+          ${renderMatchBlock(job)}
           <div class="job-actions">
             <button class="secondary-button subtle" type="button" data-view-job="${escapeHtml(job.id)}">
               Ver detalle

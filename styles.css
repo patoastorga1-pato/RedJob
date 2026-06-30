@@ -927,6 +927,21 @@ textarea:focus {
   padding-top: 4px;
 }
 
+.match-block-incomplete {
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 14px 16px;
+  background: #f8fafc;
+}
+
+.match-block-incomplete p {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
 .match-label {
   display: flex;
   justify-content: space-between;
@@ -938,6 +953,14 @@ textarea:focus {
 
 .match-label strong {
   color: var(--red);
+}
+
+.match-block-incomplete .match-label strong {
+  color: #475569;
+}
+
+.match-block-incomplete .match-bar {
+  display: none;
 }
 
 .match-bar {
