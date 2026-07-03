@@ -1,0 +1,8 @@
+.env
+.env.*
+!.env.example
+config.js
+local-server.log
+node_modules/
+.netlify/
+dist-mobile/
