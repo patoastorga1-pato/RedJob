@@ -1,0 +1,16 @@
+{
+  "appId": "mx.com.redjob.app",
+  "appName": "RedJob",
+  "webDir": "dist-mobile",
+  "bundledWebRuntime": false,
+  "backgroundColor": "#f8fafc",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "backgroundColor": "#f8fafc"
+  },
+  "ios": {
+    "backgroundColor": "#f8fafc"
+  }
+}
