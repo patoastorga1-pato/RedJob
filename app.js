@@ -1589,6 +1589,15 @@ async function loadAdminDashboard() {
   adminReportsCount.textContent = String(stats?.pending_reports ?? 0);
 
   const adminUserIds = new Set((roleRows ?? []).filter((entry) => entry.role === "admin").map((entry) => String(entry.user_id)));
+  const companiesByUser = new Map();
+
+  (companies ?? []).forEach((company) => {
+    const ownerId = String(company.user_id ?? "");
+    if (!ownerId) return;
+    const ownedCompanies = companiesByUser.get(ownerId) ?? [];
+    ownedCompanies.push(company);
+    companiesByUser.set(ownerId, ownedCompanies);
+  });
 
   adminReportsList.innerHTML = reports?.length
     ? reports.map((report) => `
@@ -1635,8 +1644,11 @@ async function loadAdminDashboard() {
     : `<p class="empty-list">No hay vacantes disponibles.</p>`;
 
   adminUsersList.innerHTML = users?.length
-    ? users.map((user) => `
-        <article class="admin-row" data-search="${escapeHtml(`${user.email} ${user.role} ${user.suspended_at ? "suspendido" : "activo"} ${adminUserIds.has(String(user.id)) ? "administrador" : ""}`)}">
+    ? users.map((user) => {
+        const userCompanies = companiesByUser.get(String(user.id)) ?? [];
+        const companyNames = userCompanies.map((company) => company.company_name).join(" ");
+        return `
+        <article class="admin-row" data-search="${escapeHtml(`${user.email} ${user.role} ${user.suspended_at ? "suspendido" : "activo"} ${adminUserIds.has(String(user.id)) ? "administrador" : ""} ${companyNames}`)}">
           <div class="admin-row-main">
             <div class="admin-row-title">
               <strong>${escapeHtml(user.email)}</strong>
@@ -1645,6 +1657,32 @@ async function loadAdminDashboard() {
             </div>
             <p>${escapeHtml(user.role === "company" ? "Cuenta de empresa" : "Cuenta de candidato")}</p>
             <small>${user.suspension_reason ? `Motivo: ${escapeHtml(user.suspension_reason)}` : escapeHtml(formatMessageTime(user.created_at))}</small>
+            <div class="admin-user-companies">
+              <span>Empresas creadas</span>
+              ${userCompanies.length
+                ? userCompanies.map((company) => `
+                    <article class="admin-user-company">
+                      <div>
+                        <strong>${escapeHtml(company.company_name)}</strong>
+                        ${company.is_verified ? `<small class="admin-status verified">Verificada</small>` : `<small class="admin-status">Sin verificar</small>`}
+                      </div>
+                      <div class="admin-user-company-actions">
+                        <button class="admin-action ${company.is_verified ? "" : "success"}" type="button"
+                          data-admin-company-id="${escapeHtml(company.id)}"
+                          data-admin-verified="${company.is_verified ? "false" : "true"}">
+                          ${company.is_verified ? "Quitar verificación" : "Verificar"}
+                        </button>
+                        <button class="admin-action ${user.suspended_at ? "success" : "danger"}" type="button"
+                          data-admin-user-id="${escapeHtml(user.id)}"
+                          data-admin-suspend="${user.suspended_at ? "false" : "true"}"
+                          ${adminUserIds.has(String(user.id)) ? "disabled" : ""}>
+                          ${user.suspended_at ? "Reactivar usuario" : "Suspender usuario"}
+                        </button>
+                      </div>
+                    </article>
+                  `).join("")
+                : `<small>Este usuario aún no tiene empresas creadas.</small>`}
+            </div>
           </div>
           <div class="admin-row-actions">
             <button class="admin-action ${user.suspended_at ? "success" : "danger"}" type="button"
@@ -1655,7 +1693,8 @@ async function loadAdminDashboard() {
             </button>
           </div>
         </article>
-      `).join("")
+      `;
+      }).join("")
     : `<p class="empty-list">No hay usuarios disponibles.</p>`;
 
   adminCompaniesList.innerHTML = companies?.length

@@ -2418,6 +2418,62 @@ textarea:focus {
   line-height: 1.55;
 }
 
+.admin-user-companies {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 10px;
+  border-top: 1px solid #eef2f7;
+}
+
+.admin-user-companies > span {
+  color: #475569;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.admin-user-company {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 10px 12px;
+  background: #ffffff;
+}
+
+.admin-user-company > div:first-child {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.admin-user-company strong {
+  min-width: 0;
+  color: var(--black);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.admin-user-company-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 7px;
+}
+
+.admin-user-company-actions .admin-action {
+  min-height: 32px;
+  border-radius: 9px;
+  padding: 0 10px;
+  font-size: 11px;
+}
+
 .admin-status {
   display: inline-flex;
   min-height: 26px;
@@ -2886,6 +2942,19 @@ textarea:focus {
   .job-actions .primary-button,
   .job-actions .save-button {
     width: 100%;
+  }
+
+  .admin-user-company {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .admin-user-company-actions {
+    justify-content: stretch;
+  }
+
+  .admin-user-company-actions .admin-action {
+    flex: 1 1 140px;
   }
 
   .hero,
