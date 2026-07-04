@@ -187,6 +187,8 @@ const receivedCandidateProfiles = new Map();
 let activeEditingJobId = null;
 let activeConversationJobId = null;
 let activeReportTarget = null;
+let lastBackgroundRefreshAt = 0;
+let isBackgroundRefreshing = false;
 
 function isCurrentAdmin() {
   return currentUserRoles.includes("admin");
@@ -511,16 +513,46 @@ function setStoredSession(session) {
   renderSessionStatus();
 }
 
-function clearExpiredSession(message = "Tu sesión expiró. Inicia sesión de nuevo.") {
+function resetUserState({ clearJobs = false } = {}) {
   currentProfile = null;
   currentUserRoles = [];
   currentCandidateProfile = null;
   currentCompanyProfile = null;
+  currentCompanyProfiles = [];
+  savedJobs.clear();
+  applications.length = 0;
+  receivedCandidateProfiles.clear();
   activeConversationId = null;
   activeConversationJobId = null;
+  activeApplicationJob = null;
+  activeDetailJobId = null;
+  activePreviewCandidate = null;
+  activeReceivedCandidate = null;
+  activeEditingJobId = null;
+  activeReportTarget = null;
+
+  if (clearJobs) jobs = [];
+
+  conversationList.innerHTML = `<p class="empty-list">Inicia sesión para ver tus conversaciones.</p>`;
+  chatBody.innerHTML = `<p class="empty-list">Selecciona una conversación.</p>`;
+  conversationCount.textContent = "0";
+  profileMessagesCount.textContent = "0";
+  companyCandidatesCount.textContent = "0";
+  companyInterviewCount.textContent = "0";
+}
+
+function clearExpiredSession(message = "Tu sesión expiró. Inicia sesión de nuevo.") {
+  resetUserState({ clearJobs: true });
   localStorage.removeItem(SESSION_STORAGE_KEY);
   renderSessionStatus();
+  renderProfileHeader();
+  renderResumeStatus();
   renderUnreadMessagesBadge(0);
+  renderJobs();
+  renderHiringCompanies();
+  renderProfileActivity();
+  renderCompanyProfileSelect();
+  renderCompanyJobs();
   applyRoleExperience();
   signupMessage.textContent = message;
   showToast(message);
@@ -2096,12 +2128,46 @@ async function loadRealJobs() {
     renderProfileActivity();
     renderCompanyJobs();
   } catch (error) {
-    jobs = [];
-    renderJobs();
-    renderHiringCompanies();
-    renderProfileActivity();
-    renderCompanyJobs();
+    if (!jobs.length) {
+      renderJobs();
+      renderHiringCompanies();
+      renderProfileActivity();
+      renderCompanyJobs();
+    }
     showToast(friendlyError(error));
+  }
+}
+
+async function refreshVisibleData({ force = false } = {}) {
+  const session = getStoredSession();
+  const now = Date.now();
+
+  if (isBackgroundRefreshing) return;
+  if (!force && now - lastBackgroundRefreshAt < 60000) return;
+
+  isBackgroundRefreshing = true;
+  lastBackgroundRefreshAt = now;
+
+  try {
+    if (session?.user?.id) {
+      await loadCurrentProfile();
+    }
+
+    await loadRealJobs();
+
+    if (session?.user?.id) {
+      await loadSavedJobs();
+      await loadFirstConversation(false);
+      await loadReceivedCandidates();
+    }
+
+    if (activeDetailJobId && document.querySelector("#vacante")?.classList.contains("active-view")) {
+      await openJobDetail(activeDetailJobId);
+    }
+  } catch (error) {
+    showToast(friendlyError(error));
+  } finally {
+    isBackgroundRefreshing = false;
   }
 }
 
@@ -2186,7 +2252,7 @@ async function saveCandidateProfile() {
   renderProfileHeader();
 }
 
-async function saveCompanyProfile() {
+async function saveCompanyProfile({ silent = false } = {}) {
   const session = requireSession();
   const companyName = companyNameInput.value.trim();
 
@@ -2225,6 +2291,7 @@ async function saveCompanyProfile() {
   applyRoleExperience();
   renderProfileHeader();
   renderCompanyProfileSelect();
+  if (!silent) showToast("Perfil de empresa guardado.");
   return currentCompanyProfile;
 }
 
@@ -2293,7 +2360,7 @@ async function uploadCompanyLogo(file) {
 }
 
 async function publishRealJob() {
-  const companyProfile = currentCompanyProfile ?? (await saveCompanyProfile());
+  const companyProfile = await saveCompanyProfile({ silent: true });
   const jobTitle = jobTitleInput.value.trim();
   const jobDescription = jobDescriptionInput.value.trim();
 
@@ -2641,19 +2708,7 @@ async function signOutFromSupabase() {
   }
 
   setStoredSession(null);
-  currentProfile = null;
-  currentUserRoles = [];
-  currentCandidateProfile = null;
-  currentCompanyProfile = null;
-  currentCompanyProfiles = [];
-  savedJobs.clear();
-  applications.length = 0;
-  jobs = [];
-  receivedCandidateProfiles.clear();
-  activeConversationId = null;
-  activeConversationJobId = null;
-  activeApplicationJob = null;
-  activeDetailJobId = null;
+  resetUserState({ clearJobs: true });
   conversationList.innerHTML = `<p class="empty-list">Inicia sesión para ver tus conversaciones.</p>`;
   chatBody.innerHTML = `<p class="empty-list">Selecciona una conversación.</p>`;
   conversationCount.textContent = "0";
@@ -3733,6 +3788,16 @@ if (window.matchMedia("(display-mode: standalone)").matches) {
 } else if (isIosDevice) {
   installAppButton.classList.remove("is-hidden");
 }
+
+window.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") {
+    refreshVisibleData().catch((error) => showToast(friendlyError(error)));
+  }
+});
+
+window.addEventListener("focus", () => {
+  refreshVisibleData().catch((error) => showToast(friendlyError(error)));
+});
 
 const isLocalPreview = ["localhost", "127.0.0.1"].includes(window.location.hostname);
 
