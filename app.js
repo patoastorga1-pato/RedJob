@@ -934,7 +934,7 @@ function renderHiringCompanies() {
                 </span>
               </span>
               ${renderRatingSummary(company.id)}
-              <p>${company.activeJobs} vacante${company.activeJobs === 1 ? "" : "s"} activa${company.activeJobs === 1 ? "" : "s"}</p>
+              <p>${company.activeJobs} vacante${company.activeJobs === 1 ? "" : "s"} disponible${company.activeJobs === 1 ? "" : "s"}</p>
             </button>
           `
         )
@@ -2471,6 +2471,15 @@ function editCompanyJob(jobId) {
   if (!job || job.source !== "supabase") {
     showToast("Solo puedes editar vacantes reales.");
     return;
+  }
+
+  const jobCompany = currentCompanyProfiles.find((company) => sameId(company.id, job.companyId));
+  if (jobCompany) {
+    currentCompanyProfile = jobCompany;
+    companyProfileSelect.value = jobCompany.id;
+    hydrateCompanyForm(currentCompanyProfile);
+    renderCompanyProfileSelect();
+    loadReceivedCandidates().catch((error) => showToast(friendlyError(error)));
   }
 
   activeEditingJobId = job.id;
