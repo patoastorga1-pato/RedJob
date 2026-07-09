@@ -1,16 +1,16 @@
-const CACHE_NAME = "redjob-shell-20260708a";
+const CACHE_NAME = "redjob-shell-20260708b";
 const APP_SHELL = [
   "/",
   "/index.html",
   "/offline.html",
-  "/styles.css?v=20260708a",
-  "/app.js?v=20260708a",
+  "/styles.css?v=20260708b",
+  "/app.js?v=20260708b",
   "/manifest.json?v=20260609b",
   "/assets/redjob-logo-header.png",
   "/assets/redjob-icon-192.png?v=20260609b",
   "/assets/redjob-icon-512.png?v=20260609b",
   "/assets/redjob-icon-maskable-512.png?v=20260609b",
-  "/assets/redjob-briefcase-access.png?v=20260708a"
+  "/assets/redjob-briefcase-access.png?v=20260708b"
 ];
 
 self.addEventListener("install", (event) => {
