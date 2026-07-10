@@ -1153,6 +1153,36 @@ textarea:focus {
   line-height: 1.6;
 }
 
+.candidate-preview-actions,
+.candidate-preview-status > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.candidate-preview-actions button {
+  flex: 1 1 150px;
+}
+
+.candidate-preview-status {
+  display: grid;
+  gap: 8px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.candidate-preview-status > span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.candidate-preview-status .status-action {
+  flex: 1 1 110px;
+}
+
 .chat-body {
   display: grid;
   gap: 14px;
@@ -1281,15 +1311,31 @@ textarea:focus {
 }
 
 .access-briefcase {
+  position: relative;
   width: min(460px, 100%);
   margin: 18px 0 18px;
+  isolation: isolate;
+}
+
+.access-briefcase::before {
+  content: "";
+  position: absolute;
+  inset: 8% 2% 2%;
+  z-index: -1;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 42% 48%, rgba(220, 38, 38, 0.34), transparent 58%),
+    radial-gradient(circle at 62% 62%, rgba(229, 9, 20, 0.2), transparent 62%);
+  filter: blur(18px);
+  transform: scale(0.95);
 }
 
 .access-briefcase img {
+  position: relative;
   display: block;
   width: 100%;
   height: auto;
-  filter: drop-shadow(0 28px 44px rgba(220, 38, 38, 0.2));
+  filter: drop-shadow(0 28px 44px rgba(220, 38, 38, 0.24));
 }
 
 .profile-card h1 {
@@ -2877,12 +2923,29 @@ textarea:focus {
     padding-top: 34px;
   }
 
-  .access-briefcase {
-    width: min(360px, 96vw);
-    margin: 16px auto 14px;
+  .access-copy {
+    display: contents;
   }
 
-  .access-page > div:first-child {
+  .access-copy > span,
+  .access-copy > h1,
+  .access-copy > p {
+    order: 1;
+  }
+
+  .access-card {
+    order: 2;
+  }
+
+  .access-briefcase {
+    order: 3;
+    width: min(360px, 96vw);
+    margin: 12px auto 0;
+  }
+
+  .access-copy > span,
+  .access-copy > h1,
+  .access-copy > p {
     text-align: center;
   }
 

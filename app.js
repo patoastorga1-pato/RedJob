@@ -54,7 +54,9 @@ const candidatePreviewAvatar = document.querySelector("#candidatePreviewAvatar")
 const candidatePreviewName = document.querySelector("#candidatePreviewName");
 const candidatePreviewMeta = document.querySelector("#candidatePreviewMeta");
 const candidatePreviewSummary = document.querySelector("#candidatePreviewSummary");
+const candidatePreviewProfile = document.querySelector("#candidatePreviewProfile");
 const candidatePreviewResume = document.querySelector("#candidatePreviewResume");
+const candidatePreviewStatusActions = document.querySelector("#candidatePreviewStatusActions");
 const candidateProfileDialog = document.querySelector("#candidateProfileDialog");
 const receivedCandidateAvatar = document.querySelector("#receivedCandidateAvatar");
 const receivedCandidateName = document.querySelector("#receivedCandidateName");
@@ -174,6 +176,8 @@ const SUPABASE_SCHEMA_MESSAGE =
   "Falta instalar la base de datos de RedJob en Supabase. Abre Supabase > SQL Editor y ejecuta outputs/RedJob/supabase-schema.sql.";
 const SUPABASE_CONFIG_MESSAGE =
   "Falta configurar Supabase. Copia config.example.js como config.js y agrega la URL y la llave anon de tu proyecto.";
+const CONVERSATION_SELECT =
+  "id,application_id,job_id,last_message_at,jobs(title),applications(id,status,match_score),company_profiles(company_name,logo_path),candidate_profiles(full_name,age,target_role,location,work_mode,summary,resume_name,resume_path)";
 let currentProfile = null;
 let currentUserRoles = [];
 let currentCandidateProfile = null;
@@ -182,6 +186,7 @@ let currentCompanyProfiles = [];
 let activeConversationId = null;
 let activeDetailJobId = null;
 let activePreviewCandidate = null;
+let activePreviewApplication = null;
 let activeReceivedCandidate = null;
 const receivedCandidateProfiles = new Map();
 let activeEditingJobId = null;
@@ -527,6 +532,7 @@ function resetUserState({ clearJobs = false } = {}) {
   activeApplicationJob = null;
   activeDetailJobId = null;
   activePreviewCandidate = null;
+  activePreviewApplication = null;
   activeReceivedCandidate = null;
   activeEditingJobId = null;
   activeReportTarget = null;
@@ -1892,7 +1898,7 @@ async function loadFirstConversation(openFirst = false) {
   }
 
   const rows = await supabaseRestRequest(
-    "/conversations?select=id,job_id,last_message_at,jobs(title),company_profiles(company_name,logo_path),candidate_profiles(full_name,age,target_role,location,summary,resume_name,resume_path)&status=eq.open&order=last_message_at.desc.nullslast,created_at.desc"
+    `/conversations?select=${CONVERSATION_SELECT}&status=eq.open&order=last_message_at.desc.nullslast,created_at.desc`
   );
 
   renderConversationList(rows ?? []);
@@ -1934,7 +1940,7 @@ async function openConversation(conversationId, conversationData) {
     conversationData ??
     (
       await supabaseRestRequest(
-        `/conversations?select=id,job_id,last_message_at,jobs(title),company_profiles(company_name,logo_path),candidate_profiles(full_name,age,target_role,location,summary,resume_name,resume_path)&id=eq.${conversationId}&limit=1`
+        `/conversations?select=${CONVERSATION_SELECT}&id=eq.${conversationId}&limit=1`
       )
     )?.[0];
 
@@ -2050,7 +2056,7 @@ function renderChatMessages(messages, conversation) {
   document.querySelector(".chat-head small").textContent = chatSubtitle;
   activeConversationJobId = conversation.job_id;
   chatJobDetailButton.classList.toggle("is-hidden", !activeConversationJobId);
-  renderCandidatePreview(candidate, isCompanyView);
+  renderCandidatePreview(candidate, isCompanyView, conversation, jobTitle, companyName);
 
   chatBody.innerHTML = messages.length
     ? messages
@@ -2069,14 +2075,50 @@ function renderChatMessages(messages, conversation) {
     : `<article class="bubble candidate"><span>RedJob</span><p>Conversación lista. Escribe el primer mensaje.</p></article>`;
 }
 
-function renderCandidatePreview(candidate, isCompanyView) {
+function getConversationApplicationRecord(conversation) {
+  return Array.isArray(conversation?.applications)
+    ? conversation.applications[0]
+    : conversation?.applications;
+}
+
+function renderChatStatusButtons(applicationId, status) {
+  const statuses = [
+    ["reviewing", "En espera"],
+    ["hired", "Contratado"],
+    ["rejected", "Rechazado"]
+  ];
+
+  return statuses
+    .map(
+      ([value, label]) => `
+        <button class="status-action ${status === value ? "active" : ""}" type="button" data-chat-application-status="${escapeHtml(value)}" data-application-id="${escapeHtml(applicationId)}">
+          ${escapeHtml(label)}
+        </button>
+      `
+    )
+    .join("");
+}
+
+function renderCandidatePreview(candidate, isCompanyView, conversation = null, jobTitle = "Vacante", companyName = "Empresa") {
   if (!isCompanyView || !candidate) {
     candidatePreview.classList.add("is-hidden");
     activePreviewCandidate = null;
+    activePreviewApplication = null;
     return;
   }
 
+  const application = getConversationApplicationRecord(conversation);
   activePreviewCandidate = candidate;
+  activePreviewApplication = application?.id
+    ? {
+        id: application.id,
+        candidate,
+        jobTitle,
+        companyName,
+        status: application.status,
+        matchScore: application.match_score
+      }
+    : null;
   candidatePreview.classList.remove("is-hidden");
   candidatePreviewAvatar.textContent = getInitials(candidate.full_name ?? "Candidato");
   candidatePreviewName.textContent = candidate.full_name ?? "Candidato";
@@ -2084,6 +2126,13 @@ function renderCandidatePreview(candidate, isCompanyView) {
   candidatePreviewSummary.textContent = candidate.summary || "Este candidato aún no agregó un resumen.";
   candidatePreviewResume.textContent = candidate.resume_name ? `Ver currículum: ${candidate.resume_name}` : "Sin currículum";
   candidatePreviewResume.disabled = !candidate.resume_path;
+  candidatePreviewProfile.disabled = !activePreviewApplication;
+  candidatePreviewStatusActions.innerHTML = application?.id
+    ? `
+        <span>Estado del candidato</span>
+        <div>${renderChatStatusButtons(application.id, application.status)}</div>
+      `
+    : "";
 }
 
 function hydrateCandidateForm(profile) {
@@ -3596,6 +3645,33 @@ candidatePreviewResume.addEventListener("click", async () => {
     window.open(signedUrl, "_blank", "noopener");
   } catch (error) {
     showToast(error.message);
+  }
+});
+
+candidatePreviewProfile.addEventListener("click", () => {
+  if (!activePreviewApplication?.candidate) {
+    showToast("No se pudo abrir el perfil del candidato.");
+    return;
+  }
+
+  receivedCandidateProfiles.set(String(activePreviewApplication.id), activePreviewApplication);
+  openReceivedCandidateProfile(activePreviewApplication.id);
+});
+
+candidatePreviewStatusActions.addEventListener("click", async (event) => {
+  const statusButton = event.target.closest("[data-chat-application-status]");
+  if (!statusButton) return;
+
+  try {
+    statusButton.disabled = true;
+    await updateApplicationStatus(statusButton.dataset.applicationId, statusButton.dataset.chatApplicationStatus);
+    await loadFirstConversation(false);
+    if (activeConversationId) await openConversation(activeConversationId);
+    showToast("Estado del candidato actualizado.");
+  } catch (error) {
+    showToast(friendlyError(error));
+  } finally {
+    statusButton.disabled = false;
   }
 });
 

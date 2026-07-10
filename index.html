@@ -30,7 +30,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./styles.css?v=20260708b" />
+    <link rel="stylesheet" href="./styles.css?v=20260710a" />
   </head>
   <body>
     <header class="site-header">
@@ -241,7 +241,11 @@
                 </div>
               </div>
               <p id="candidatePreviewSummary">Sin resumen disponible.</p>
-              <button class="secondary-button subtle" type="button" id="candidatePreviewResume">Ver currículum</button>
+              <div class="candidate-preview-actions">
+                <button class="secondary-button subtle" type="button" id="candidatePreviewProfile">Ver perfil</button>
+                <button class="secondary-button subtle" type="button" id="candidatePreviewResume">Ver currículum</button>
+              </div>
+              <div class="candidate-preview-status" id="candidatePreviewStatusActions"></div>
             </aside>
             <div class="chat-body">
               <article class="bubble candidate">
@@ -575,7 +579,7 @@
 
       <section class="view" id="acceso">
         <section class="access-page">
-          <div>
+          <div class="access-copy">
             <span>Acceso</span>
             <h1>Accede a RedJob</h1>
             <p>Inicia sesión rápido o crea una cuenta nueva cuando quieras comenzar.</p>
@@ -954,6 +958,6 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script src="./config.js?v=20260605h"></script>
-    <script src="./app.js?v=20260708b"></script>
+    <script src="./app.js?v=20260710a"></script>
   </body>
 </html>
