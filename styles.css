@@ -3059,38 +3059,72 @@ textarea:focus {
 
   .company-job-row {
     align-items: start;
-    grid-template-columns: 48px minmax(0, 1fr);
-    gap: 14px;
-    padding: 15px;
+    grid-template-columns: 54px minmax(0, 1fr);
+    gap: 12px;
+    padding: 16px;
+    border-radius: 20px;
   }
 
   .company-job-row .company-logo {
-    width: 48px;
-    height: 48px;
-    border-radius: 15px;
+    width: 54px;
+    height: 54px;
+    border-radius: 16px;
+    grid-row: 1;
   }
 
   .company-job-title,
   .company-job-company,
   .company-job-meta span {
-    overflow-wrap: anywhere;
+    overflow-wrap: normal;
+    word-break: normal;
+    hyphens: none;
+  }
+
+  .company-job-info {
+    min-width: 0;
+    gap: 8px;
+  }
+
+  .company-job-title {
+    font-size: 1rem;
+    line-height: 1.28;
   }
 
   .company-job-meta {
-    gap: 5px 7px;
-    font-size: 0.82rem;
+    display: grid;
+    gap: 4px;
+    font-size: 0.86rem;
+    line-height: 1.35;
+  }
+
+  .company-job-meta [aria-hidden="true"] {
+    display: none;
+  }
+
+  .company-job-meta span {
+    display: inline;
+    max-width: 100%;
+  }
+
+  .company-job-company {
+    color: var(--black);
+    font-weight: 900;
   }
 
   .company-job-actions {
     grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     width: 100%;
     min-width: 0;
+    gap: 10px;
     justify-content: stretch;
   }
 
   .company-job-actions button {
-    flex: 1 1 0;
+    width: 100%;
     min-width: 0;
+    min-height: 42px;
   }
 
   .logo-upload-field .secondary-button,
@@ -3146,6 +3180,24 @@ textarea:focus {
 
   .header-actions {
     gap: 4px;
+  }
+
+  .company-job-row {
+    grid-template-columns: 1fr;
+    justify-items: start;
+  }
+
+  .company-job-row .company-logo {
+    grid-row: auto;
+  }
+
+  .company-job-info,
+  .company-job-actions {
+    width: 100%;
+  }
+
+  .company-job-title {
+    font-size: 1.05rem;
   }
 
 }
