@@ -1634,7 +1634,7 @@ textarea:focus {
   gap: 10px;
 }
 
-.mini-job-list div,
+.mini-job-list > div,
 .candidate-row-card {
   display: flex;
   align-items: center;
@@ -3185,6 +3185,8 @@ textarea:focus {
   .company-job-row {
     grid-template-columns: 1fr;
     justify-items: start;
+    gap: 14px;
+    padding: 18px;
   }
 
   .company-job-row .company-logo {
@@ -3197,7 +3199,20 @@ textarea:focus {
   }
 
   .company-job-title {
-    font-size: 1.05rem;
+    display: block;
+    width: 100%;
+    font-size: 1.12rem;
+    line-height: 1.25;
+  }
+
+  .company-job-meta {
+    width: 100%;
+    border-top: 1px solid #eef2f7;
+    padding-top: 10px;
+  }
+
+  .company-job-actions {
+    margin-top: 2px;
   }
 
 }
