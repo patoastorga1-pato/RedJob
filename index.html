@@ -30,7 +30,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./styles.css?v=20260711c" />
+    <link rel="stylesheet" href="./styles.css?v=20260713a" />
   </head>
   <body>
     <header class="site-header">
@@ -214,7 +214,7 @@
           <span>Mensajes</span>
           <h1>Conversa con reclutadores sin perder contexto</h1>
         </section>
-        <section class="messages-shell">
+        <section class="messages-shell" id="messagesShell">
           <aside class="conversation-panel">
             <div class="panel-head">
               <h2>Conversaciones</h2>
@@ -223,7 +223,7 @@
             <div class="conversation-list" id="conversationList"></div>
           </aside>
 
-          <section class="chat-panel">
+          <section class="chat-panel is-hidden" id="chatPanel">
             <div class="chat-head">
               <span class="company-logo">R</span>
               <div>
@@ -231,6 +231,7 @@
                 <small>Selecciona una conversación</small>
               </div>
               <button class="secondary-button subtle is-hidden" type="button" id="chatJobDetailButton">Ver vacante</button>
+              <button class="secondary-button subtle chat-close-button" type="button" id="closeChatPanel" aria-label="Cerrar chat">Cerrar</button>
             </div>
             <aside class="candidate-preview is-hidden" id="candidatePreview">
               <div>
@@ -958,6 +959,6 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script src="./config.js?v=20260605h"></script>
-    <script src="./app.js?v=20260711c"></script>
+    <script src="./app.js?v=20260713a"></script>
   </body>
 </html>

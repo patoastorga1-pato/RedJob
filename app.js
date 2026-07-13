@@ -48,6 +48,9 @@ const toast = document.querySelector("#toast");
 const chatBody = document.querySelector(".chat-body");
 const conversationList = document.querySelector("#conversationList");
 const conversationCount = document.querySelector("#conversationCount");
+const messagesShell = document.querySelector("#messagesShell");
+const chatPanel = document.querySelector("#chatPanel");
+const closeChatPanel = document.querySelector("#closeChatPanel");
 const chatJobDetailButton = document.querySelector("#chatJobDetailButton");
 const candidatePreview = document.querySelector("#candidatePreview");
 const candidatePreviewAvatar = document.querySelector("#candidatePreviewAvatar");
@@ -192,6 +195,9 @@ const receivedCandidateProfiles = new Map();
 let activeEditingJobId = null;
 let activeConversationJobId = null;
 let activeReportTarget = null;
+let currentConversations = [];
+const unreadConversationCounts = new Map();
+let messageRefreshTimer = null;
 let lastBackgroundRefreshAt = 0;
 let isBackgroundRefreshing = false;
 
@@ -536,6 +542,11 @@ function resetUserState({ clearJobs = false } = {}) {
   activeReceivedCandidate = null;
   activeEditingJobId = null;
   activeReportTarget = null;
+  currentConversations = [];
+  unreadConversationCounts.clear();
+  stopMessageRefresh();
+  chatPanel?.classList.add("is-hidden");
+  messagesShell?.classList.remove("chat-open");
 
   if (clearJobs) jobs = [];
 
@@ -1892,6 +1903,8 @@ function mapApplicationStatus(status) {
 async function loadFirstConversation(openFirst = false) {
   const session = getStoredSession();
   if (!session?.user?.id) {
+    currentConversations = [];
+    unreadConversationCounts.clear();
     renderUnreadMessagesBadge(0);
     profileMessagesCount.textContent = "0";
     return;
@@ -1901,13 +1914,34 @@ async function loadFirstConversation(openFirst = false) {
     `/conversations?select=${CONVERSATION_SELECT}&status=eq.open&order=last_message_at.desc.nullslast,created_at.desc`
   );
 
-  renderConversationList(rows ?? []);
+  currentConversations = rows ?? [];
+  await loadUnreadMessagesByConversation();
+  renderConversationList(currentConversations);
   await loadUnreadMessagesCount();
 
   const conversation = rows?.[0];
   if (!openFirst || !conversation?.id) return;
 
   await openConversation(conversation.id, conversation);
+}
+
+async function loadUnreadMessagesByConversation() {
+  const session = getStoredSession();
+  unreadConversationCounts.clear();
+  if (!session?.user?.id) return;
+
+  try {
+    const rows = await supabaseRestRequest(
+      `/messages?select=conversation_id&sender_user_id=neq.${session.user.id}&read_at=is.null`
+    );
+
+    (rows ?? []).forEach((message) => {
+      const key = String(message.conversation_id);
+      unreadConversationCounts.set(key, (unreadConversationCounts.get(key) ?? 0) + 1);
+    });
+  } catch (error) {
+    console.warn("No se pudieron contar los mensajes por conversaciÃ³n.", error);
+  }
 }
 
 async function loadUnreadMessagesCount() {
@@ -1935,6 +1969,32 @@ function renderUnreadMessagesBadge(count) {
   unreadMessagesBadge.setAttribute("aria-label", unreadCount ? `${unreadCount} mensajes sin leer` : "Sin mensajes sin leer");
 }
 
+function isMessagesViewActive() {
+  return document.querySelector("#mensajes")?.classList.contains("active-view");
+}
+
+function startMessageRefresh() {
+  if (messageRefreshTimer) return;
+  messageRefreshTimer = window.setInterval(() => {
+    refreshMessagesQuietly().catch((error) => console.warn("No se pudieron actualizar los mensajes.", error));
+  }, 3500);
+}
+
+function stopMessageRefresh() {
+  if (!messageRefreshTimer) return;
+  window.clearInterval(messageRefreshTimer);
+  messageRefreshTimer = null;
+}
+
+async function refreshMessagesQuietly() {
+  if (!isMessagesViewActive() || !getStoredSession()?.user?.id) return;
+  const selectedConversationId = activeConversationId;
+  await loadFirstConversation(false);
+  if (selectedConversationId) {
+    await openConversation(selectedConversationId);
+  }
+}
+
 async function openConversation(conversationId, conversationData) {
   const conversation =
     conversationData ??
@@ -1948,14 +2008,30 @@ async function openConversation(conversationId, conversationData) {
 
   activeConversationId = conversation.id;
   activeConversationJobId = conversation.job_id;
+  chatPanel?.classList.remove("is-hidden");
+  messagesShell?.classList.add("chat-open");
   const messages = await supabaseRestRequest(
     `/messages?select=id,body,sender_user_id,created_at,read_at&conversation_id=eq.${conversation.id}&order=created_at.asc`
   );
 
   await markConversationMessagesAsRead(conversation.id);
+  unreadConversationCounts.delete(String(conversation.id));
   renderChatMessages(messages ?? [], conversation);
+  renderConversationList(currentConversations);
   renderActiveConversation();
   await loadUnreadMessagesCount();
+}
+
+function closeActiveChat() {
+  activeConversationId = null;
+  activeConversationJobId = null;
+  activePreviewCandidate = null;
+  activePreviewApplication = null;
+  chatPanel?.classList.add("is-hidden");
+  messagesShell?.classList.remove("chat-open");
+  chatJobDetailButton?.classList.add("is-hidden");
+  candidatePreview?.classList.add("is-hidden");
+  renderActiveConversation();
 }
 
 async function markConversationMessagesAsRead(conversationId) {
@@ -1999,7 +2075,7 @@ function getConversationDisplay(conversation) {
 }
 
 function renderConversationList(conversations) {
-  conversationCount.textContent = String(conversations.length);
+  conversationCount.textContent = "";
   profileMessagesCount.textContent = String(conversations.length);
   conversationList.innerHTML = conversations.length
     ? conversations
@@ -2012,16 +2088,19 @@ function renderConversationList(conversations) {
             : conversation.candidate_profiles;
           const jobTitle = Array.isArray(conversation.jobs) ? conversation.jobs[0]?.title : conversation.jobs?.title;
           const conversationDisplay = getConversationDisplay(conversation);
+          const unreadCount = unreadConversationCounts.get(String(conversation.id)) ?? 0;
+          const unreadLabel = unreadCount > 9 ? "9+" : String(unreadCount);
           const primaryName = candidate?.full_name || company || "Conversación";
           const secondaryLabel = candidate?.full_name ? `${company ?? "Empresa"} - ${jobTitle ?? "Vacante"}` : jobTitle ?? "Vacante";
           return `
             <button class="conversation-item ${sameId(conversation.id, activeConversationId) ? "active" : ""}" type="button" data-conversation-id="${escapeHtml(conversation.id)}">
               ${renderCompanyLogoMarkup(conversationDisplay.primaryName, conversationDisplay.logoPath)}
-              <div>
+              <div class="conversation-copy">
                 <strong>${escapeHtml(conversationDisplay.primaryName)}</strong>
                 <small>${escapeHtml(conversationDisplay.secondaryLabel)}</small>
+                <em>${escapeHtml(conversation.last_message_at ? formatMessageTime(conversation.last_message_at) : "Nueva")}</em>
               </div>
-              <em>${escapeHtml(conversation.last_message_at ? formatMessageTime(conversation.last_message_at) : "Nueva")}</em>
+              ${unreadCount ? `<span class="conversation-unread">${escapeHtml(unreadLabel)}</span>` : ""}
             </button>
           `;
         })
@@ -2595,18 +2674,19 @@ async function createRealApplication(job) {
   }
 
   const application = Array.isArray(rows) ? rows[0] : rows;
+  let createdConversationId = null;
   if (application?.id) {
     const conversations = await supabaseRestRequest(`/conversations?select=id&application_id=eq.${application.id}&limit=1`);
-    activeConversationId = conversations?.[0]?.id ?? activeConversationId;
+    createdConversationId = conversations?.[0]?.id ?? null;
   }
 
   const initialMessage = coverNote.value.trim();
-  if (activeConversationId && initialMessage) {
+  if (createdConversationId && initialMessage) {
     await supabaseRestRequest("/messages", {
       method: "POST",
       prefer: "return=representation",
       body: {
-        conversation_id: activeConversationId,
+        conversation_id: createdConversationId,
         sender_user_id: session.user.id,
         body: initialMessage
       }
@@ -2620,10 +2700,6 @@ async function createRealApplication(job) {
 
 async function sendRealMessage(body) {
   const session = requireSession();
-
-  if (!activeConversationId) {
-    await loadFirstConversation(true);
-  }
 
   if (!activeConversationId) {
     throw new Error("Aún no hay una conversación real. Postúlate a una vacante real primero.");
@@ -3014,7 +3090,10 @@ function switchView(viewId) {
   });
 
   if (viewId === "mensajes" && getStoredSession()?.access_token) {
-    loadFirstConversation(true).catch((error) => showToast(`Mensajes: ${error.message}`));
+    loadFirstConversation(false).catch((error) => showToast(`Mensajes: ${error.message}`));
+    startMessageRefresh();
+  } else {
+    stopMessageRefresh();
   }
 
   if (viewId === "administracion") {
@@ -3688,6 +3767,8 @@ chatJobDetailButton.addEventListener("click", async () => {
   }
 });
 
+closeChatPanel.addEventListener("click", closeActiveChat);
+
 resumeButton.addEventListener("click", () => {
   resumeInput.click();
 });
@@ -3745,7 +3826,7 @@ document.querySelector("#confirmApplication").addEventListener("click", async ()
     let realApplication = null;
     if (activeApplicationJob.source === "supabase") {
       realApplication = await createRealApplication(activeApplicationJob);
-      await loadFirstConversation(true);
+      await loadFirstConversation(false);
       await loadCandidateApplications();
     } else {
       applications.unshift({
@@ -3786,7 +3867,7 @@ document.querySelector("#messageForm").addEventListener("submit", async (event) 
     }
 
     if (!activeConversationId) {
-      await loadFirstConversation(true);
+      await loadFirstConversation(false);
     }
 
     if (activeConversationId) {
