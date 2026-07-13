@@ -6,3 +6,10 @@ local-server.log
 node_modules/
 .netlify/
 dist-mobile/
+*.jks
+*.keystore
+*.p12
+*.mobileprovision
+android/key.properties
+android/app/release/
+ios/App/App.xcarchive/
