@@ -1,130 +1,202 @@
-# RedJob como app Android/iOS
+# RedJob para Play Store y App Store
 
-Esta carpeta ya queda preparada para convertir RedJob en app instalable para Play Store y App Store usando Capacitor.
+Esta carpeta ya tiene la base para convertir RedJob en app Android/iOS usando Capacitor.
 
-## Que se agrego
+## Estado actual
 
-- `package.json`: comandos para preparar y sincronizar la app movil.
-- `capacitor.config.json`: configuracion de nombre, identificador y carpeta web.
-- `scripts/prepare-mobile.js`: crea `dist-mobile` con solo los archivos necesarios para la app.
+- Nombre de app: RedJob
+- Identificador nativo: `mx.com.redjob.app`
+- Carpeta web para la app: `dist-mobile`
+- Sitio publico recomendado: `https://redjob.com.mx`
+- Correo de soporte: `redjobmx@gmail.com`
+- Politica de privacidad: usar la pagina de Privacidad dentro de RedJob
+- Terminos de uso: usar la pagina de Terminos dentro de RedJob
 
-El identificador inicial de la app es:
+Mantener fijo `mx.com.redjob.app`. Cambiarlo despues puede causar problemas al actualizar la app en tiendas.
 
-```text
-mx.com.redjob.app
-```
+## Archivos moviles incluidos
 
-Conviene mantenerlo fijo porque despues sera el identificador usado por Android y iOS.
+- `package.json`: comandos de preparacion.
+- `capacitor.config.json`: nombre, identificador y carpeta web.
+- `scripts/prepare-mobile.js`: crea `dist-mobile`.
+- `scripts/mobile-check.js`: revisa que no falten piezas importantes.
+- `MOBILE_APP_GUIDE.md`: esta guia.
 
-## Requisitos en tu computadora
+## Antes de crear Android/iOS
 
-Para Android:
-
-1. Instalar Node.js.
-2. Instalar Android Studio.
-3. Crear una cuenta en Google Play Console.
-
-Para iPhone/App Store:
-
-1. Tener una Mac.
-2. Instalar Xcode.
-3. Crear una cuenta de Apple Developer.
-
-## Preparar el proyecto
-
-Abre terminal dentro de la carpeta `RedJob` y ejecuta:
+Dentro de la carpeta `RedJob`, ejecutar:
 
 ```bash
 npm install
-```
-
-Despues prepara los archivos moviles:
-
-```bash
+npm run mobile:check
 npm run mobile:prepare
 ```
 
-Esto crea la carpeta `dist-mobile`.
+`mobile:check` debe terminar sin errores. Si marca que falta `config.js`, crea ese archivo localmente con tus datos de Supabase. No lo subas a GitHub.
 
-## Crear app Android
+## Crear Android
 
-Solo la primera vez:
+Requisitos:
+
+- Windows o Mac.
+- Node.js.
+- Android Studio.
+- Cuenta de Google Play Console.
+
+Primera vez:
 
 ```bash
 npm run mobile:add:android
 ```
 
-Cuando hagas cambios en RedJob:
+Cada vez que actualices RedJob:
 
 ```bash
 npm run mobile:sync
-```
-
-Para abrir Android Studio:
-
-```bash
 npm run mobile:open:android
 ```
 
-Desde Android Studio se genera el archivo `.aab` para subirlo a Play Store.
+En Android Studio:
 
-## Crear app iOS
+1. Revisar que la app abra bien.
+2. Probar inicio de sesion, perfiles, vacantes, postulaciones, mensajes, CV y logos.
+3. Generar archivo de publicacion `.aab`.
+4. Subir el `.aab` a Google Play Console.
 
-Esto requiere Mac.
+## Crear iOS
 
-Solo la primera vez:
+Requisitos:
+
+- Mac.
+- Xcode.
+- Cuenta Apple Developer.
+
+Primera vez:
 
 ```bash
 npm run mobile:add:ios
 ```
 
-Cuando hagas cambios en RedJob:
+Cada vez que actualices RedJob:
 
 ```bash
 npm run mobile:sync
-```
-
-Para abrir Xcode:
-
-```bash
 npm run mobile:open:ios
 ```
 
-Desde Xcode se sube la app a App Store Connect.
+En Xcode:
 
-## Importante sobre config.js
+1. Configurar el equipo de Apple Developer.
+2. Revisar que el Bundle Identifier sea `mx.com.redjob.app`.
+3. Probar en simulador y, si es posible, en iPhone real.
+4. Crear Archive.
+5. Subir a App Store Connect.
 
-La app movil necesita `config.js` con:
+## Informacion para las tiendas
 
-```text
-NEXT_PUBLIC_SUPABASE_URL
-NEXT_PUBLIC_SUPABASE_ANON_KEY
-```
+### Categoria sugerida
 
-Si `config.js` existe en tu computadora, `mobile:prepare` lo copia a `dist-mobile`.
+- Android: Business o Productivity.
+- iOS: Business.
 
-No subas `config.js` a GitHub si contiene tus valores reales. Para la app movil, basta con que exista localmente al momento de generar Android/iOS.
+### Descripcion corta sugerida
 
-## Costos y cuentas
+RedJob conecta candidatos y empresas en Mexico con vacantes, postulaciones y mensajes directos.
 
-- Google Play Console tiene una cuota unica de registro.
-- Apple Developer Program tiene membresia anual.
+### Descripcion completa sugerida
 
-Revisa siempre las paginas oficiales antes de pagar o publicar, porque las reglas pueden cambiar.
+RedJob es una plataforma de empleo para Mexico que ayuda a candidatos y empresas a conectar de forma simple, directa y profesional.
 
-## Archivos que si puedes subir a GitHub
+Los candidatos pueden crear su perfil, subir su curriculum, buscar vacantes, guardar oportunidades, postularse y conversar con reclutadores desde la app.
+
+Las empresas pueden crear perfiles, publicar vacantes, recibir postulaciones, revisar candidatos y responder mensajes desde un solo lugar.
+
+RedJob esta disenada para facilitar el reclutamiento con una experiencia limpia, rapida y enfocada en oportunidades reales.
+
+### Palabras clave sugeridas
+
+empleo, vacantes, trabajo, reclutamiento, candidatos, empresas, curriculum, Mexico
+
+### URL legales
+
+- Privacidad: `https://redjob.com.mx` y abrir seccion Privacidad.
+- Terminos: `https://redjob.com.mx` y abrir seccion Terminos.
+- Soporte: `redjobmx@gmail.com`
+
+Si despues se crean URLs directas como `/privacidad` y `/terminos`, usarlas en las tiendas.
+
+## Declaracion de datos para tiendas
+
+RedJob maneja datos personales, asi que en Play Console y App Store Connect se debe declarar con cuidado:
+
+- Nombre.
+- Correo electronico.
+- Telefono si el usuario lo agrega.
+- Ubicacion laboral o ciudad/estado.
+- CV/curriculum.
+- Foto o logo si el usuario lo sube.
+- Mensajes entre usuarios.
+- Informacion de empresas y vacantes.
+
+No declares que la app no recopila datos. RedJob si recopila datos para operar perfiles, postulaciones y mensajes.
+
+## Capturas recomendadas
+
+Preparar capturas de:
+
+1. Inicio / busqueda de vacantes.
+2. Detalle de vacante.
+3. Perfil candidato.
+4. Perfil empresa.
+5. Mensajes.
+6. Administracion, solo si quieres mostrarla publicamente. Si no, mejor no.
+
+## Archivos que si se pueden subir a GitHub
 
 - `package.json`
+- `package-lock.json`, si se genera.
 - `capacitor.config.json`
 - `scripts/prepare-mobile.js`
+- `scripts/mobile-check.js`
 - `MOBILE_APP_GUIDE.md`
+- Carpetas `android/` e `ios/` cuando se generen, excepto llaves privadas.
 
-Cuando generes las carpetas `android` e `ios`, normalmente tambien conviene subirlas a GitHub porque son el proyecto nativo.
+## Archivos que NO se deben subir
 
-## Archivos que no debes subir
-
-- `node_modules`
-- `dist-mobile`
+- `node_modules/`
+- `dist-mobile/`
 - `config.js`
-- claves privadas de Android
-- certificados o perfiles privados de Apple
+- `.env`
+- `.env.*`
+- Archivos `.jks`
+- Archivos `.keystore`
+- Archivos `.p12`
+- Archivos `.mobileprovision`
+- `android/key.properties`
+- certificados privados de Apple
+
+## Flujo recomendado cada vez que cambie RedJob
+
+1. Actualizar GitHub con la version web.
+2. Probar `https://redjob.com.mx`.
+3. En la carpeta local ejecutar:
+
+```bash
+npm run mobile:check
+npm run mobile:sync
+```
+
+4. Probar en Android Studio o Xcode.
+5. Generar nueva version para tienda.
+6. Subir nueva version a Play Console/App Store Connect.
+
+## Pendientes antes de publicar en tiendas
+
+- Crear cuenta Google Play Console.
+- Crear cuenta Apple Developer.
+- Tener capturas oficiales.
+- Tener icono final de app en todos los tamanos requeridos.
+- Revisar Politica de Privacidad y Terminos.
+- Llenar declaracion de datos en Play Console.
+- Llenar App Privacy en App Store Connect.
+- Probar login, registro, CV, logos, postulaciones y mensajes en app real.

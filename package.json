@@ -5,6 +5,7 @@
   "description": "RedJob mobile wrapper for Android and iOS.",
   "scripts": {
     "mobile:prepare": "node scripts/prepare-mobile.js",
+    "mobile:check": "node scripts/mobile-check.js",
     "mobile:sync": "npm run mobile:prepare && npx cap sync",
     "mobile:add:android": "npm run mobile:prepare && npx cap add android",
     "mobile:add:ios": "npm run mobile:prepare && npx cap add ios",
