@@ -1,10 +1,10 @@
-const CACHE_NAME = "redjob-shell-20260721c";
+const CACHE_NAME = "redjob-shell-20260721d";
 const APP_SHELL = [
   "/",
   "/index.html",
   "/offline.html",
-  "/styles.css?v=20260721c",
-  "/app.js?v=20260721c",
+  "/styles.css?v=20260721d",
+  "/app.js?v=20260721d",
   "/manifest.json?v=20260609b",
   "/assets/redjob-logo-header.png",
   "/assets/redjob-icon-192.png?v=20260609b",

@@ -2728,15 +2728,15 @@ async function sendRealMessage(body) {
 }
 
 async function deleteOwnMessage(messageId) {
-  const session = requireSession();
+  requireSession();
   if (!messageId || !activeConversationId) return;
 
-  const deletedRows = await supabaseRestRequest(`/messages?id=eq.${encodeURIComponent(messageId)}&sender_user_id=eq.${session.user.id}`, {
-    method: "DELETE",
-    prefer: "return=representation"
+  const deleted = await supabaseRestRequest("/rpc/delete_own_message", {
+    method: "POST",
+    body: { message_uuid: messageId }
   });
 
-  if (!deletedRows?.length) {
+  if (deleted !== true) {
     throw new Error("No se pudo borrar el mensaje. Actualiza el SQL de Supabase e intenta de nuevo.");
   }
 
@@ -3753,7 +3753,7 @@ chatBody.addEventListener("click", async (event) => {
     await deleteOwnMessage(deleteButton.dataset.deleteMessageId);
     showToast("Mensaje borrado.");
   } catch (error) {
-    showToast(friendlyError(error));
+    showToast(error.message || "No se pudo borrar el mensaje.");
   } finally {
     deleteButton.disabled = false;
   }

@@ -1097,15 +1097,57 @@ begin
 end;
 $$;
 
+create or replace function public.delete_own_message(message_uuid uuid)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  target_message public.messages%rowtype;
+  deleted_count integer := 0;
+begin
+  if auth.uid() is null then
+    raise exception 'Debes iniciar sesion.';
+  end if;
+
+  select *
+  into target_message
+  from public.messages
+  where id = message_uuid;
+
+  if target_message.id is null then
+    raise exception 'Mensaje no encontrado.';
+  end if;
+
+  if target_message.sender_user_id <> auth.uid() then
+    raise exception 'Solo puedes borrar mensajes enviados por ti.';
+  end if;
+
+  if not public.is_conversation_participant(target_message.conversation_id) then
+    raise exception 'No puedes borrar mensajes de esta conversacion.';
+  end if;
+
+  delete from public.messages
+  where id = message_uuid
+    and sender_user_id = auth.uid();
+
+  get diagnostics deleted_count = row_count;
+  return deleted_count > 0;
+end;
+$$;
+
 revoke all on function public.apply_to_job(uuid, uuid, integer, text) from public;
 revoke all on function public.update_my_application(uuid, text, text) from public;
 revoke all on function public.update_company_application_status(uuid, text) from public;
 revoke all on function public.mark_conversation_read(uuid) from public;
+revoke all on function public.delete_own_message(uuid) from public;
 
 grant execute on function public.apply_to_job(uuid, uuid, integer, text) to authenticated;
 grant execute on function public.update_my_application(uuid, text, text) to authenticated;
 grant execute on function public.update_company_application_status(uuid, text) to authenticated;
 grant execute on function public.mark_conversation_read(uuid) to authenticated;
+grant execute on function public.delete_own_message(uuid) to authenticated;
 
 create or replace function public.is_conversation_participant(conversation_uuid uuid)
 returns boolean
