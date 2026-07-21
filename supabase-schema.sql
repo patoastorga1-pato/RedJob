@@ -594,6 +594,18 @@ security definer
 set search_path = public
 as $$
 begin
+  if tg_op = 'DELETE' then
+    update public.conversations
+    set last_message_at = (
+      select max(created_at)
+      from public.messages
+      where conversation_id = old.conversation_id
+    )
+    where id = old.conversation_id;
+
+    return old;
+  end if;
+
   update public.conversations
   set last_message_at = new.created_at
   where id = new.conversation_id;
@@ -605,7 +617,7 @@ $$;
 drop trigger if exists messages_sync_conversation_last_message on public.messages;
 
 create trigger messages_sync_conversation_last_message
-after insert on public.messages
+after insert or delete on public.messages
 for each row execute function public.sync_conversation_last_message();
 
 create or replace function public.create_conversation_for_application()
@@ -1517,6 +1529,15 @@ with check (
 );
 
 drop policy if exists "Conversation participants can mark messages as read" on public.messages;
+
+drop policy if exists "Message senders can delete own messages" on public.messages;
+
+create policy "Message senders can delete own messages"
+on public.messages for delete
+using (
+  sender_user_id = auth.uid()
+  and public.is_conversation_participant(conversation_id)
+);
 
 insert into storage.buckets (id, name, public)
 values ('resumes', 'resumes', false)

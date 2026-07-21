@@ -2151,8 +2151,11 @@ function renderChatMessages(messages, conversation) {
           const isMine = sameId(message.sender_user_id, session?.user?.id);
           const senderName = isMine ? "Tu" : isCompanyView ? candidate?.full_name ?? "Candidato" : companyName ?? "Empresa";
           return `
-            <article class="bubble ${isMine ? "candidate" : "company"}">
-              <span>${escapeHtml(senderName)}</span>
+            <article class="bubble ${isMine ? "candidate" : "company"}" data-message-id="${escapeHtml(message.id)}">
+              <div class="bubble-head">
+                <span>${escapeHtml(senderName)}</span>
+                ${isMine ? `<button class="message-delete-button" type="button" data-delete-message-id="${escapeHtml(message.id)}" aria-label="Borrar mensaje" title="Borrar mensaje">Borrar</button>` : ""}
+              </div>
               <p>${escapeHtml(message.body)}</p>
               ${message.created_at ? `<time datetime="${escapeHtml(message.created_at)}">${escapeHtml(formatMessageTime(message.created_at))}${isMine && message.read_at ? " - Leido" : ""}</time>` : ""}
             </article>
@@ -2722,6 +2725,19 @@ async function sendRealMessage(body) {
       body
     }
   });
+}
+
+async function deleteOwnMessage(messageId) {
+  const session = requireSession();
+  if (!messageId || !activeConversationId) return;
+
+  await supabaseRestRequest(`/messages?id=eq.${encodeURIComponent(messageId)}&sender_user_id=eq.${session.user.id}`, {
+    method: "DELETE",
+    prefer: "return=minimal"
+  });
+
+  await loadFirstConversation(false);
+  await openConversation(activeConversationId);
 }
 
 function getAuthFormValues() {
@@ -3718,6 +3734,24 @@ conversationList.addEventListener("click", async (event) => {
     await openConversation(conversationButton.dataset.conversationId);
   } catch (error) {
     showToast(error.message);
+  }
+});
+
+chatBody.addEventListener("click", async (event) => {
+  const deleteButton = event.target.closest("[data-delete-message-id]");
+  if (!deleteButton) return;
+
+  const confirmed = window.confirm("Borrar este mensaje enviado?");
+  if (!confirmed) return;
+
+  try {
+    deleteButton.disabled = true;
+    await deleteOwnMessage(deleteButton.dataset.deleteMessageId);
+    showToast("Mensaje borrado.");
+  } catch (error) {
+    showToast(friendlyError(error));
+  } finally {
+    deleteButton.disabled = false;
   }
 });
 

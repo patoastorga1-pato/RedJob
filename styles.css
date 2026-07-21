@@ -1241,12 +1241,47 @@ textarea:focus {
   padding: 14px 16px;
 }
 
+.bubble-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
 .bubble span {
   display: block;
-  margin-bottom: 4px;
   color: var(--muted);
   font-size: 0.78rem;
   font-weight: 900;
+}
+
+.message-delete-button {
+  border: 0;
+  padding: 2px 0;
+  background: transparent;
+  color: #94a3b8;
+  font: inherit;
+  font-size: 0.7rem;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+.bubble:hover .message-delete-button,
+.message-delete-button:focus-visible {
+  opacity: 1;
+}
+
+.message-delete-button:hover {
+  color: var(--red);
+}
+
+.message-delete-button:disabled {
+  cursor: wait;
+  opacity: 0.55;
 }
 
 .bubble p {
@@ -3151,6 +3186,10 @@ textarea:focus {
 
   .chat-close-button {
     width: 100%;
+  }
+
+  .message-delete-button {
+    opacity: 1;
   }
 
   .company-job-row {
