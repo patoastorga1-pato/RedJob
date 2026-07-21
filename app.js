@@ -2731,10 +2731,14 @@ async function deleteOwnMessage(messageId) {
   const session = requireSession();
   if (!messageId || !activeConversationId) return;
 
-  await supabaseRestRequest(`/messages?id=eq.${encodeURIComponent(messageId)}&sender_user_id=eq.${session.user.id}`, {
+  const deletedRows = await supabaseRestRequest(`/messages?id=eq.${encodeURIComponent(messageId)}&sender_user_id=eq.${session.user.id}`, {
     method: "DELETE",
-    prefer: "return=minimal"
+    prefer: "return=representation"
   });
+
+  if (!deletedRows?.length) {
+    throw new Error("No se pudo borrar el mensaje. Actualiza el SQL de Supabase e intenta de nuevo.");
+  }
 
   await loadFirstConversation(false);
   await openConversation(activeConversationId);

@@ -1506,6 +1506,7 @@ grant select, insert on table public.reports to authenticated;
 
 grant select on table public.company_rating_summary to anon, authenticated;
 grant select, insert, update, delete on table public.company_ratings to authenticated;
+grant select, insert, delete on table public.messages to authenticated;
 
 drop policy if exists "Conversation participants can read conversations" on public.conversations;
 
