@@ -1252,6 +1252,9 @@ textarea:focus {
 .bubble p {
   margin-bottom: 0;
   color: var(--black);
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .bubble time {
@@ -1275,10 +1278,43 @@ textarea:focus {
 .compose-bar {
   display: grid;
   grid-template-columns: 1fr;
+  align-items: end;
   gap: 12px;
   border-top: 1px solid var(--line);
   padding: 16px;
   background: var(--white);
+}
+
+.compose-bar textarea {
+  width: 100%;
+  min-height: 52px;
+  max-height: 170px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 15px 16px;
+  background: #ffffff;
+  color: var(--black);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.45;
+  resize: none;
+  overflow-y: auto;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.compose-bar textarea:hover {
+  border-color: rgba(220, 38, 38, 0.35);
+}
+
+.compose-bar textarea:focus {
+  outline: none;
+  border-color: rgba(220, 38, 38, 0.62);
+  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.1);
+}
+
+.compose-bar button {
+  min-height: 52px;
 }
 
 .profile-layout,

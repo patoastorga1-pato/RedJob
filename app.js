@@ -46,6 +46,8 @@ const applicationJobMeta = document.querySelector("#applicationJobMeta");
 const coverNote = document.querySelector("#coverNote");
 const toast = document.querySelector("#toast");
 const chatBody = document.querySelector(".chat-body");
+const messageForm = document.querySelector("#messageForm");
+const messageInput = document.querySelector("#messageInput");
 const conversationList = document.querySelector("#conversationList");
 const conversationCount = document.querySelector("#conversationCount");
 const messagesShell = document.querySelector("#messagesShell");
@@ -1962,6 +1964,12 @@ async function loadUnreadMessagesCount() {
   }
 }
 
+function resizeMessageComposer() {
+  if (!messageInput) return;
+  messageInput.style.height = "auto";
+  messageInput.style.height = `${Math.min(messageInput.scrollHeight, 170)}px`;
+}
+
 function renderUnreadMessagesBadge(count) {
   const unreadCount = Number(count) || 0;
   unreadMessagesBadge.textContent = unreadCount > 9 ? "9+" : String(unreadCount);
@@ -3852,11 +3860,10 @@ document.querySelector("#confirmApplication").addEventListener("click", async ()
   }
 });
 
-document.querySelector("#messageForm").addEventListener("submit", async (event) => {
+messageForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
-  const input = document.querySelector("#messageInput");
-  const message = input.value.trim();
+  const message = messageInput.value.trim();
   if (!message) return;
 
   try {
@@ -3878,11 +3885,21 @@ document.querySelector("#messageForm").addEventListener("submit", async (event) 
     } else {
       showToast("Primero necesitas una conversación real. Se crea al postularte a una vacante real.");
     }
-    input.value = "";
+    messageInput.value = "";
+    resizeMessageComposer();
   } catch (error) {
     showToast(error.message);
   }
 });
+
+messageInput.addEventListener("input", resizeMessageComposer);
+messageInput.addEventListener("keydown", (event) => {
+  if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+    event.preventDefault();
+    messageForm.requestSubmit();
+  }
+});
+resizeMessageComposer();
 
 candidateProfileForm.addEventListener("submit", async (event) => {
   event.preventDefault();
