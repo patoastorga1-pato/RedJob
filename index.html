@@ -354,6 +354,8 @@
               <span>Perfil de empresa</span>
               <h1 id="companyHeroName">Tu empresa</h1>
               <div class="company-plan-row">
+                <span class="plan-badge" data-plan="free" id="companyPlanBadge">Plan Free</span>
+                <span class="plan-status-badge" id="companyPlanStatus">Visibilidad basica</span>
                 <span class="verified-badge is-hidden" id="companyVerifiedBadge">Empresa verificada</span>
               </div>
               <p id="companyHeroDescription">Completa el perfil de empresa para publicar vacantes reales.</p>
@@ -460,6 +462,55 @@
             <h2>Candidatos recibidos</h2>
             <div class="candidate-inbox" id="receivedCandidatesList">
               <p class="empty-list">Aún no hay candidatos recibidos.</p>
+            </div>
+          </section>
+          <section class="info-card promotion-card">
+            <div class="promotion-heading">
+              <div>
+                <span>Mayor visibilidad</span>
+                <h2>Impulsa tus vacantes</h2>
+                <p>Elige como quieres aparecer ante mas candidatos: vacantes destacadas, prioridad en resultados y empresa verificada.</p>
+              </div>
+              <div class="promotion-summary">
+                <strong id="promotionActivePlan">Free</strong>
+                <small id="promotionActiveBenefits">Publicacion basica activa</small>
+                <button class="secondary-button subtle is-hidden" type="button" id="manageBillingButton">Administrar suscripción</button>
+              </div>
+            </div>
+            <div class="promotion-plans" id="promotionPlanCards">
+              <article class="promotion-plan" data-plan-card="free">
+                <span>Free</span>
+                <h3>$0 MXN</h3>
+                <p>Para publicar vacantes reales y empezar a recibir candidatos.</p>
+                <ul>
+                  <li>Vacantes en resultados normales</li>
+                  <li>Mensajes con candidatos postulados</li>
+                  <li>Perfil de empresa basico</li>
+                </ul>
+                <button class="secondary-button subtle" type="button" data-plan-request="free">Plan actual</button>
+              </article>
+              <article class="promotion-plan recommended" data-plan-card="pro">
+                <span>Pro</span>
+                <h3>$499 MXN/mes</h3>
+                <p>Para empresas que quieren que una vacante gane mas alcance.</p>
+                <ul>
+                  <li>1 vacante destacada</li>
+                  <li>Prioridad media en busquedas</li>
+                  <li>Elegible para verificacion</li>
+                </ul>
+                <button class="primary-button" type="button" data-plan-request="pro">Solicitar Pro</button>
+              </article>
+              <article class="promotion-plan" data-plan-card="premium">
+                <span>Premium</span>
+                <h3>$999 MXN/mes</h3>
+                <p>Para reclutamiento constante y maxima presencia en RedJob.</p>
+                <ul>
+                  <li>3 vacantes destacadas</li>
+                  <li>Prioridad alta en busquedas</li>
+                  <li>Verificacion y soporte prioritario</li>
+                </ul>
+                <button class="primary-button" type="button" data-plan-request="premium">Solicitar Premium</button>
+              </article>
             </div>
           </section>
         </section>
@@ -743,15 +794,16 @@
 
     <section class="legal-pages" aria-label="Información legal">
       <article class="view legal-view" id="privacidad">
-        <section class="page-hero compact">
-          <span>Privacidad</span>
-          <h1>Aviso de privacidad</h1>
-          <p>Última actualización: junio de 2026</p>
-        </section>
-        <section class="section-block legal-copy">
-          <p>RedJob, accesible a través de <a href="https://www.redjob.com.mx" target="_blank" rel="noopener noreferrer">www.redjob.com.mx</a>, es una plataforma digital dedicada a conectar candidatos con empleadores y facilitar procesos de reclutamiento y selección de personal en México y otros países de América.</p>
+        <section class="section-block legal-copy privacy-copy">
+          <header class="legal-copy-heading">
+            <span>Privacidad</span>
+            <h1>Aviso de privacidad</h1>
+            <p>Última actualización: julio de 2026</p>
+          </header>
 
-          <p>La plataforma es operada actualmente por una persona física con domicilio en México. Para cualquier asunto relacionado con privacidad y protección de datos personales, los usuarios pueden comunicarse al correo electrónico: <a href="mailto:redjobmx@gmail.com">redjobmx@gmail.com</a>.</p>
+          <p>RedJob, accesible a través de <a href="https://www.redjob.com.mx" target="_blank" rel="noopener noreferrer">www.redjob.com.mx</a>, es una plataforma digital dedicada a conectar candidatos con empleadores y facilitar procesos de reclutamiento y selección de personal en México.</p>
+
+          <p>La plataforma es operada por el titular de RedJob con domicilio en México. Para cualquier asunto relacionado con privacidad, protección de datos personales o el ejercicio de derechos ARCO, los usuarios pueden comunicarse al correo electrónico <a href="mailto:redjobmx@gmail.com">redjobmx@gmail.com</a>.</p>
 
           <h2>Datos personales recabados</h2>
           <p>RedJob podrá recopilar los siguientes datos de los candidatos:</p>
@@ -760,43 +812,84 @@
             <li>Correo electrónico.</li>
             <li>Número telefónico.</li>
             <li>Ciudad y estado de residencia.</li>
-            <li>Currículum vitae (CV).</li>
+            <li>Currículum Vitae (CV).</li>
             <li>Experiencia laboral.</li>
             <li>Escolaridad.</li>
-            <li>Fotografía.</li>
+            <li>Fotografía de perfil.</li>
             <li>Redes sociales profesionales.</li>
             <li>Información adicional proporcionada voluntariamente por el usuario.</li>
           </ul>
 
-          <p>Asimismo, RedJob podrá recopilar los siguientes datos de las empresas y reclutadores:</p>
+          <p>Asimismo, RedJob podrá recopilar los siguientes datos de empresas y reclutadores:</p>
           <ul>
             <li>Nombre de la empresa.</li>
-            <li>Nombre del reclutador o representante.</li>
+            <li>Nombre del representante o reclutador.</li>
             <li>Correo electrónico.</li>
             <li>Número telefónico.</li>
-            <li>Datos de facturación cuando corresponda.</li>
+            <li>Datos fiscales o de facturación, cuando correspondan.</li>
           </ul>
+
+          <p>Cuando un usuario contrate alguno de los planes disponibles dentro de la plataforma, RedJob también podrá recopilar información relacionada con la suscripción, incluyendo:</p>
+          <ul>
+            <li>Plan contratado.</li>
+            <li>Estado de la suscripción.</li>
+            <li>Fecha de contratación.</li>
+            <li>Fecha de renovación o vencimiento.</li>
+            <li>Historial de pagos.</li>
+            <li>Identificadores de transacciones generados por el proveedor de pagos.</li>
+          </ul>
+          <p>RedJob no almacena información completa de tarjetas bancarias, números de tarjeta, códigos de seguridad (CVV) ni credenciales de pago.</p>
 
           <h2>Finalidades del tratamiento de datos</h2>
           <p>Los datos personales serán utilizados para:</p>
           <ul>
             <li>Crear y administrar cuentas de usuario.</li>
-            <li>Permitir la publicación y gestión de vacantes.</li>
+            <li>Permitir la publicación y administración de vacantes.</li>
             <li>Facilitar la postulación de candidatos.</li>
             <li>Conectar candidatos con empleadores.</li>
             <li>Verificar la autenticidad de perfiles y empresas.</li>
-            <li>Mejorar la experiencia dentro de la plataforma.</li>
+            <li>Administrar suscripciones y beneficios de los planes de pago.</li>
+            <li>Procesar y validar pagos realizados dentro de la plataforma.</li>
             <li>Atender solicitudes de soporte.</li>
-            <li>Cumplir obligaciones legales aplicables.</li>
+            <li>Mejorar la experiencia de uso y el funcionamiento de RedJob.</li>
+            <li>Detectar actividades fraudulentas o usos indebidos.</li>
+            <li>Cumplir obligaciones legales y fiscales aplicables.</li>
+          </ul>
+
+          <h2>Información relacionada con pagos</h2>
+          <p>Cuando un usuario contrate alguno de los planes de pago disponibles en RedJob, la plataforma podrá procesar información relacionada con la contratación y administración de la suscripción.</p>
+          <p>Los pagos son procesados por proveedores especializados en servicios de pago, quienes son responsables del tratamiento de la información financiera necesaria para completar la transacción.</p>
+          <p>RedJob únicamente recibe la información necesaria para:</p>
+          <ul>
+            <li>Confirmar que el pago fue realizado.</li>
+            <li>Activar o renovar la suscripción correspondiente.</li>
+            <li>Registrar el historial de pagos.</li>
+            <li>Atender aclaraciones relacionadas con la contratación.</li>
+            <li>Cumplir obligaciones legales y fiscales.</li>
           </ul>
 
           <h2>Compartición de información</h2>
           <p>Los datos proporcionados por los candidatos podrán ser compartidos con las empresas a las que decidan postularse mediante la plataforma.</p>
-          <p>RedJob no vende información personal a terceros.</p>
+          <p>RedJob no vende, alquila ni comercializa información personal a terceros.</p>
+          <p>Sin embargo, RedJob podrá compartir información estrictamente necesaria con proveedores tecnológicos que participan en la operación de la plataforma, incluyendo servicios de:</p>
+          <ul>
+            <li>Procesamiento de pagos.</li>
+            <li>Alojamiento de servidores.</li>
+            <li>Bases de datos.</li>
+            <li>Autenticación de usuarios.</li>
+            <li>Envío de correos electrónicos.</li>
+            <li>Analítica y monitoreo del servicio.</li>
+          </ul>
+          <p>Estos proveedores únicamente podrán utilizar la información para prestar los servicios contratados por RedJob y conforme a sus propias políticas de privacidad.</p>
 
           <h2>Seguridad de la información</h2>
-          <p>RedJob implementa medidas técnicas y administrativas razonables para proteger la información personal contra pérdida, uso indebido, acceso no autorizado, alteración o divulgación.</p>
-          <p>Sin embargo, ningún sistema de transmisión o almacenamiento electrónico puede garantizar una seguridad absoluta.</p>
+          <p>RedJob implementa medidas técnicas, administrativas y organizativas razonables para proteger la información personal contra pérdida, uso indebido, acceso no autorizado, alteración o divulgación.</p>
+          <p>La información relacionada con pagos es procesada mediante conexiones seguras y mecanismos de protección implementados por el proveedor de pagos correspondiente.</p>
+          <p>No obstante, ningún sistema de transmisión o almacenamiento electrónico puede garantizar una seguridad absoluta.</p>
+
+          <h2>Conservación de la información</h2>
+          <p>Los datos personales serán conservados mientras exista una relación entre el usuario y RedJob o durante el tiempo necesario para cumplir obligaciones legales, fiscales, contractuales o resolver controversias.</p>
+          <p>Una vez concluido dicho periodo, los datos podrán eliminarse, anonimizarse o conservarse únicamente cuando la legislación aplicable así lo requiera.</p>
 
           <h2>Derechos ARCO</h2>
           <p>Los usuarios podrán ejercer sus derechos de Acceso, Rectificación, Cancelación y Oposición (ARCO) enviando una solicitud al correo:</p>
@@ -810,119 +903,168 @@
           </ul>
 
           <h2>Cookies y tecnologías similares</h2>
-          <p>RedJob puede utilizar cookies y tecnologías similares para mejorar la navegación, recordar preferencias de usuario, analizar el uso de la plataforma y optimizar el rendimiento del servicio.</p>
+          <p>RedJob podrá utilizar cookies y tecnologías similares para:</p>
+          <ul>
+            <li>Recordar preferencias del usuario.</li>
+            <li>Mantener la sesión iniciada.</li>
+            <li>Mejorar la experiencia de navegación.</li>
+            <li>Analizar el uso de la plataforma.</li>
+            <li>Optimizar el rendimiento del servicio.</li>
+          </ul>
+          <p>El usuario podrá configurar su navegador para rechazar el uso de cookies; sin embargo, algunas funciones de la plataforma podrían verse limitadas.</p>
+
+          <h2>Proveedores de servicios</h2>
+          <p>Para el funcionamiento de la plataforma, RedJob podrá utilizar proveedores externos que prestan servicios relacionados con:</p>
+          <ul>
+            <li>Hospedaje y servidores.</li>
+            <li>Base de datos.</li>
+            <li>Autenticación.</li>
+            <li>Envío de correos electrónicos.</li>
+            <li>Procesamiento de pagos.</li>
+            <li>Analítica y monitoreo.</li>
+          </ul>
+          <p>Cada proveedor tratará únicamente la información necesaria para prestar sus servicios conforme a la legislación aplicable y sus propias políticas de privacidad.</p>
 
           <h2>Modificaciones al aviso</h2>
-          <p>RedJob podrá actualizar el presente Aviso de Privacidad en cualquier momento. Las modificaciones serán publicadas dentro de la plataforma y entrarán en vigor desde su publicación.</p>
+          <p>RedJob podrá actualizar el presente Aviso de Privacidad en cualquier momento para reflejar cambios en la plataforma, en la legislación aplicable o en los servicios ofrecidos.</p>
+          <p>Las modificaciones serán publicadas en <a href="https://www.redjob.com.mx" target="_blank" rel="noopener noreferrer">www.redjob.com.mx</a> y entrarán en vigor desde la fecha de su publicación.</p>
 
           <h2>Aceptación</h2>
-          <p>Al registrarse, utilizar la plataforma o enviar información mediante RedJob, el usuario reconoce haber leído y aceptado el presente Aviso de Privacidad.</p>
+          <p>Al registrarse, utilizar la plataforma, contratar cualquiera de los planes disponibles o proporcionar información mediante RedJob, el usuario declara haber leído, comprendido y aceptado el presente Aviso de Privacidad.</p>
         </section>
       </article>
 
       <article class="view legal-view" id="terminos">
-        <section class="page-hero compact">
-          <span>Términos</span>
-          <h1>Términos y condiciones de uso de RedJob</h1>
-          <p>Última actualización: junio de 2026</p>
-        </section>
-        <section class="section-block legal-copy">
-          <h2>1. Aceptación de los términos</h2>
-          <p>Bienvenido a RedJob. Al acceder, registrarse o utilizar la plataforma disponible en <a href="https://www.redjob.com.mx" target="_blank" rel="noopener noreferrer">www.redjob.com.mx</a>, el usuario acepta estos Términos y Condiciones. Si no está de acuerdo con ellos, deberá abstenerse de utilizar la plataforma.</p>
+        <section class="section-block legal-copy terms-copy">
+          <header class="legal-copy-heading">
+            <span>Términos</span>
+            <h1>Términos y condiciones de uso</h1>
+            <p>Última actualización: julio de 2026</p>
+          </header>
 
-          <h2>2. Descripción del servicio</h2>
-          <p>RedJob es una plataforma digital que facilita el contacto entre candidatos y empleadores mediante la publicación de vacantes laborales y la recepción de postulaciones.</p>
-          <p>RedJob actúa exclusivamente como intermediario tecnológico y no participa en los procesos de contratación entre las partes.</p>
+          <p>Bienvenido a RedJob ("la Plataforma"), disponible en <a href="https://www.redjob.com.mx" target="_blank" rel="noopener noreferrer">www.redjob.com.mx</a>.</p>
+          <p>Los presentes Términos y Condiciones regulan el acceso y uso de la Plataforma. Al registrarse, acceder o utilizar RedJob, el usuario declara haber leído, comprendido y aceptado estos términos. Si no está de acuerdo con ellos, deberá abstenerse de utilizar la Plataforma.</p>
 
-          <h2>3. Registro de usuarios</h2>
-          <p>Los usuarios podrán crear una cuenta proporcionando información veraz, completa y actualizada.</p>
-          <p>El usuario es responsable de mantener la confidencialidad de sus credenciales de acceso y de toda actividad realizada desde su cuenta.</p>
+          <h2>1. Objeto</h2>
+          <p>RedJob es una plataforma digital que permite conectar candidatos, empresas y reclutadores mediante la publicación de vacantes, búsqueda de talento y postulación a oportunidades laborales.</p>
+          <p>RedJob actúa únicamente como intermediario tecnológico y no forma parte de la relación laboral que pudiera surgir entre candidatos y empleadores.</p>
 
-          <h2>4. Obligaciones de los candidatos</h2>
-          <p>Los candidatos se comprometen a:</p>
+          <h2>2. Registro de usuarios</h2>
+          <p>Para utilizar determinadas funciones será necesario crear una cuenta.</p>
+          <p>El usuario se compromete a:</p>
           <ul>
-            <li>Proporcionar información verdadera y actualizada.</li>
-            <li>No suplantar la identidad de terceros.</li>
-            <li>No cargar documentos falsificados.</li>
-            <li>Utilizar la plataforma únicamente para fines legítimos de búsqueda de empleo.</li>
+            <li>Proporcionar información veraz y actualizada.</li>
+            <li>Mantener la confidencialidad de sus credenciales de acceso.</li>
+            <li>No compartir su cuenta con terceros.</li>
+            <li>Actualizar sus datos cuando sea necesario.</li>
           </ul>
-          <p>RedJob podrá suspender o eliminar cuentas que incumplan estas disposiciones.</p>
+          <p>El usuario es responsable de todas las actividades realizadas desde su cuenta.</p>
 
-          <h2>5. Obligaciones de las empresas</h2>
-          <p>Las empresas y reclutadores se comprometen a:</p>
+          <h2>3. Uso permitido</h2>
+          <p>El usuario acepta utilizar la Plataforma únicamente para fines legales y relacionados con oportunidades de empleo.</p>
+          <p>Queda prohibido:</p>
           <ul>
-            <li>Publicar únicamente vacantes reales y vigentes.</li>
-            <li>Proporcionar información veraz sobre las oportunidades laborales.</li>
-            <li>Cumplir con la legislación aplicable.</li>
-            <li>No solicitar pagos, depósitos o transferencias a candidatos.</li>
-            <li>No realizar actividades fraudulentas o engañosas.</li>
-            <li>No utilizar la plataforma para fines ilegales.</li>
+            <li>Publicar información falsa o engañosa.</li>
+            <li>Suplantar la identidad de otra persona o empresa.</li>
+            <li>Publicar vacantes inexistentes o fraudulentas.</li>
+            <li>Compartir contenido ofensivo, ilegal o discriminatorio.</li>
+            <li>Utilizar herramientas automatizadas que afecten el funcionamiento de la Plataforma.</li>
+            <li>Intentar acceder sin autorización a sistemas o información de otros usuarios.</li>
           </ul>
+          <p>RedJob podrá suspender o cancelar cuentas que incumplan estos términos.</p>
 
-          <h2>6. Prohibición de fraudes</h2>
-          <p>Queda estrictamente prohibido:</p>
+          <h2>4. Publicación de vacantes</h2>
+          <p>Las empresas son responsables del contenido publicado y garantizan que:</p>
           <ul>
-            <li>Solicitar dinero a candidatos.</li>
-            <li>Prometer empleos inexistentes.</li>
-            <li>Utilizar identidades falsas.</li>
-            <li>Suplantar empresas o personas.</li>
-            <li>Publicar esquemas fraudulentos o piramidales.</li>
-            <li>Solicitar información financiera sensible sin justificación legítima.</li>
+            <li>La información es veraz.</li>
+            <li>Cuentan con autorización para publicar las vacantes.</li>
+            <li>Las condiciones laborales cumplen con la legislación aplicable.</li>
           </ul>
-          <p>RedJob podrá eliminar inmediatamente cualquier publicación sospechosa y suspender permanentemente a los usuarios involucrados.</p>
+          <p>RedJob podrá eliminar publicaciones que considere falsas, engañosas, fraudulentas o que incumplan estos Términos.</p>
 
-          <h2>7. Moderación de contenido</h2>
-          <p>Las vacantes podrán publicarse automáticamente en la plataforma.</p>
-          <p>Sin embargo, RedJob se reserva el derecho de revisar, modificar, ocultar o eliminar cualquier vacante, perfil o contenido que considere:</p>
+          <h2>5. Postulación de candidatos</h2>
+          <p>Los candidatos deciden libremente a qué vacantes desean postularse.</p>
+          <p>Al postularse, autorizan que la información necesaria de su perfil sea compartida con la empresa correspondiente.</p>
+          <p>RedJob no garantiza que una empresa contacte al candidato ni que exista una contratación.</p>
+
+          <h2>6. Planes de suscripción</h2>
+          <p>RedJob ofrece planes de suscripción que permiten acceder a funciones adicionales dentro de la Plataforma.</p>
+          <p>Actualmente los planes disponibles son:</p>
           <ul>
-            <li>Fraudulento.</li>
-            <li>Engañoso.</li>
-            <li>Ilegal.</li>
-            <li>Discriminatorio.</li>
-            <li>Ofensivo.</li>
-            <li>Contrario a estos Términos y Condiciones.</li>
+            <li>Plan Pro: $499 MXN por mes.</li>
+            <li>Plan Premium: $999 MXN por mes.</li>
           </ul>
+          <p>Las funciones incluidas en cada plan serán las publicadas dentro de la Plataforma y podrán actualizarse o modificarse para mejorar el servicio.</p>
 
-          <h2>8. Limitación de responsabilidad</h2>
+          <h2>7. Pagos</h2>
+          <p>Los pagos de las suscripciones son procesados de forma segura mediante Stripe.</p>
+          <p>RedJob no almacena información completa de tarjetas bancarias ni credenciales de pago.</p>
+          <p>Al contratar un plan, el usuario autoriza el cobro correspondiente conforme al precio vigente al momento de la contratación.</p>
+
+          <h2>8. Renovación de suscripciones</h2>
+          <p>Las suscripciones se renovarán automáticamente al finalizar cada periodo de facturación utilizando el método de pago registrado en Stripe, salvo que el usuario cancele la renovación antes del siguiente ciclo de cobro.</p>
+          <p>La fecha de renovación dependerá de la fecha en que se contrató la suscripción.</p>
+
+          <h2>9. Cancelación</h2>
+          <p>El usuario podrá cancelar la renovación automática de su suscripción en cualquier momento.</p>
+          <p>La cancelación impedirá futuros cobros, pero el usuario conservará el acceso a los beneficios del plan hasta la conclusión del periodo ya pagado.</p>
+
+          <h2>10. Reembolsos</h2>
+          <p>Salvo que la legislación aplicable disponga lo contrario, los pagos realizados por suscripciones no son reembolsables una vez activado el servicio.</p>
+          <p>Si existiera un error de cobro atribuible a RedJob o al procesamiento del pago, el usuario podrá contactar al soporte para que su caso sea revisado.</p>
+
+          <h2>11. Cambios de precios</h2>
+          <p>RedJob podrá modificar los precios de sus planes de suscripción.</p>
+          <p>Cuando corresponda, dichos cambios serán informados antes de que entren en vigor y no afectarán los periodos ya pagados.</p>
+
+          <h2>12. Disponibilidad del servicio</h2>
+          <p>RedJob procura mantener la Plataforma disponible de forma continua.</p>
+          <p>No obstante, podrán existir interrupciones por mantenimiento, actualizaciones, fallas técnicas, problemas de conectividad o causas ajenas al control de RedJob.</p>
+          <p>RedJob no garantiza disponibilidad ininterrumpida del servicio.</p>
+
+          <h2>13. Propiedad intelectual</h2>
+          <p>Todo el contenido de RedJob, incluyendo su nombre, logotipos, diseño, software, código fuente, bases de datos, imágenes, textos y demás elementos, es propiedad de RedJob o de sus respectivos titulares y se encuentra protegido por la legislación aplicable.</p>
+          <p>Queda prohibida su reproducción, distribución o utilización sin autorización previa.</p>
+
+          <h2>14. Responsabilidad</h2>
+          <p>RedJob proporciona únicamente la infraestructura tecnológica para facilitar el contacto entre candidatos y empleadores.</p>
           <p>RedJob no garantiza:</p>
           <ul>
             <li>La contratación de candidatos.</li>
-            <li>La obtención de empleo.</li>
-            <li>La autenticidad absoluta de todas las vacantes.</li>
-            <li>La veracidad absoluta de toda la información proporcionada por los usuarios.</li>
+            <li>Que una vacante permanezca disponible.</li>
+            <li>La veracidad absoluta de la información publicada por los usuarios.</li>
+            <li>El desempeño profesional de los candidatos.</li>
+            <li>La solvencia, legalidad o cumplimiento de las empresas registradas.</li>
           </ul>
-          <p>Cada usuario es responsable de verificar la información antes de celebrar acuerdos laborales o compartir documentación adicional.</p>
+          <p>Las decisiones de contratación corresponden exclusivamente a las partes involucradas.</p>
 
-          <h2>9. Relación entre las partes</h2>
-          <p>La relación laboral, contractual o comercial que pueda surgir entre candidatos y empleadores es exclusiva de dichas partes.</p>
-          <p>RedJob no forma parte de dicha relación y no asume obligaciones derivadas de ella.</p>
-
-          <h2>10. Propiedad intelectual</h2>
-          <p>El nombre RedJob, su diseño, contenido, logotipos, software, bases de datos y demás elementos de la plataforma son propiedad de sus titulares o se utilizan bajo autorización correspondiente.</p>
-          <p>Queda prohibida su reproducción, distribución o utilización sin autorización previa.</p>
-
-          <h2>11. Planes y servicios futuros</h2>
-          <p>Actualmente el uso básico de la plataforma es gratuito.</p>
-          <p>RedJob podrá implementar en el futuro planes gratuitos o de pago, incluyendo modalidades Free, Pro y Premium para empresas, así como servicios adicionales relacionados con reclutamiento y promoción de vacantes.</p>
-
-          <h2>12. Suspensión o cancelación de cuentas</h2>
+          <h2>15. Suspensión y cancelación de cuentas</h2>
           <p>RedJob podrá suspender o cancelar cuentas cuando detecte:</p>
           <ul>
-            <li>Actividades fraudulentas.</li>
-            <li>Incumplimiento de estos términos.</li>
-            <li>Uso indebido de la plataforma.</li>
-            <li>Riesgos para otros usuarios.</li>
+            <li>Información falsa.</li>
+            <li>Actividad fraudulenta.</li>
+            <li>Incumplimiento de estos Términos.</li>
+            <li>Uso indebido de la Plataforma.</li>
+            <li>Actividades que afecten la seguridad o funcionamiento del servicio.</li>
           </ul>
+          <p>En caso de suspensión o cancelación por incumplimiento, RedJob podrá cancelar los beneficios asociados a la cuenta sin obligación de realizar reembolsos cuando corresponda conforme a estos Términos y a la legislación aplicable.</p>
 
-          <h2>13. Modificaciones</h2>
-          <p>RedJob podrá actualizar estos Términos y Condiciones en cualquier momento. Las modificaciones serán publicadas dentro de la plataforma y entrarán en vigor desde su publicación.</p>
+          <h2>16. Protección de datos personales</h2>
+          <p>El tratamiento de los datos personales se realiza conforme al Aviso de Privacidad de RedJob, disponible en la Plataforma.</p>
 
-          <h2>14. Contacto</h2>
-          <p>Para cualquier consulta relacionada con estos Términos y Condiciones:</p>
+          <h2>17. Modificaciones</h2>
+          <p>RedJob podrá modificar estos Términos y Condiciones en cualquier momento para adaptarlos a cambios legales, técnicos o de funcionamiento de la Plataforma.</p>
+          <p>Las modificaciones serán publicadas en <a href="https://www.redjob.com.mx" target="_blank" rel="noopener noreferrer">www.redjob.com.mx</a> e indicarán la fecha de su última actualización.</p>
+          <p>El uso continuo de la Plataforma después de la publicación de las modificaciones implicará la aceptación de los nuevos Términos.</p>
+
+          <h2>18. Legislación aplicable</h2>
+          <p>Estos Términos y Condiciones se regirán por las leyes de los Estados Unidos Mexicanos.</p>
+          <p>Cualquier controversia relacionada con la Plataforma será resuelta por los tribunales competentes conforme a la legislación mexicana, salvo disposición legal en contrario.</p>
+
+          <h2>19. Contacto</h2>
+          <p>Para cualquier duda relacionada con estos Términos y Condiciones o con el funcionamiento de la Plataforma, el usuario podrá comunicarse a:</p>
           <p>Correo electrónico: <a href="mailto:redjobmx@gmail.com">redjobmx@gmail.com</a></p>
-
-          <h2>15. Legislación aplicable</h2>
-          <p>Estos Términos y Condiciones se regirán conforme a las leyes aplicables de los Estados Unidos Mexicanos, sin perjuicio de los derechos que pudieran corresponder a usuarios ubicados en otros países.</p>
+          <p>Sitio web: <a href="https://www.redjob.com.mx" target="_blank" rel="noopener noreferrer">www.redjob.com.mx</a></p>
         </section>
       </article>
 

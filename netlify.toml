@@ -2,6 +2,30 @@
   command = "node scripts/create-config.js"
   publish = "."
 
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+[[redirects]]
+  from = "/api/billing/checkout"
+  to = "/.netlify/functions/create-checkout-session"
+  status = 200
+
+[[redirects]]
+  from = "/api/billing/portal"
+  to = "/.netlify/functions/create-customer-portal"
+  status = 200
+
+[[redirects]]
+  from = "/api/billing/stripe-webhook"
+  to = "/.netlify/functions/stripe-webhook"
+  status = 200
+
+[[redirects]]
+  from = "/api/jobs/promote"
+  to = "/.netlify/functions/promote-job"
+  status = 200
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
