@@ -520,7 +520,7 @@ textarea:focus {
 .companies-grid,
 .jobs-grid {
   display: grid;
-  gap: 18px;
+  gap: 14px;
 }
 
 .category-grid {
@@ -822,8 +822,8 @@ textarea:focus {
 
 .job-card {
   display: grid;
-  gap: 22px;
-  padding: 26px;
+  gap: 14px;
+  padding: 20px;
   overflow: hidden;
 }
 
@@ -831,7 +831,7 @@ textarea:focus {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: start;
-  gap: 18px;
+  gap: 14px;
 }
 
 .job-card-main {
@@ -839,24 +839,24 @@ textarea:focus {
 }
 
 .job-card-top .company-logo {
-  width: 64px;
-  height: 64px;
-  border-radius: 18px;
+  width: 76px;
+  height: 76px;
+  border-radius: 20px;
   justify-self: end;
-  --company-logo-padding: 6px;
+  --company-logo-padding: 7px;
 }
 
 .job-card h3 {
-  margin: 2px 0 8px;
+  margin: 0 0 6px;
   color: var(--black);
-  font-size: clamp(21px, 2.1vw, 26px);
+  font-size: clamp(19px, 1.8vw, 23px);
   font-weight: 900;
-  line-height: 1.08;
+  line-height: 1.12;
   letter-spacing: 0;
 }
 
 .job-card .job-commercial-badges {
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .job-card .verified-badge {
@@ -867,10 +867,10 @@ textarea:focus {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: 7px;
+  margin-bottom: 8px;
   color: #64748b;
-  font-size: 0.98rem;
+  font-size: 0.9rem;
   font-weight: 800;
 }
 
@@ -890,9 +890,9 @@ textarea:focus {
 .job-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 9px 14px;
+  gap: 6px 10px;
   color: var(--muted);
-  font-size: 0.94rem;
+  font-size: 0.82rem;
   font-weight: 700;
 }
 
@@ -905,43 +905,50 @@ textarea:focus {
 .job-meta span:not(:last-child)::after {
   content: "";
   width: 1px;
-  height: 16px;
-  margin-left: 5px;
+  height: 13px;
+  margin-left: 3px;
   background: #e2e8f0;
 }
 
 .job-salary {
-  margin-top: 14px;
+  margin-top: 9px;
   color: var(--black);
-  font-size: 1.08rem;
-  font-weight: 900;
+  font-size: 1.24rem;
+  font-weight: 950;
+  line-height: 1.15;
 }
 
 .tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 9px;
+  gap: 7px;
 }
 
 .tags span {
   border-radius: 999px;
-  padding: 9px 13px;
+  padding: 6px 10px;
   background: #f8fafc;
   color: #334155;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 800;
+}
+
+.tags .more-tags {
+  background: #fff5f5;
+  color: var(--red);
+  font-weight: 950;
 }
 
 .match-block {
   display: grid;
-  gap: 9px;
-  padding-top: 4px;
+  gap: 7px;
+  padding-top: 0;
 }
 
 .match-block-incomplete {
   border: 1px solid #e2e8f0;
-  border-radius: 18px;
-  padding: 14px 16px;
+  border-radius: 14px;
+  padding: 10px 12px;
   background: #f8fafc;
 }
 
@@ -958,7 +965,7 @@ textarea:focus {
   justify-content: space-between;
   gap: 12px;
   color: var(--muted);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
 }
 
@@ -975,7 +982,7 @@ textarea:focus {
 }
 
 .match-bar {
-  height: 8px;
+  height: 6px;
   border-radius: 999px;
   background: #ededed;
   overflow: hidden;
@@ -991,13 +998,13 @@ textarea:focus {
 .job-actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  padding-top: 4px;
+  gap: 9px;
+  padding-top: 0;
 }
 
 .job-actions button {
   width: 100%;
-  min-height: 48px;
+  min-height: 42px;
 }
 
 .job-actions .secondary-button,
@@ -1010,21 +1017,31 @@ textarea:focus {
 
 .job-actions .primary-button {
   grid-column: 1 / -1;
-  min-height: 54px;
-  font-size: 1rem;
+  min-height: 46px;
+  font-size: 0.94rem;
 }
 
 .save-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
   border: 1px solid var(--line);
   border-radius: 999px;
-  min-height: 44px;
-  padding: 0 16px;
+  min-height: 40px;
+  padding: 0 14px;
   background: var(--white);
   color: var(--black);
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 800;
+  font-size: 13px;
+  font-weight: 900;
   transition: border-color 180ms ease, background 180ms ease, color 180ms ease, transform 180ms ease;
+}
+
+.save-button span {
+  color: var(--red);
+  font-size: 1rem;
+  line-height: 1;
 }
 
 .save-button.active {
@@ -3541,10 +3558,10 @@ textarea:focus {
   }
 
   .job-card-top .company-logo {
-    width: 58px;
-    height: 58px;
-    border-radius: 17px;
-    --company-logo-padding: 5px;
+    width: 68px;
+    height: 68px;
+    border-radius: 18px;
+    --company-logo-padding: 6px;
   }
 
   .job-card,
@@ -3552,7 +3569,7 @@ textarea:focus {
   .profile-card,
   .access-card {
     border-radius: 18px;
-    padding: 20px;
+    padding: 18px;
   }
 
   .access-page {
@@ -3587,11 +3604,11 @@ textarea:focus {
   }
 
   .job-card h3 {
-    font-size: clamp(20px, 6vw, 24px);
+    font-size: clamp(19px, 5.5vw, 23px);
   }
 
   .job-meta {
-    gap: 7px 10px;
+    gap: 6px 9px;
   }
 
   .job-meta span:not(:last-child)::after {

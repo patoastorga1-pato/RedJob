@@ -3242,6 +3242,9 @@ function renderJobs() {
         const verifiedMark = job.companyVerified
           ? `<span class="job-company-verified" title="Empresa verificada" aria-label="Empresa verificada">✓</span>`
           : "";
+        const visibleTags = job.tags.slice(0, 3);
+        const remainingTagsCount = Math.max(job.tags.length - visibleTags.length, 0);
+        const saved = isSavedJob(job.id);
 
         return `
         <article class="job-card">
@@ -3264,15 +3267,17 @@ function renderJobs() {
             ${renderCompanyLogoMarkup(job.company, job.companyLogoPath)}
           </div>
           <div class="tags">
-            ${job.tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}
+            ${visibleTags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}
+            ${remainingTagsCount ? `<span class="more-tags">+${remainingTagsCount} requisitos</span>` : ""}
           </div>
           ${renderMatchBlock(job)}
           <div class="job-actions">
             <button class="secondary-button subtle" type="button" data-view-job="${escapeHtml(job.id)}">
               Ver detalle
             </button>
-            <button class="save-button ${isSavedJob(job.id) ? "active" : ""}" type="button" data-save-job="${escapeHtml(job.id)}">
-              ${isSavedJob(job.id) ? "Guardada" : "Guardar"}
+            <button class="save-button ${saved ? "active" : ""}" type="button" data-save-job="${escapeHtml(job.id)}" aria-label="${saved ? "Vacante guardada" : "Guardar vacante"}">
+              <span aria-hidden="true">${saved ? "&#9829;" : "&#9825;"}</span>
+              ${saved ? "Guardada" : "Guardar"}
             </button>
             <button class="primary-button" type="button" data-apply-job="${escapeHtml(job.id)}">
               ${hasApplication(job.id) ? "Postulada" : "Postularme"}
