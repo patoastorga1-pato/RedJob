@@ -10,6 +10,7 @@ import {
 } from "./_shared/billing.mts";
 
 async function recordEvent(event, status, companyId = null, extraPayload = {}) {
+  const object = event.data?.object ?? {};
   await supabaseRequest("/billing_events?on_conflict=provider,provider_event_id", {
     method: "POST",
     service: true,
@@ -21,8 +22,13 @@ async function recordEvent(event, status, companyId = null, extraPayload = {}) {
       event_type: event.type,
       status,
       payload: {
-        stripe_object_id: event.data?.object?.id,
-        stripe_object_type: event.data?.object?.object,
+        stripe_object_id: object.id,
+        stripe_object_type: object.object,
+        customer_id: typeof object.customer === "string" ? object.customer : object.customer?.id,
+        subscription_id: typeof object.subscription === "string" ? object.subscription : object.subscription?.id,
+        client_reference_id: object.client_reference_id,
+        redjob_company_id: object.metadata?.redjob_company_id,
+        redjob_plan: object.metadata?.redjob_plan,
         ...extraPayload
       },
       processed_at: new Date().toISOString()
@@ -30,9 +36,10 @@ async function recordEvent(event, status, companyId = null, extraPayload = {}) {
   });
 }
 
-async function findCompanyBySubscriptionOrCustomer(subscription) {
+async function findCompanyBySubscriptionOrCustomer(subscription, fallbackCompanyId = null) {
   const metadataCompanyId = subscription.metadata?.redjob_company_id;
   if (metadataCompanyId) return metadataCompanyId;
+  if (fallbackCompanyId) return fallbackCompanyId;
 
   if (subscription.id) {
     const rows = await supabaseRequest(
@@ -54,7 +61,7 @@ async function findCompanyBySubscriptionOrCustomer(subscription) {
   return null;
 }
 
-function getPlanFromSubscription(subscription) {
+function getPlanFromSubscription(subscription, fallbackPlan = null) {
   const activePriceId = subscription.items?.data?.[0]?.price?.id;
   if (activePriceId) {
     const matchedPlan = Object.entries(planConfig).find(([, config]) => {
@@ -66,17 +73,18 @@ function getPlanFromSubscription(subscription) {
 
   const metadataPlan = subscription.metadata?.redjob_plan;
   if (metadataPlan === "pro" || metadataPlan === "premium") return metadataPlan;
+  if (fallbackPlan === "pro" || fallbackPlan === "premium") return fallbackPlan;
   return "free";
 }
 
-async function syncSubscription(subscription) {
-  const companyId = await findCompanyBySubscriptionOrCustomer(subscription);
+async function syncSubscription(subscription, fallback = {}) {
+  const companyId = await findCompanyBySubscriptionOrCustomer(subscription, fallback.companyId);
   if (!companyId) {
     throw new Error(`No se encontro empresa para la suscripcion ${subscription.id || "sin id"}.`);
   }
 
   const status = mapSubscriptionStatus(subscription.status);
-  const plan = status === "canceled" ? "free" : getPlanFromSubscription(subscription);
+  const plan = status === "canceled" ? "free" : getPlanFromSubscription(subscription, fallback.plan);
   const body = {
     plan,
     plan_status: status,
@@ -98,8 +106,13 @@ async function syncSubscription(subscription) {
 
 async function handleCheckoutCompleted(session, stripe) {
   if (!session.subscription) return session.metadata?.redjob_company_id ?? null;
-  const subscription = await stripe.subscriptions.retrieve(session.subscription);
-  return syncSubscription(subscription);
+  const subscription = await stripe.subscriptions.retrieve(session.subscription, {
+    expand: ["items.data.price"]
+  });
+  return syncSubscription(subscription, {
+    companyId: session.metadata?.redjob_company_id || session.client_reference_id,
+    plan: session.metadata?.redjob_plan
+  });
 }
 
 export default async (req) => {

@@ -41,10 +41,12 @@ async function getSubscriptionFromCheckoutSession(stripe, checkoutSessionId) {
   });
 
   const subscription = session.subscription;
-  return {
-    session,
-    subscription: typeof subscription === "string" ? await stripe.subscriptions.retrieve(subscription) : subscription
-  };
+  const hydratedSubscription =
+    typeof subscription === "string"
+      ? await stripe.subscriptions.retrieve(subscription, { expand: ["items.data.price"] })
+      : subscription;
+
+  return { session, subscription: hydratedSubscription };
 }
 
 async function syncCompanySubscription(company, subscription) {
