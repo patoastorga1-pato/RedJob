@@ -30,7 +30,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./styles.css?v=20260721d" />
+    <link rel="stylesheet" href="./styles.css?v=20260729a" />
   </head>
   <body>
     <header class="site-header">
@@ -478,9 +478,10 @@
               </div>
             </div>
             <div class="promotion-plans" id="promotionPlanCards">
-              <article class="promotion-plan" data-plan-card="free">
-                <span>Free</span>
-                <h3>$0 MXN</h3>
+              <article class="promotion-plan promotion-plan-free" data-plan-card="free">
+                <span class="promotion-plan-label">Free</span>
+                <h3>Free</h3>
+                <strong>$0 MXN</strong>
                 <p>Para publicar vacantes reales y empezar a recibir candidatos.</p>
                 <ul>
                   <li>Vacantes en resultados normales</li>
@@ -490,8 +491,9 @@
                 <button class="secondary-button subtle" type="button" data-plan-request="free">Plan actual</button>
               </article>
               <article class="promotion-plan recommended" data-plan-card="pro">
-                <span>Pro</span>
-                <h3>$499 MXN/mes</h3>
+                <span class="promotion-plan-label">Mas popular</span>
+                <h3>Pro</h3>
+                <strong>$499 MXN/mes</strong>
                 <p>Para empresas que quieren que una vacante gane mas alcance.</p>
                 <ul>
                   <li>1 vacante destacada</li>
@@ -500,9 +502,10 @@
                 </ul>
                 <button class="primary-button" type="button" data-plan-request="pro">Solicitar Pro</button>
               </article>
-              <article class="promotion-plan" data-plan-card="premium">
-                <span>Premium</span>
-                <h3>$999 MXN/mes</h3>
+              <article class="promotion-plan premium" data-plan-card="premium">
+                <span class="promotion-plan-label">Maxima visibilidad</span>
+                <h3>Premium</h3>
+                <strong>$999 MXN/mes</strong>
                 <p>Para reclutamiento constante y maxima presencia en RedJob.</p>
                 <ul>
                   <li>3 vacantes destacadas</li>
@@ -512,6 +515,7 @@
                 <button class="primary-button" type="button" data-plan-request="premium">Solicitar Premium</button>
               </article>
             </div>
+            <p class="promotion-billing-status" id="promotionBillingStatus" role="status" aria-live="polite"></p>
           </section>
         </section>
       </section>
@@ -1100,7 +1104,7 @@
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-    <script src="./config.js?v=20260605h"></script>
-    <script src="./app.js?v=20260721d"></script>
+    <script src="./config.js?v=20260729a"></script>
+    <script src="./app.js?v=20260729a"></script>
   </body>
 </html>

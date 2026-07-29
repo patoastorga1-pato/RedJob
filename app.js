@@ -113,6 +113,7 @@ const companyPlanStatus = document.querySelector("#companyPlanStatus");
 const promotionActivePlan = document.querySelector("#promotionActivePlan");
 const promotionActiveBenefits = document.querySelector("#promotionActiveBenefits");
 const promotionPlanCards = document.querySelector("#promotionPlanCards");
+const promotionBillingStatus = document.querySelector("#promotionBillingStatus");
 const manageBillingButton = document.querySelector("#manageBillingButton");
 const companyProfileSelect = document.querySelector("#companyProfileSelect");
 const newCompanyButton = document.querySelector("#newCompanyButton");
@@ -810,9 +811,20 @@ function renderPromotionState() {
   promotionPlanCards?.querySelectorAll("[data-plan-card]").forEach((card) => {
     const isActive = card.dataset.planCard === activePlan;
     card.classList.toggle("active", isActive);
+    card.setAttribute("aria-current", isActive ? "true" : "false");
     const button = card.querySelector("[data-plan-request]");
-    if (button) button.textContent = isActive ? "Plan actual" : `Solicitar ${promotionPlans[card.dataset.planCard]?.label || "plan"}`;
+    if (button) {
+      button.textContent = isActive ? "Plan actual" : `Solicitar ${promotionPlans[card.dataset.planCard]?.label || "plan"}`;
+      button.disabled = isActive;
+    }
   });
+}
+
+function setPromotionBillingStatus(message = "", type = "info") {
+  if (!promotionBillingStatus) return;
+  promotionBillingStatus.textContent = message;
+  promotionBillingStatus.dataset.status = type;
+  promotionBillingStatus.classList.toggle("is-visible", Boolean(message));
 }
 
 function renderCompanyHeader() {
@@ -953,7 +965,7 @@ async function startPlanCheckout(plan) {
   }
 
   const session = requireSession();
-  const checkout = await billingRequest("/api/billing/checkout", {
+  const checkout = await billingRequest("/.netlify/functions/create-checkout-session", {
     plan,
     companyId: currentCompanyProfile.id,
     email: session.user?.email
@@ -3658,10 +3670,16 @@ promotionPlanCards?.addEventListener("click", async (event) => {
   }
 
   planButton.disabled = true;
+  const originalText = planButton.textContent;
+  planButton.textContent = "Abriendo pago...";
+  setPromotionBillingStatus("Abriendo pago seguro con Stripe...", "info");
   try {
     await startPlanCheckout(selectedPlan);
   } catch (error) {
-    showToast(friendlyError(error));
+    const message = friendlyError(error);
+    setPromotionBillingStatus(message, "error");
+    showToast(message);
+    planButton.textContent = originalText;
     planButton.disabled = false;
   }
 });
