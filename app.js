@@ -32,6 +32,10 @@ const profileSignOutButton = document.querySelector("#profileSignOutButton");
 const profileAvatar = document.querySelector("#profileAvatar");
 const profileDisplayName = document.querySelector("#profileDisplayName");
 const profileDisplayMeta = document.querySelector("#profileDisplayMeta");
+const profilePlanCard = document.querySelector("#profilePlanCard");
+const profilePlanName = document.querySelector("#profilePlanName");
+const profilePlanDescription = document.querySelector("#profilePlanDescription");
+const profilePlanStatus = document.querySelector("#profilePlanStatus");
 const resumeButton = document.querySelector("#resumeButton");
 const resumeInput = document.querySelector("#resumeInput");
 const resumeStatus = document.querySelector("#resumeStatus");
@@ -624,7 +628,36 @@ function renderProfileHeader() {
   profileDisplayMeta.textContent = currentProfile?.role === "company"
     ? `${currentCompanyProfile?.industry ?? "Empresa"} - ${location}`
     : `${targetRole} - ${location}`;
+  renderProfilePlanSummary();
   renderResumeStatus();
+}
+
+function getPlanStatusCopy(status, planCopy) {
+  const statusCopy = {
+    active: "Pago activo",
+    trialing: "Prueba activa",
+    past_due: "Pago pendiente",
+    canceled: "Cancelado",
+    beta: planCopy.status
+  };
+  return statusCopy[status] ?? planCopy.status;
+}
+
+function renderProfilePlanSummary() {
+  if (!profilePlanCard) return;
+
+  const showPlan = currentProfile?.role === "company";
+  profilePlanCard.classList.toggle("is-hidden", !showPlan);
+  if (!showPlan) return;
+
+  const activePlan = getCompanyPlan();
+  const planCopy = promotionPlans[activePlan];
+  const status = currentCompanyProfile?.plan_status || "beta";
+
+  profilePlanCard.dataset.plan = activePlan;
+  profilePlanName.textContent = planCopy.label;
+  profilePlanDescription.textContent = planCopy.benefits;
+  profilePlanStatus.textContent = getPlanStatusCopy(status, planCopy);
 }
 
 function renderSessionStatus() {
@@ -794,14 +827,7 @@ function renderPromotionState() {
   }
 
   if (companyPlanStatus) {
-    const statusCopy = {
-      active: "Pago activo",
-      trialing: "Prueba activa",
-      past_due: "Pago pendiente",
-      canceled: "Cancelado",
-      beta: planCopy.status
-    };
-    companyPlanStatus.textContent = statusCopy[status] ?? planCopy.status;
+    companyPlanStatus.textContent = getPlanStatusCopy(status, planCopy);
   }
 
   if (promotionActivePlan) promotionActivePlan.textContent = planCopy.label;
@@ -818,6 +844,7 @@ function renderPromotionState() {
       button.disabled = isActive;
     }
   });
+  renderProfilePlanSummary();
 }
 
 function setPromotionBillingStatus(message = "", type = "info") {
@@ -825,6 +852,27 @@ function setPromotionBillingStatus(message = "", type = "info") {
   promotionBillingStatus.textContent = message;
   promotionBillingStatus.dataset.status = type;
   promotionBillingStatus.classList.toggle("is-visible", Boolean(message));
+}
+
+function wait(ms) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+async function waitForPlanSync({ attempts = 8, delayMs = 1500 } = {}) {
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    if (attempt > 0) await wait(delayMs);
+    await loadCurrentProfile();
+    await refreshCurrentCompanyProfile();
+    renderPromotionState();
+
+    const plan = getCompanyPlan();
+    const status = currentCompanyProfile?.plan_status;
+    if (plan !== "free" && ["active", "trialing", "past_due"].includes(status)) {
+      return { synced: true, plan, status };
+    }
+  }
+
+  return { synced: false, plan: getCompanyPlan(), status: currentCompanyProfile?.plan_status };
 }
 
 function renderCompanyHeader() {
@@ -3351,10 +3399,20 @@ async function handleBillingReturn() {
   }
 
   if (checkout === "success") {
-    showToast("Pago recibido. Tu plan se actualizara cuando Stripe confirme la suscripcion.");
+    setPromotionBillingStatus("Pago recibido. Confirmando el plan con Stripe...", "info");
+    const result = await waitForPlanSync();
+    if (result.synced) {
+      const planCopy = promotionPlans[result.plan] ?? promotionPlans.free;
+      setPromotionBillingStatus(`Plan ${planCopy.label} activo.`, "info");
+      showToast(`Tu plan ${planCopy.label} ya esta activo.`);
+    } else {
+      setPromotionBillingStatus("Pago recibido. El plan se activara cuando Stripe confirme el webhook.", "info");
+      showToast("Pago recibido. Tu plan se actualizara cuando Stripe confirme la suscripcion.");
+    }
   } else if (checkout === "cancel") {
     showToast("Pago cancelado. No se hizo ningun cargo desde RedJob.");
   } else if (billing === "portal") {
+    await waitForPlanSync({ attempts: 4, delayMs: 1200 });
     showToast("Suscripcion actualizada desde Stripe.");
   }
 

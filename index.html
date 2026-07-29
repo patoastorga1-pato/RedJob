@@ -30,7 +30,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./styles.css?v=20260729c" />
+    <link rel="stylesheet" href="./styles.css?v=20260729d" />
   </head>
   <body>
     <header class="site-header">
@@ -328,6 +328,17 @@
             <section class="info-card">
               <h2>Experiencia</h2>
               <textarea id="candidateSummary" rows="4" placeholder="Resume tu experiencia, logros y tipo de oportunidad que buscas."></textarea>
+            </section>
+            <section class="info-card profile-plan-card is-hidden" id="profilePlanCard">
+              <div>
+                <span>Plan de empresa</span>
+                <h2 id="profilePlanName">Free</h2>
+                <p id="profilePlanDescription">Vacantes en resultados normales</p>
+              </div>
+              <div class="profile-plan-status">
+                <strong id="profilePlanStatus">Visibilidad basica</strong>
+                <button class="secondary-button subtle" type="button" data-view-link="empresas">Ver planes</button>
+              </div>
             </section>
             <section class="profile-stats">
               <article><strong id="savedCount">0</strong><span>Vacantes guardadas</span></article>
@@ -1104,7 +1115,7 @@
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-    <script src="./config.js?v=20260729c"></script>
-    <script src="./app.js?v=20260729c"></script>
+    <script src="./config.js?v=20260729d"></script>
+    <script src="./app.js?v=20260729d"></script>
   </body>
 </html>
