@@ -13,7 +13,8 @@
     "mobile:open:ios": "npx cap open ios"
   },
   "dependencies": {
-    "@capacitor/core": "^7.4.3"
+    "@capacitor/core": "^7.4.3",
+    "stripe": "^17.5.0"
   },
   "devDependencies": {
     "@capacitor/android": "^7.4.3",

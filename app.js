@@ -108,6 +108,12 @@ const companyHeroLogo = document.querySelector("#companyHeroLogo");
 const companyHeroName = document.querySelector("#companyHeroName");
 const companyHeroDescription = document.querySelector("#companyHeroDescription");
 const companyVerifiedBadge = document.querySelector("#companyVerifiedBadge");
+const companyPlanBadge = document.querySelector("#companyPlanBadge");
+const companyPlanStatus = document.querySelector("#companyPlanStatus");
+const promotionActivePlan = document.querySelector("#promotionActivePlan");
+const promotionActiveBenefits = document.querySelector("#promotionActiveBenefits");
+const promotionPlanCards = document.querySelector("#promotionPlanCards");
+const manageBillingButton = document.querySelector("#manageBillingButton");
 const companyProfileSelect = document.querySelector("#companyProfileSelect");
 const newCompanyButton = document.querySelector("#newCompanyButton");
 const deleteCompanyButton = document.querySelector("#deleteCompanyButton");
@@ -175,8 +181,8 @@ window.REDJOB_CONFIG = {
   NEXT_PUBLIC_SUPABASE_ANON_KEY: SUPABASE_ANON_KEY
 };
 const SESSION_STORAGE_KEY = "redjob_supabase_session";
-const LEGAL_TERMS_VERSION = "Junio 2026";
-const LEGAL_PRIVACY_VERSION = "Junio 2026";
+const LEGAL_TERMS_VERSION = "Julio 2026";
+const LEGAL_PRIVACY_VERSION = "Julio 2026";
 const SUPABASE_SCHEMA_MESSAGE =
   "Falta instalar la base de datos de RedJob en Supabase. Abre Supabase > SQL Editor y ejecuta outputs/RedJob/supabase-schema.sql.";
 const SUPABASE_CONFIG_MESSAGE =
@@ -752,6 +758,63 @@ function renderCompanyLogoMarkup(name, logoPath, extraClass = "") {
   return `<span class="${classes}" data-logo-fallback="${escapeHtml(getInitials(name || "RJ"))}"><img src="${escapeHtml(logoUrl)}" alt="Imagen de ${escapeHtml(name || "empresa")}" loading="lazy" /></span>`;
 }
 
+const promotionPlans = {
+  free: {
+    label: "Free",
+    status: "Visibilidad basica",
+    benefits: "Vacantes en resultados normales"
+  },
+  pro: {
+    label: "Pro",
+    status: "1 vacante destacada",
+    benefits: "Prioridad media y elegible para verificacion"
+  },
+  premium: {
+    label: "Premium",
+    status: "3 vacantes destacadas",
+    benefits: "Prioridad alta, verificacion y soporte prioritario"
+  }
+};
+
+function getCompanyPlan(company = currentCompanyProfile) {
+  const plan = String(company?.plan || "free").toLowerCase();
+  return promotionPlans[plan] ? plan : "free";
+}
+
+function renderPromotionState() {
+  const activePlan = getCompanyPlan();
+  const planCopy = promotionPlans[activePlan];
+  const status = currentCompanyProfile?.plan_status || "beta";
+  const hasStripeCustomer = Boolean(currentCompanyProfile?.billing_customer_id);
+
+  if (companyPlanBadge) {
+    companyPlanBadge.dataset.plan = activePlan;
+    companyPlanBadge.textContent = `Plan ${planCopy.label}`;
+  }
+
+  if (companyPlanStatus) {
+    const statusCopy = {
+      active: "Pago activo",
+      trialing: "Prueba activa",
+      past_due: "Pago pendiente",
+      canceled: "Cancelado",
+      beta: planCopy.status
+    };
+    companyPlanStatus.textContent = statusCopy[status] ?? planCopy.status;
+  }
+
+  if (promotionActivePlan) promotionActivePlan.textContent = planCopy.label;
+  if (promotionActiveBenefits) promotionActiveBenefits.textContent = planCopy.benefits;
+  manageBillingButton?.classList.toggle("is-hidden", !hasStripeCustomer);
+
+  promotionPlanCards?.querySelectorAll("[data-plan-card]").forEach((card) => {
+    const isActive = card.dataset.planCard === activePlan;
+    card.classList.toggle("active", isActive);
+    const button = card.querySelector("[data-plan-request]");
+    if (button) button.textContent = isActive ? "Plan actual" : `Solicitar ${promotionPlans[card.dataset.planCard]?.label || "plan"}`;
+  });
+}
+
 function renderCompanyHeader() {
   const name = currentCompanyProfile?.company_name || "Tu empresa";
   const description = currentCompanyProfile?.description || "Completa el perfil de empresa para publicar vacantes reales.";
@@ -763,6 +826,7 @@ function renderCompanyHeader() {
     ? `Imagen cargada: ${currentCompanyProfile.logo_name}`
     : "Sin imagen cargada";
   companyVerifiedBadge.classList.toggle("is-hidden", !currentCompanyProfile?.is_verified);
+  renderPromotionState();
 }
 
 function isJobFeatured(job) {
@@ -868,6 +932,69 @@ async function refreshCurrentCompanyProfile() {
   return currentCompanyProfile;
 }
 
+async function startPlanCheckout(plan) {
+  if (plan === "free") {
+    showToast("Tu empresa ya puede publicar vacantes con el plan Free.");
+    return;
+  }
+
+  if (!currentCompanyProfile?.id) {
+    await saveCompanyProfile({ silent: true });
+  }
+
+  if (!currentCompanyProfile?.id) {
+    throw new Error("Guarda o selecciona una empresa antes de contratar un plan.");
+  }
+
+  if (currentCompanyProfile.billing_customer_id && ["active", "trialing", "past_due"].includes(currentCompanyProfile.plan_status)) {
+    showToast("Abriendo Stripe para administrar o cambiar tu suscripcion.");
+    await openBillingPortal();
+    return;
+  }
+
+  const session = requireSession();
+  const checkout = await billingRequest("/api/billing/checkout", {
+    plan,
+    companyId: currentCompanyProfile.id,
+    email: session.user?.email
+  });
+
+  if (!checkout?.url) throw new Error("Stripe no devolvio una URL de pago.");
+  window.location.href = checkout.url;
+}
+
+async function openBillingPortal() {
+  if (!currentCompanyProfile?.id) {
+    throw new Error("Selecciona una empresa para administrar su suscripcion.");
+  }
+
+  const portal = await billingRequest("/api/billing/portal", {
+    companyId: currentCompanyProfile.id
+  });
+
+  if (!portal?.url) throw new Error("Stripe no devolvio una URL de administracion.");
+  window.location.href = portal.url;
+}
+
+async function promoteCompanyJob(jobId) {
+  const result = await billingRequest("/api/jobs/promote", { jobId });
+  if (result?.job) {
+    const mappedJob = mapSupabaseJob({
+      ...result.job,
+      company_profiles: currentCompanyProfiles.find((company) => sameId(company.id, result.job.company_id)),
+      job_skills: []
+    });
+    if (mappedJob) {
+      const existingIndex = jobs.findIndex((job) => sameId(job.id, mappedJob.id));
+      if (existingIndex >= 0) jobs[existingIndex] = { ...jobs[existingIndex], ...mappedJob };
+    }
+  }
+
+  await loadRealJobs();
+  await refreshCurrentCompanyProfile();
+  showToast("Vacante destacada por 30 dias.");
+}
+
 function renderCompanyJobs() {
   const companyIds = new Set(currentCompanyProfiles.map((company) => String(company.id)));
   const companyJobs = companyIds.size
@@ -883,11 +1010,16 @@ function renderCompanyJobs() {
               ? `<span class="company-job-verified" title="Empresa verificada" aria-label="Empresa verificada">✓</span>`
               : "";
 
+            const promoteButton = isJobFeatured(job)
+              ? `<button class="secondary-button subtle" type="button" disabled>Destacada</button>`
+              : `<button class="secondary-button subtle" type="button" data-promote-job="${escapeHtml(job.id)}">Destacar</button>`;
+
             return `
             <article class="company-job-row">
               ${renderCompanyLogoMarkup(job.company, job.companyLogoPath, "compact")}
               <div class="company-job-info">
                 <strong class="company-job-title">${escapeHtml(job.title)}</strong>
+                <div class="job-commercial-badges">${renderCommercialBadges(job)}</div>
                 <div class="company-job-meta">
                   <span class="company-job-company">${escapeHtml(job.company)}</span>
                   ${verifiedMark}
@@ -898,6 +1030,7 @@ function renderCompanyJobs() {
                 </div>
               </div>
               <div class="company-job-actions">
+                ${promoteButton}
                 <button class="secondary-button subtle" type="button" data-edit-job="${escapeHtml(job.id)}">
                   Editar
                 </button>
@@ -1142,6 +1275,25 @@ async function supabaseRestRequest(path, options = {}) {
       throw new Error(SUPABASE_SCHEMA_MESSAGE);
     }
     throw new Error(errorMessage);
+  }
+
+  return payload;
+}
+
+async function billingRequest(path, body = {}) {
+  const session = requireSession();
+  const response = await fetch(path, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${session.access_token}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(body)
+  });
+
+  const payload = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(payload?.error || "No se pudo completar la solicitud de pagos.");
   }
 
   return payload;
@@ -3102,6 +3254,10 @@ function switchView(viewId) {
     viewId = "inicio";
   }
 
+  const isLegalView = ["privacidad", "terminos", "contacto"].includes(viewId);
+  document.body.classList.toggle("is-legal-view", isLegalView);
+  if (isLegalView) document.activeElement?.blur();
+
   document.querySelectorAll(".view").forEach((view) => {
     view.classList.toggle("active-view", view.id === viewId);
   });
@@ -3112,9 +3268,7 @@ function switchView(viewId) {
 
   window.requestAnimationFrame(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-    if (viewId === "contacto") {
-      document.querySelector("#contacto")?.scrollIntoView({ block: "start", behavior: "auto" });
-    }
+    if (isLegalView) window.setTimeout(() => window.scrollTo({ top: 0, left: 0, behavior: "auto" }), 0);
   });
 
   if (viewId === "mensajes" && getStoredSession()?.access_token) {
@@ -3134,6 +3288,33 @@ function openAuthPanel(mode) {
   const createMode = mode === "create";
   createAccountPanel.open = createMode;
   signInPanel.open = !createMode;
+}
+
+async function handleBillingReturn() {
+  const params = new URLSearchParams(window.location.search);
+  const checkout = params.get("checkout");
+  const billing = params.get("billing");
+  if (!checkout && !billing) return;
+
+  switchView("empresas");
+
+  try {
+    await loadCurrentProfile();
+    await loadRealJobs();
+  } catch (error) {
+    showToast(friendlyError(error));
+    return;
+  }
+
+  if (checkout === "success") {
+    showToast("Pago recibido. Tu plan se actualizara cuando Stripe confirme la suscripcion.");
+  } else if (checkout === "cancel") {
+    showToast("Pago cancelado. No se hizo ningun cargo desde RedJob.");
+  } else if (billing === "portal") {
+    showToast("Suscripcion actualizada desde Stripe.");
+  }
+
+  window.history.replaceState({}, document.title, `${window.location.pathname}${window.location.hash || ""}`);
 }
 
 document.querySelectorAll("[data-view-link]").forEach((trigger) => {
@@ -3432,9 +3613,21 @@ applicationsList.addEventListener("click", async (event) => {
 companyJobsList.addEventListener("click", async (event) => {
   const deleteButton = event.target.closest("[data-delete-job]");
   const editButton = event.target.closest("[data-edit-job]");
+  const promoteButton = event.target.closest("[data-promote-job]");
 
   if (editButton) {
     editCompanyJob(editButton.dataset.editJob);
+    return;
+  }
+
+  if (promoteButton) {
+    promoteButton.disabled = true;
+    try {
+      await promoteCompanyJob(promoteButton.dataset.promoteJob);
+    } catch (error) {
+      showToast(friendlyError(error));
+      promoteButton.disabled = false;
+    }
     return;
   }
 
@@ -3448,6 +3641,38 @@ companyJobsList.addEventListener("click", async (event) => {
     await deleteCompanyJob(deleteButton.dataset.deleteJob);
   } catch (error) {
     showToast(friendlyError(error));
+  }
+});
+
+promotionPlanCards?.addEventListener("click", async (event) => {
+  const planButton = event.target.closest("[data-plan-request]");
+  if (!planButton) return;
+
+  const selectedPlan = planButton.dataset.planRequest;
+  const planCopy = promotionPlans[selectedPlan] ?? promotionPlans.free;
+  const currentPlan = getCompanyPlan();
+
+  if (selectedPlan === currentPlan) {
+    showToast(`Tu empresa ya esta en el plan ${planCopy.label}.`);
+    return;
+  }
+
+  planButton.disabled = true;
+  try {
+    await startPlanCheckout(selectedPlan);
+  } catch (error) {
+    showToast(friendlyError(error));
+    planButton.disabled = false;
+  }
+});
+
+manageBillingButton?.addEventListener("click", async () => {
+  manageBillingButton.disabled = true;
+  try {
+    await openBillingPortal();
+  } catch (error) {
+    showToast(friendlyError(error));
+    manageBillingButton.disabled = false;
   }
 });
 
@@ -4047,6 +4272,7 @@ renderJobs();
 renderHiringCompanies();
 renderProfileActivity();
 renderSessionStatus();
+renderCompanyHeader();
 renderCompanyJobs();
 applyRoleExperience();
 loadCurrentProfile()
@@ -4054,4 +4280,5 @@ loadCurrentProfile()
   .then(loadSavedJobs)
   .then(() => loadFirstConversation(false))
   .then(loadReceivedCandidates)
+  .then(handleBillingReturn)
   .catch((error) => showToast(friendlyError(error)));

@@ -224,6 +224,10 @@ main {
   min-height: calc(100vh - 76px);
 }
 
+body.is-legal-view main {
+  display: none;
+}
+
 .view {
   display: none;
 }
@@ -616,6 +620,7 @@ textarea:focus {
 }
 
 .plan-badge,
+.plan-status-badge,
 .verified-badge,
 .featured-badge {
   display: inline-flex;
@@ -645,6 +650,12 @@ textarea:focus {
   border: 1px solid rgba(220, 38, 38, 0.2);
   background: var(--red-soft);
   color: var(--red);
+}
+
+.plan-status-badge {
+  border: 1px solid rgba(17, 17, 17, 0.08);
+  background: #f8fafc;
+  color: #475569;
 }
 
 .verified-badge {
@@ -1495,6 +1506,118 @@ textarea:focus {
   font-weight: 700;
 }
 
+.promotion-card {
+  display: grid;
+  gap: 22px;
+}
+
+.promotion-heading {
+  display: grid;
+  gap: 16px;
+}
+
+.promotion-heading > div:first-child {
+  display: grid;
+  gap: 8px;
+}
+
+.promotion-heading span {
+  color: var(--red);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.promotion-heading h2,
+.promotion-heading p,
+.promotion-plan h3,
+.promotion-plan p {
+  margin: 0;
+}
+
+.promotion-heading p,
+.promotion-plan p,
+.promotion-plan li,
+.promotion-summary small {
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.promotion-summary {
+  display: grid;
+  gap: 4px;
+  align-content: center;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px;
+  background: #fafafa;
+}
+
+.promotion-summary strong {
+  color: var(--black);
+  font-size: 22px;
+}
+
+.promotion-summary button {
+  width: fit-content;
+  margin-top: 8px;
+}
+
+.promotion-plans {
+  display: grid;
+  gap: 14px;
+}
+
+.promotion-plan {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 20px;
+  background: var(--white);
+}
+
+.promotion-plan.active {
+  border-color: var(--red-line);
+  background: var(--red-soft);
+}
+
+.promotion-plan.recommended {
+  box-shadow: 0 18px 38px rgba(220, 38, 38, 0.12);
+}
+
+.promotion-plan > span {
+  width: fit-content;
+  border-radius: 999px;
+  padding: 5px 10px;
+  background: #f1f5f9;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.promotion-plan.recommended > span,
+.promotion-plan.active > span {
+  background: var(--red);
+  color: var(--white);
+}
+
+.promotion-plan h3 {
+  font-size: 28px;
+}
+
+.promotion-plan ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 18px;
+}
+
+.promotion-plan button {
+  margin-top: 2px;
+}
+
 .profile-content {
   display: grid;
   gap: 18px;
@@ -2314,6 +2437,36 @@ textarea:focus {
   max-width: 900px;
 }
 
+.privacy-copy {
+  padding-top: 28px;
+}
+
+.legal-copy-heading {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.legal-copy-heading span {
+  color: var(--red);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.legal-copy-heading h1 {
+  margin: 0;
+  color: var(--black);
+  font-size: clamp(2rem, 6vw, 4.2rem);
+  line-height: 1;
+}
+
+.legal-copy-heading p {
+  color: var(--muted);
+  font-weight: 700;
+}
+
 .legal-copy h2 {
   color: var(--black);
   font-size: 1.12rem;
@@ -2847,6 +3000,15 @@ textarea:focus {
   .profile-overview-actions {
     grid-column: auto;
     justify-content: flex-end;
+  }
+
+  .promotion-heading {
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 280px);
+    align-items: stretch;
+  }
+
+  .promotion-plans {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .profile-stats,

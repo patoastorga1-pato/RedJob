@@ -6,10 +6,10 @@ Crea un proyecto en Supabase y entra al panel del proyecto.
 
 ## 2. Crear tablas y seguridad
 
-Abre el SQL Editor y ejecuta:
+Abre el SQL Editor y ejecuta completo:
 
 ```text
-outputs/RedJob/supabase-schema.sql
+supabase-schema.sql
 ```
 
 Ese archivo crea:
@@ -19,48 +19,67 @@ Ese archivo crea:
 - Vacantes y habilidades.
 - Postulaciones.
 - Conversaciones y mensajes.
-- Reglas de seguridad.
+- Reportes y funciones de administracion.
+- Reglas de seguridad RLS.
+- Buckets de Storage para curriculums y logos.
 - Trigger automatico para crear perfil base al registrarse.
 
-## 3. Configurar variables
+Para asignar una cuenta administradora, crea primero el usuario y despues usa `supabase-admin-example.sql` reemplazando el UUID de ejemplo por el UUID real del usuario.
 
-En la app Next copia:
+## 3. Configurar la app estatica
+
+Copia:
 
 ```text
-outputs/RedJob-app/.env.example
+config.example.js
 ```
 
 y crea:
 
 ```text
-outputs/RedJob-app/.env.local
+config.js
 ```
 
-Con estos valores de Supabase:
+Con tus valores reales:
+
+```js
+window.REDJOB_CONFIG = {
+  NEXT_PUBLIC_SUPABASE_URL: "https://TU-PROYECTO.supabase.co",
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: "TU-ANON-KEY"
+};
+```
+
+`config.js` esta ignorado por Git para no publicar valores de tu proyecto.
+
+En Netlify, no subas `config.js`. Agrega estas variables en la configuracion del sitio:
+
+```text
+NEXT_PUBLIC_SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY
+```
+
+El build ejecuta `scripts/create-config.js` y genera `config.js` automaticamente.
+
+## 4. Probar en local
+
+Desde esta carpeta:
 
 ```bash
-NEXT_PUBLIC_SUPABASE_URL=tu_url_de_supabase
-NEXT_PUBLIC_SUPABASE_ANON_KEY=tu_anon_key
+node local-server.js
 ```
 
-## 4. Arrancar app real
+Luego abre:
 
-Desde `outputs/RedJob-app`:
-
-```bash
-npm.cmd install
-npm.cmd run dev
+```text
+http://localhost:8065/
 ```
 
-## 5. Probar
-
-En la app:
+## 5. Probar flujo real
 
 - Abre Acceso.
 - Crea cuenta como candidato o empresa.
 - Inicia sesion.
-- Revisa que el perfil base exista en Supabase.
-
-## Nota
-
-El prototipo visible en `http://localhost:8062/` sigue siendo la maqueta premium estatica. La app real conectada es `outputs/RedJob-app`.
+- Completa un perfil.
+- Publica una vacante desde una cuenta de empresa.
+- Postulate desde una cuenta de candidato.
+- Revisa mensajes y postulaciones.

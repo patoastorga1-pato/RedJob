@@ -142,10 +142,11 @@ insert into public.plan_catalog (
 )
 values
   ('free', 'Free', null, null, 0, false, '{"beta_access": true, "payments_enabled": false}'::jsonb),
-  ('pro', 'Pro', null, null, 1, true, '{"beta_access": true, "payments_enabled": false, "future_priority": "medium"}'::jsonb),
-  ('premium', 'Premium', null, null, 3, true, '{"beta_access": true, "payments_enabled": false, "future_priority": "high"}'::jsonb)
+  ('pro', 'Pro', 499, null, 1, true, '{"beta_access": true, "payments_enabled": true, "priority": "medium", "stripe_price_id": "price_1TyKJNRonDWaSBmIvqhVrKrS"}'::jsonb),
+  ('premium', 'Premium', 999, null, 3, true, '{"beta_access": true, "payments_enabled": true, "priority": "high", "stripe_price_id": "price_1TyKJbRonDWaSBmIROFQtUx0"}'::jsonb)
 on conflict (code) do update set
   display_name = excluded.display_name,
+  monthly_price_mxn = excluded.monthly_price_mxn,
   featured_slots = excluded.featured_slots,
   verification_eligible = excluded.verification_eligible,
   features = excluded.features;

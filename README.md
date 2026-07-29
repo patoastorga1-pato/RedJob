@@ -25,7 +25,7 @@ La app ya incluye:
 
 La version actual se esta probando en:
 
-`http://localhost:8062/`
+`http://localhost:8065/`
 
 Tambien puede abrirse directamente desde `index.html`, pero para pruebas completas conviene mantener el servidor local.
 
@@ -41,14 +41,44 @@ Importante: despues de cambios de seguridad, vuelve a ejecutar `supabase-schema.
 
 Si agregas categorias de vacantes, tambien debes ejecutar el SQL actualizado para crear la columna `jobs.category`.
 
-Configuracion local usada por la app:
+Configuracion local:
 
 ```text
-NEXT_PUBLIC_SUPABASE_URL=https://tkfexxkbdkvpwhcqkvwp.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_H0QIgf8EpEnl6A086dp-9Q_NddTLvWy
+NEXT_PUBLIC_SUPABASE_URL=https://TU-PROYECTO.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=TU-ANON-KEY
 ```
 
-En despliegue estatico, estos valores se leen desde `config.js` mediante `window.REDJOB_CONFIG`. Si se cambia de proyecto Supabase, actualiza ese archivo o genera uno durante el despliegue.
+En despliegue estatico, estos valores se leen desde `config.js` mediante `window.REDJOB_CONFIG`.
+Para GitHub, sube `config.example.js` y deja `config.js` fuera del repositorio.
+En Netlify, agrega `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY` como variables de entorno; el comando de build genera `config.js` automaticamente.
+
+## Pagos con Stripe
+
+RedJob incluye funciones de Netlify para crear Checkout, abrir Customer Portal, procesar webhooks y activar planes en Supabase.
+
+Variables de entorno necesarias en Netlify:
+
+```text
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+STRIPE_PRICE_PRO=price_1TyKJNRonDWaSBmIvqhVrKrS
+STRIPE_PRICE_PREMIUM=price_1TyKJbRonDWaSBmIROFQtUx0
+SUPABASE_SERVICE_ROLE_KEY=...
+SITE_URL=https://www.redjob.com.mx
+```
+
+Webhook recomendado en Stripe:
+
+`https://www.redjob.com.mx/api/billing/stripe-webhook`
+
+Eventos a enviar:
+
+- `checkout.session.completed`
+- `customer.subscription.created`
+- `customer.subscription.updated`
+- `customer.subscription.deleted`
+
+Importante: las llaves `sk_live` y `SUPABASE_SERVICE_ROLE_KEY` nunca deben guardarse en archivos del proyecto.
 
 ## Pruebas recomendadas
 
@@ -69,6 +99,8 @@ En despliegue estatico, estos valores se leen desde `config.js` mediante `window
 - `index.html`: estructura principal.
 - `styles.css`: diseno visual.
 - `app.js`: logica de autenticacion, perfiles, vacantes, postulaciones y mensajes.
+- `scripts/create-config.js`: genera `config.js` en despliegues de Netlify usando variables de entorno.
 - `supabase-schema.sql`: base de datos y seguridad.
+- `supabase-admin-example.sql`: ejemplo para asignar un administrador manualmente.
 - `data-model.md`: modelo de datos.
 - `supabase-setup.md`: guia corta para activar Supabase.
