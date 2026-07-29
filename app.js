@@ -1768,20 +1768,29 @@ async function loadReceivedCandidates() {
             });
             return `
               <article class="candidate-row-card" data-application-id="${escapeHtml(application.id)}">
-                <div>
+                <div class="candidate-row-main">
                   <strong>${escapeHtml(candidate?.full_name ?? "Candidato")}</strong>
                   <small>${escapeHtml(candidate?.target_role ?? "Perfil candidato")} - ${escapeHtml(formatLocationLabel(candidate?.location ?? "Mexico"))}${candidate?.age ? ` - ${escapeHtml(candidate.age)} años` : ""}</small>
-                  <small>${escapeHtml(company?.company_name ?? "Empresa")} - ${escapeHtml(job?.title ?? "Vacante")} - ${escapeHtml(mapApplicationStatus(application.status))}${candidate?.resume_name ? ` - CV: ${escapeHtml(candidate.resume_name)}` : ""}</small>
+                  <small>${escapeHtml(company?.company_name ?? "Empresa")} - ${escapeHtml(job?.title ?? "Vacante")}${candidate?.resume_name ? ` - CV: ${escapeHtml(candidate.resume_name)}` : ""}</small>
                 </div>
-                <strong>${safePercent(application.match_score)}%</strong>
-                <button class="secondary-button subtle candidate-profile-button" type="button" data-view-candidate="${escapeHtml(application.id)}">
-                  Ver perfil
-                </button>
-                <button class="remove-candidate-button" type="button" data-remove-candidate="${escapeHtml(application.id)}" title="Quitar candidato de esta vacante">
-                  Quitar
-                </button>
-                <div class="application-status-actions">
-                  ${renderApplicationStatusButtons(application.id, application.status)}
+                <div class="candidate-match-score">
+                  <strong>${safePercent(application.match_score)}%</strong>
+                  <span>compatibilidad</span>
+                </div>
+                <span class="application-status-badge ${getApplicationStatusClass(application.status)}">${escapeHtml(mapApplicationStatus(application.status))}</span>
+                <div class="candidate-row-actions">
+                  <button class="secondary-button subtle candidate-profile-button" type="button" data-view-candidate="${escapeHtml(application.id)}">
+                    Ver perfil
+                  </button>
+                  <details class="application-status-menu">
+                    <summary>Cambiar estado</summary>
+                    <div class="application-status-actions">
+                      ${renderApplicationStatusButtons(application.id, application.status)}
+                    </div>
+                  </details>
+                  <button class="remove-candidate-button icon-only" type="button" data-remove-candidate="${escapeHtml(application.id)}" title="Quitar candidato de esta vacante" aria-label="Quitar candidato">
+                    &#128465;
+                  </button>
                 </div>
               </article>
             `;
@@ -1835,6 +1844,10 @@ function renderApplicationStatusButtons(applicationId, status) {
       `
     )
     .join("");
+}
+
+function getApplicationStatusClass(status) {
+  return `status-${String(status || "submitted").replace(/[^a-z0-9_-]/gi, "")}`;
 }
 
 async function updateApplicationStatus(applicationId, nextStatus) {

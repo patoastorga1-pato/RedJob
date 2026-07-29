@@ -2113,46 +2113,166 @@ textarea:focus {
 }
 
 .candidate-row-card {
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.candidate-row-card div {
   display: grid;
-  gap: 4px;
+  grid-template-columns: minmax(220px, 1fr) 92px auto minmax(250px, auto);
+  align-items: center;
+  gap: 12px;
+  padding: 11px 12px;
+  border-radius: 12px;
+  background: #ffffff;
 }
 
-.candidate-row-card small {
+.candidate-row-main {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.candidate-row-main strong {
+  overflow: hidden;
+  color: var(--black);
+  font-size: 0.95rem;
+  font-weight: 900;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.candidate-row-main small {
+  overflow: hidden;
   color: var(--muted);
+  font-size: 0.78rem;
   font-weight: 700;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.candidate-row-card strong:last-child {
+.candidate-match-score {
+  display: grid;
+  justify-items: center;
+  gap: 1px;
   color: var(--red);
   white-space: nowrap;
 }
 
-.application-status-actions {
+.candidate-match-score strong {
+  font-size: 1rem;
+  font-weight: 950;
+}
+
+.candidate-match-score span {
+  color: var(--muted);
+  font-size: 0.64rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.application-status-badge {
+  justify-self: start;
+  min-width: 92px;
+  border-radius: 999px;
+  padding: 5px 9px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 0.72rem;
+  font-weight: 950;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.application-status-badge.status-reviewing {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.application-status-badge.status-interview {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.application-status-badge.status-hired {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.application-status-badge.status-rejected {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.candidate-row-actions {
   display: flex;
-  flex: 1 1 100%;
-  flex-wrap: wrap;
-  gap: 8px;
+  align-items: center;
   justify-content: flex-end;
+  gap: 8px;
+}
+
+.candidate-profile-button,
+.application-status-menu summary,
+.remove-candidate-button {
+  min-height: 34px;
+  white-space: nowrap;
 }
 
 .candidate-profile-button {
-  flex: 0 0 auto;
+  padding: 0 12px;
+  font-size: 0.76rem;
+}
+
+.application-status-menu {
+  position: relative;
+}
+
+.application-status-menu summary {
+  display: grid;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0 12px;
+  background: #ffffff;
+  color: var(--black);
+  cursor: pointer;
+  font-size: 0.76rem;
+  font-weight: 900;
+  list-style: none;
+}
+
+.application-status-menu summary::-webkit-details-marker {
+  display: none;
+}
+
+.application-status-menu[open] summary {
+  border-color: var(--red-line);
+  background: var(--red-soft);
+  color: var(--red);
+}
+
+.application-status-actions {
+  position: absolute;
+  right: 0;
+  z-index: 20;
+  display: grid;
+  min-width: 150px;
+  margin-top: 8px;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.15);
 }
 
 .remove-candidate-button {
-  min-height: 38px;
+  width: 36px;
   border: 1px solid rgba(220, 38, 38, 0.18);
   border-radius: 999px;
-  padding: 0 14px;
+  padding: 0;
   background: #ffffff;
   color: var(--red);
   cursor: pointer;
-  font-size: 0.78rem;
+  font-size: 1rem;
   font-weight: 900;
   transition: border-color 180ms ease, background 180ms ease, transform 180ms ease;
 }
@@ -2164,15 +2284,16 @@ textarea:focus {
 }
 
 .status-action {
-  min-height: 34px;
+  min-height: 32px;
   border: 1px solid var(--line);
-  border-radius: 999px;
+  border-radius: 8px;
   background: #ffffff;
   color: var(--muted);
   cursor: pointer;
   font-size: 0.78rem;
   font-weight: 900;
-  padding: 0 12px;
+  padding: 0 10px;
+  text-align: left;
 }
 
 .status-action.active,
@@ -3232,6 +3353,48 @@ textarea:focus {
 
   .company-private-id .secondary-button {
     width: 100%;
+  }
+
+  .candidate-row-card {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 9px;
+    padding: 10px;
+  }
+
+  .candidate-row-main {
+    grid-column: 1 / -1;
+  }
+
+  .candidate-match-score {
+    justify-items: start;
+  }
+
+  .application-status-badge {
+    justify-self: end;
+    min-width: auto;
+  }
+
+  .candidate-row-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .candidate-profile-button {
+    flex: 1 1 120px;
+  }
+
+  .application-status-menu {
+    flex: 1 1 145px;
+  }
+
+  .application-status-menu summary {
+    justify-content: center;
+  }
+
+  .application-status-actions {
+    left: 0;
+    right: auto;
   }
 
   body {
