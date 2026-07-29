@@ -120,6 +120,9 @@ const promotionPlanCards = document.querySelector("#promotionPlanCards");
 const promotionBillingStatus = document.querySelector("#promotionBillingStatus");
 const manageBillingButton = document.querySelector("#manageBillingButton");
 const companyProfileSelect = document.querySelector("#companyProfileSelect");
+const companyPrivateIdCard = document.querySelector("#companyPrivateIdCard");
+const companyPrivateId = document.querySelector("#companyPrivateId");
+const copyCompanyIdButton = document.querySelector("#copyCompanyIdButton");
 const newCompanyButton = document.querySelector("#newCompanyButton");
 const deleteCompanyButton = document.querySelector("#deleteCompanyButton");
 const detailCompanyLogo = document.querySelector("#detailCompanyLogo");
@@ -908,7 +911,17 @@ function renderCompanyHeader() {
     ? `Imagen cargada: ${currentCompanyProfile.logo_name}`
     : "Sin imagen cargada";
   companyVerifiedBadge.classList.toggle("is-hidden", !currentCompanyProfile?.is_verified);
+  renderCompanyPrivateId();
   renderPromotionState();
+}
+
+function renderCompanyPrivateId() {
+  if (!companyPrivateIdCard || !companyPrivateId || !copyCompanyIdButton) return;
+
+  const id = currentCompanyProfile?.id ?? "";
+  companyPrivateIdCard.classList.toggle("is-hidden", !id);
+  companyPrivateId.textContent = id || "Sin empresa guardada";
+  copyCompanyIdButton.disabled = !id;
 }
 
 function isJobFeatured(job) {
@@ -4060,6 +4073,21 @@ newCompanyButton.addEventListener("click", () => {
   updateJobFormMode();
   loadReceivedCandidates().catch((error) => showToast(friendlyError(error)));
   showToast("Formulario listo para crear otra empresa.");
+});
+
+copyCompanyIdButton?.addEventListener("click", async () => {
+  const id = currentCompanyProfile?.id ?? "";
+  if (!id) {
+    showToast("Guarda o selecciona una empresa para ver su ID.");
+    return;
+  }
+
+  try {
+    await navigator.clipboard.writeText(id);
+    showToast("ID de empresa copiado.");
+  } catch (error) {
+    showToast(`ID de empresa: ${id}`);
+  }
 });
 
 deleteCompanyButton.addEventListener("click", async () => {
