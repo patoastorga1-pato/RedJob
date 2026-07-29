@@ -965,11 +965,14 @@ async function startPlanCheckout(plan) {
   }
 
   const session = requireSession();
-  const checkout = await billingRequest("/.netlify/functions/create-checkout-session", {
-    plan,
-    companyId: currentCompanyProfile.id,
-    email: session.user?.email
-  });
+  const checkout = await billingRequest(
+    ["/.netlify/functions/create-checkout-session", "/api/billing/checkout"],
+    {
+      plan,
+      companyId: currentCompanyProfile.id,
+      email: session.user?.email
+    }
+  );
 
   if (!checkout?.url) throw new Error("Stripe no devolvio una URL de pago.");
   window.location.href = checkout.url;
@@ -1292,23 +1295,52 @@ async function supabaseRestRequest(path, options = {}) {
   return payload;
 }
 
-async function billingRequest(path, body = {}) {
-  const session = requireSession();
-  const response = await fetch(path, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${session.access_token}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(body)
-  });
+function tryParseJson(text) {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
 
-  const payload = await response.json().catch(() => null);
-  if (!response.ok) {
-    throw new Error(payload?.error || "No se pudo completar la solicitud de pagos.");
+async function billingRequest(paths, body = {}) {
+  const session = requireSession();
+  const pathList = Array.isArray(paths) ? paths : [paths];
+  let fallbackError = null;
+
+  for (const path of pathList) {
+    const response = await fetch(path, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(body)
+    });
+
+    const text = await response.text().catch(() => "");
+    const payload = text ? tryParseJson(text) : null;
+
+    if (response.ok && payload) return payload;
+
+    if (response.ok && !payload && pathList.length > 1) {
+      fallbackError = new Error("La ruta de pagos no devolvio una respuesta valida.");
+      continue;
+    }
+
+    const message = payload?.error || payload?.message || text?.slice(0, 180) || response.statusText;
+    const error = new Error(message || "No se pudo completar la solicitud de pagos.");
+    error.status = response.status;
+
+    if (!payload && (response.status === 404 || response.status === 405) && pathList.length > 1) {
+      fallbackError = error;
+      continue;
+    }
+
+    throw error;
   }
 
-  return payload;
+  throw fallbackError || new Error("La funcion de pagos no devolvio una respuesta valida.");
 }
 
 async function supabaseStorageUpload(path, file) {

@@ -1578,12 +1578,13 @@ textarea:focus {
   border-radius: 20px;
   padding: 22px;
   background: var(--white);
+  color: #09090b;
   box-shadow: 0 14px 32px rgba(15, 23, 42, 0.07);
 }
 
 .promotion-plan.active {
   border-color: var(--red);
-  background: linear-gradient(180deg, #fff7f7 0%, #ffffff 58%);
+  background: linear-gradient(180deg, #fff1f2 0%, #ffffff 62%);
   box-shadow: 0 18px 38px rgba(220, 38, 38, 0.16);
 }
 
@@ -1603,23 +1604,30 @@ textarea:focus {
 
 .promotion-plan.recommended {
   border-color: var(--red);
+  border-width: 2px;
   box-shadow: 0 20px 42px rgba(220, 38, 38, 0.16);
 }
 
 .promotion-plan.premium {
-  border-color: #111827;
-  background: linear-gradient(180deg, #111827 0%, #1f2937 36%, #ffffff 36%);
-  color: var(--white);
+  border-color: #09090b;
+  border-width: 2px;
+  background:
+    linear-gradient(180deg, rgba(9, 9, 11, 0.06) 0%, rgba(255, 255, 255, 0) 46%),
+    var(--white);
+  color: #09090b;
   box-shadow: 0 22px 46px rgba(17, 24, 39, 0.2);
+}
+
+.promotion-plan h3,
+.promotion-plan p,
+.promotion-plan li,
+.promotion-plan strong {
+  color: #09090b;
 }
 
 .promotion-plan.premium p,
 .promotion-plan.premium li {
-  color: #e5e7eb;
-}
-
-.promotion-plan.premium ul {
-  color: var(--black);
+  color: #111827;
 }
 
 .promotion-plan.premium.active {
@@ -1644,18 +1652,24 @@ textarea:focus {
 }
 
 .promotion-plan.premium .promotion-plan-label {
-  background: var(--white);
-  color: var(--black);
+  background: #09090b;
+  color: var(--white);
 }
 
 .promotion-plan h3 {
-  font-size: 26px;
+  font-size: 28px;
+  font-weight: 950;
+  letter-spacing: 0;
 }
 
 .promotion-plan strong {
-  color: inherit;
-  font-size: 30px;
+  font-size: 32px;
+  font-weight: 950;
   line-height: 1.1;
+}
+
+.promotion-plan p {
+  font-weight: 800;
 }
 
 .promotion-plan ul {
@@ -1663,6 +1677,7 @@ textarea:focus {
   gap: 9px;
   margin: 0 0 8px;
   padding-left: 18px;
+  font-weight: 850;
 }
 
 .promotion-plan button {
