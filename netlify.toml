@@ -17,6 +17,11 @@
   status = 200
 
 [[redirects]]
+  from = "/api/billing/sync"
+  to = "/.netlify/functions/sync-billing-status"
+  status = 200
+
+[[redirects]]
   from = "/api/jobs/promote"
   to = "/.netlify/functions/promote-job"
   status = 200

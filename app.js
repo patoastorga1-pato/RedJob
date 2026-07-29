@@ -861,6 +861,9 @@ function wait(ms) {
 async function waitForPlanSync({ attempts = 8, delayMs = 1500 } = {}) {
   for (let attempt = 0; attempt < attempts; attempt += 1) {
     if (attempt > 0) await wait(delayMs);
+    if (currentCompanyProfile?.id) {
+      await billingRequest("/api/billing/sync", { companyId: currentCompanyProfile.id }).catch(() => null);
+    }
     await loadCurrentProfile();
     await refreshCurrentCompanyProfile();
     renderPromotionState();
