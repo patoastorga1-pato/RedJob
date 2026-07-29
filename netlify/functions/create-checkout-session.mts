@@ -46,7 +46,7 @@ export default async (req) => {
       customer: customerId,
       line_items: [{ price: priceId, quantity: 1 }],
       allow_promotion_codes: true,
-      success_url: `${siteUrl}/?checkout=success#empresas`,
+      success_url: `${siteUrl}/?checkout=success&session_id={CHECKOUT_SESSION_ID}#empresas`,
       cancel_url: `${siteUrl}/?checkout=cancel#empresas`,
       client_reference_id: company.id,
       metadata: {

@@ -34,19 +34,64 @@ function chooseRelevantSubscription(subscriptions) {
   );
 }
 
+async function getSubscriptionFromCheckoutSession(stripe, checkoutSessionId) {
+  if (!checkoutSessionId) return null;
+  const session = await stripe.checkout.sessions.retrieve(checkoutSessionId, {
+    expand: ["subscription", "subscription.items.data.price"]
+  });
+
+  const subscription = session.subscription;
+  return {
+    session,
+    subscription: typeof subscription === "string" ? await stripe.subscriptions.retrieve(subscription) : subscription
+  };
+}
+
+async function syncCompanySubscription(company, subscription) {
+  if (!subscription) return { company, synced: false, message: "No se encontro suscripcion en Stripe." };
+
+  const status = mapSubscriptionStatus(subscription.status);
+  const plan = status === "canceled" ? "free" : getPlanFromSubscription(subscription);
+  const body = {
+    plan,
+    plan_status: status,
+    billing_provider: "stripe",
+    billing_customer_id: typeof subscription.customer === "string" ? subscription.customer : subscription.customer?.id,
+    billing_subscription_id: status === "canceled" ? null : subscription.id,
+    plan_started_at: timestampToIso(subscription.start_date),
+    plan_expires_at: status === "canceled" ? new Date().toISOString() : timestampToIso(subscription.current_period_end)
+  };
+
+  const updatedCompany = await updateCompanyBilling(company.id, body);
+  return { company: updatedCompany, synced: true, plan, status };
+}
+
 export default async (req) => {
   if (req.method !== "POST") return jsonResponse({ error: "Metodo no permitido." }, 405);
 
   try {
     const accessToken = getBearerToken(req);
-    const { companyId } = await req.json();
-    const company = await getOwnedCompany(companyId, accessToken);
+    const { companyId, checkoutSessionId, sessionId } = await req.json();
+    const stripe = getStripe();
+    const checkoutId = checkoutSessionId || sessionId;
+
+    let company = companyId ? await getOwnedCompany(companyId, accessToken) : null;
+
+    if (checkoutId) {
+      const result = await getSubscriptionFromCheckoutSession(stripe, checkoutId);
+      const sessionCompanyId = result?.session?.metadata?.redjob_company_id || result?.session?.client_reference_id;
+      if (!company && sessionCompanyId) company = await getOwnedCompany(sessionCompanyId, accessToken);
+      if (!company) throw new Error("No se encontro la empresa asociada al pago.");
+      if (sessionCompanyId && company.id !== sessionCompanyId) throw new Error("El pago no corresponde a esta empresa.");
+      return jsonResponse(await syncCompanySubscription(company, result?.subscription));
+    }
+
+    if (!company) throw new Error("Selecciona una empresa.");
 
     if (!company.billing_customer_id) {
       return jsonResponse({ company, synced: false, message: "La empresa aun no tiene cliente de Stripe." });
     }
 
-    const stripe = getStripe();
     const subscriptions = await stripe.subscriptions.list({
       customer: company.billing_customer_id,
       status: "all",
@@ -59,20 +104,7 @@ export default async (req) => {
       return jsonResponse({ company, synced: false, message: "No se encontro suscripcion en Stripe." });
     }
 
-    const status = mapSubscriptionStatus(subscription.status);
-    const plan = status === "canceled" ? "free" : getPlanFromSubscription(subscription);
-    const body = {
-      plan,
-      plan_status: status,
-      billing_provider: "stripe",
-      billing_customer_id: typeof subscription.customer === "string" ? subscription.customer : subscription.customer?.id,
-      billing_subscription_id: status === "canceled" ? null : subscription.id,
-      plan_started_at: timestampToIso(subscription.start_date),
-      plan_expires_at: status === "canceled" ? new Date().toISOString() : timestampToIso(subscription.current_period_end)
-    };
-
-    const updatedCompany = await updateCompanyBilling(company.id, body);
-    return jsonResponse({ company: updatedCompany, synced: true, plan, status });
+    return jsonResponse(await syncCompanySubscription(company, subscription));
   } catch (error) {
     return jsonResponse({ error: error.message || "No se pudo sincronizar la suscripcion." }, 400);
   }

@@ -858,12 +858,31 @@ function wait(ms) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
-async function waitForPlanSync({ attempts = 8, delayMs = 1500 } = {}) {
+function mergeSyncedCompany(company) {
+  if (!company?.id) return;
+  currentCompanyProfile = company;
+  currentCompanyProfiles = currentCompanyProfiles.some((item) => sameId(item.id, company.id))
+    ? currentCompanyProfiles.map((item) => (sameId(item.id, company.id) ? company : item))
+    : [...currentCompanyProfiles, company];
+  hydrateCompanyForm(currentCompanyProfile);
+  renderCompanyProfileSelect();
+}
+
+async function syncCurrentCompanyBilling({ checkoutSessionId = "" } = {}) {
+  if (!currentCompanyProfile?.id && !checkoutSessionId) return null;
+  const payload = {
+    ...(currentCompanyProfile?.id ? { companyId: currentCompanyProfile.id } : {}),
+    ...(checkoutSessionId ? { checkoutSessionId } : {})
+  };
+  const result = await billingRequest("/api/billing/sync", payload);
+  if (result?.company) mergeSyncedCompany(result.company);
+  return result;
+}
+
+async function waitForPlanSync({ attempts = 8, delayMs = 1500, checkoutSessionId = "" } = {}) {
   for (let attempt = 0; attempt < attempts; attempt += 1) {
     if (attempt > 0) await wait(delayMs);
-    if (currentCompanyProfile?.id) {
-      await billingRequest("/api/billing/sync", { companyId: currentCompanyProfile.id }).catch(() => null);
-    }
+    await syncCurrentCompanyBilling({ checkoutSessionId }).catch(() => null);
     await loadCurrentProfile();
     await refreshCurrentCompanyProfile();
     renderPromotionState();
@@ -3376,6 +3395,12 @@ function switchView(viewId) {
   if (viewId === "administracion") {
     loadAdminDashboard().catch((error) => showToast(friendlyError(error)));
   }
+
+  if (viewId === "empresas" && getStoredSession()?.access_token) {
+    syncCurrentCompanyBilling()
+      .then(() => renderPromotionState())
+      .catch(() => null);
+  }
 }
 
 function openAuthPanel(mode) {
@@ -3389,6 +3414,7 @@ async function handleBillingReturn() {
   const params = new URLSearchParams(window.location.search);
   const checkout = params.get("checkout");
   const billing = params.get("billing");
+  const checkoutSessionId = params.get("session_id") || "";
   if (!checkout && !billing) return;
 
   switchView("empresas");
@@ -3403,7 +3429,7 @@ async function handleBillingReturn() {
 
   if (checkout === "success") {
     setPromotionBillingStatus("Pago recibido. Confirmando el plan con Stripe...", "info");
-    const result = await waitForPlanSync();
+    const result = await waitForPlanSync({ checkoutSessionId });
     if (result.synced) {
       const planCopy = promotionPlans[result.plan] ?? promotionPlans.free;
       setPromotionBillingStatus(`Plan ${planCopy.label} activo.`, "info");
