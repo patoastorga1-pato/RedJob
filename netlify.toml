@@ -1,5 +1,5 @@
 [build]
-  command = "node scripts/create-config.js"
+  command = "npm run build"
   publish = "."
 
 [functions]
@@ -14,11 +14,6 @@
 [[redirects]]
   from = "/api/billing/portal"
   to = "/.netlify/functions/create-customer-portal"
-  status = 200
-
-[[redirects]]
-  from = "/api/billing/stripe-webhook"
-  to = "/.netlify/functions/stripe-webhook"
   status = 200
 
 [[redirects]]

@@ -64,12 +64,12 @@ STRIPE_WEBHOOK_SECRET=whsec_...
 STRIPE_PRICE_PRO=price_1TyKJNRonDWaSBmIvqhVrKrS
 STRIPE_PRICE_PREMIUM=price_1TyKJbRonDWaSBmIROFQtUx0
 SUPABASE_SERVICE_ROLE_KEY=...
-SITE_URL=https://www.redjob.com.mx
+SITE_URL=https://redjob.com.mx
 ```
 
 Webhook recomendado en Stripe:
 
-`https://www.redjob.com.mx/api/billing/stripe-webhook`
+`https://redjob.com.mx/api/billing/stripe-webhook`
 
 Eventos a enviar:
 

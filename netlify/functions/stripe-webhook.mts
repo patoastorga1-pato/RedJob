@@ -34,11 +34,24 @@ async function findCompanyBySubscriptionOrCustomer(subscription) {
   const metadataCompanyId = subscription.metadata?.redjob_company_id;
   if (metadataCompanyId) return metadataCompanyId;
 
-  const query = subscription.id
-    ? `/company_profiles?select=id&billing_subscription_id=eq.${encodeURIComponent(subscription.id)}&limit=1`
-    : `/company_profiles?select=id&billing_customer_id=eq.${encodeURIComponent(subscription.customer)}&limit=1`;
-  const rows = await supabaseRequest(query, { service: true });
-  return rows?.[0]?.id ?? null;
+  if (subscription.id) {
+    const rows = await supabaseRequest(
+      `/company_profiles?select=id&billing_subscription_id=eq.${encodeURIComponent(subscription.id)}&limit=1`,
+      { service: true }
+    );
+    if (rows?.[0]?.id) return rows[0].id;
+  }
+
+  const customerId = typeof subscription.customer === "string" ? subscription.customer : subscription.customer?.id;
+  if (customerId) {
+    const rows = await supabaseRequest(
+      `/company_profiles?select=id&billing_customer_id=eq.${encodeURIComponent(customerId)}&limit=1`,
+      { service: true }
+    );
+    if (rows?.[0]?.id) return rows[0].id;
+  }
+
+  return null;
 }
 
 function getPlanFromSubscription(subscription) {
@@ -58,7 +71,9 @@ function getPlanFromSubscription(subscription) {
 
 async function syncSubscription(subscription) {
   const companyId = await findCompanyBySubscriptionOrCustomer(subscription);
-  if (!companyId) return null;
+  if (!companyId) {
+    throw new Error(`No se encontro empresa para la suscripcion ${subscription.id || "sin id"}.`);
+  }
 
   const status = mapSubscriptionStatus(subscription.status);
   const plan = status === "canceled" ? "free" : getPlanFromSubscription(subscription);
