@@ -1,11 +1,11 @@
-const CACHE_NAME = "redjob-shell-20260801d";
+const CACHE_NAME = "redjob-shell-20260801e";
 const APP_SHELL = [
   "/",
   "/index.html",
   "/offline.html",
-  "/styles.css?v=20260801d",
-  "/app.js?v=20260801d",
-  "/admin-report-viewer.js?v=20260801d",
+  "/styles.css?v=20260801e",
+  "/app.js?v=20260801e",
+  "/admin-report-viewer.js?v=20260801e",
   "/manifest.json?v=20260609b",
   "/assets/redjob-logo-header.png",
   "/assets/redjob-icon-192.png?v=20260609b",
@@ -13,6 +13,15 @@ const APP_SHELL = [
   "/assets/redjob-icon-maskable-512.png?v=20260609b",
   "/assets/redjob-briefcase-access.png?v=20260708c"
 ];
+
+const NETWORK_FIRST_PATHS = new Set([
+  "/",
+  "/index.html",
+  "/styles.css",
+  "/app.js",
+  "/admin-report-viewer.js",
+  "/service-worker.js"
+]);
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));
@@ -44,6 +53,21 @@ self.addEventListener("fetch", (event) => {
           return response;
         })
         .catch(async () => (await caches.match("/index.html")) || caches.match("/offline.html"))
+    );
+    return;
+  }
+
+  if (NETWORK_FIRST_PATHS.has(url.pathname)) {
+    event.respondWith(
+      fetch(request, { cache: "reload" })
+        .then((response) => {
+          if (response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          }
+          return response;
+        })
+        .catch(async () => (await caches.match(request)) || caches.match("/offline.html"))
     );
     return;
   }
