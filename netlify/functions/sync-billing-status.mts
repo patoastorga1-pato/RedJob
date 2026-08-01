@@ -50,7 +50,7 @@ async function getSubscriptionFromCheckoutSession(stripe, checkoutSessionId) {
 }
 
 async function syncCompanySubscription(company, subscription) {
-  if (!subscription) return { company, synced: false, message: "No se encontro suscripcion en Stripe." };
+  if (!subscription) return { company, synced: false, message: "No se encontró suscripción en Stripe." };
 
   const status = mapSubscriptionStatus(subscription.status);
   const plan = status === "canceled" ? "free" : getPlanFromSubscription(subscription);
@@ -83,7 +83,7 @@ export default async (req) => {
       const result = await getSubscriptionFromCheckoutSession(stripe, checkoutId);
       const sessionCompanyId = result?.session?.metadata?.redjob_company_id || result?.session?.client_reference_id;
       if (!company && sessionCompanyId) company = await getOwnedCompany(sessionCompanyId, accessToken);
-      if (!company) throw new Error("No se encontro la empresa asociada al pago.");
+      if (!company) throw new Error("No se encontró la empresa asociada al pago.");
       if (sessionCompanyId && company.id !== sessionCompanyId) throw new Error("El pago no corresponde a esta empresa.");
       return jsonResponse(await syncCompanySubscription(company, result?.subscription));
     }
@@ -91,7 +91,7 @@ export default async (req) => {
     if (!company) throw new Error("Selecciona una empresa.");
 
     if (!company.billing_customer_id) {
-      return jsonResponse({ company, synced: false, message: "La empresa aun no tiene cliente de Stripe." });
+      return jsonResponse({ company, synced: false, message: "La empresa aún no tiene cliente de Stripe." });
     }
 
     const subscriptions = await stripe.subscriptions.list({
@@ -103,12 +103,12 @@ export default async (req) => {
 
     const subscription = chooseRelevantSubscription(subscriptions.data);
     if (!subscription) {
-      return jsonResponse({ company, synced: false, message: "No se encontro suscripcion en Stripe." });
+      return jsonResponse({ company, synced: false, message: "No se encontró suscripción en Stripe." });
     }
 
     return jsonResponse(await syncCompanySubscription(company, subscription));
   } catch (error) {
-    return jsonResponse({ error: error.message || "No se pudo sincronizar la suscripcion." }, 400);
+    return jsonResponse({ error: error.message || "No se pudo sincronizar la suscripción." }, 400);
   }
 };
 

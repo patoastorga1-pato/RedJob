@@ -1049,7 +1049,7 @@ async function startPlanCheckout(plan) {
   }
 
   if (currentCompanyProfile.billing_customer_id && ["active", "trialing", "past_due"].includes(currentCompanyProfile.plan_status)) {
-    showToast("Abriendo Stripe para administrar o cambiar tu suscripcion.");
+    showToast("Abriendo Stripe para administrar o cambiar tu suscripción.");
     await openBillingPortal();
     return;
   }
@@ -1070,7 +1070,7 @@ async function startPlanCheckout(plan) {
 
 async function openBillingPortal() {
   if (!currentCompanyProfile?.id) {
-    throw new Error("Selecciona una empresa para administrar su suscripcion.");
+    throw new Error("Selecciona una empresa para administrar su suscripción.");
   }
 
   const portal = await billingRequest("/api/billing/portal", {
@@ -3529,7 +3529,7 @@ async function handleBillingReturn() {
       showToast(`Tu plan ${planCopy.label} ya esta activo.`);
     } else {
       setPromotionBillingStatus("Pago recibido. El plan se activara cuando Stripe confirme el webhook.", "info");
-      showToast("Pago recibido. Tu plan se actualizara cuando Stripe confirme la suscripcion.");
+      showToast("Pago recibido. Tu plan se actualizará cuando Stripe confirme la suscripción.");
     }
   } else if (checkout === "cancel") {
     showToast("Pago cancelado. No se hizo ningun cargo desde RedJob.");

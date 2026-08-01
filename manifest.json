@@ -2,7 +2,7 @@
   "id": "/",
   "name": "RedJob",
   "short_name": "RedJob",
-  "description": "Vacantes, postulaciones y contacto directo entre candidatos y empresas en Mexico.",
+  "description": "Vacantes, postulaciones y contacto directo entre candidatos y empresas en México.",
   "lang": "es-MX",
   "dir": "ltr",
   "start_url": "/?source=pwa",

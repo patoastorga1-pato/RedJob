@@ -1,17 +1,17 @@
-import Stripe from "stripe";
+﻿import Stripe from "stripe";
 
 export const planConfig = {
   pro: {
     label: "Pro",
     priceEnv: "STRIPE_PRICE_PRO",
-    fallbackPriceId: "price_1TyKJNRonDWaSBmIvqhVrKrS",
+    fallbackPriceId: "",
     featuredSlots: 1,
     featuredPriority: 50
   },
   premium: {
     label: "Premium",
     priceEnv: "STRIPE_PRICE_PREMIUM",
-    fallbackPriceId: "price_1TyKJbRonDWaSBmIROFQtUx0",
+    fallbackPriceId: "",
     featuredSlots: 3,
     featuredPriority: 100
   }
@@ -56,7 +56,7 @@ export function getSupabaseConfig({ service = false } = {}) {
   const key = service ? serviceRoleKey : anonKey;
 
   if (!url || !key) {
-    throw new Error(service ? "Falta SUPABASE_SERVICE_ROLE_KEY o URL de Supabase." : "Falta configuracion de Supabase.");
+    throw new Error(service ? "Falta SUPABASE_SERVICE_ROLE_KEY o URL de Supabase." : "Falta configuración de Supabase.");
   }
 
   return { url: url.replace(/\/$/, ""), key };
@@ -88,7 +88,7 @@ export async function supabaseRequest(path, options = {}) {
 
 export async function getOwnedCompany(companyId, accessToken) {
   if (!companyId) throw new Error("Selecciona una empresa.");
-  if (!accessToken) throw new Error("Inicia sesion para continuar.");
+  if (!accessToken) throw new Error("Inicia sesión para continuar.");
 
   const rows = await supabaseRequest(`/company_profiles?select=*&id=eq.${encodeURIComponent(companyId)}&limit=1`, {
     authorization: `Bearer ${accessToken}`
@@ -119,3 +119,4 @@ export function mapSubscriptionStatus(status) {
 export function timestampToIso(value) {
   return value ? new Date(value * 1000).toISOString() : null;
 }
+

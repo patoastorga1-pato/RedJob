@@ -133,7 +133,7 @@
         <div class="admin-report-viewer-meta" id="adminReportViewerMeta"></div>
         <section class="admin-report-viewer-section">
           <h3>Lo que dice el reporte</h3>
-          <p id="adminReportViewerDescription">Sin descripcion.</p>
+          <p id="adminReportViewerDescription">Sin descripción.</p>
         </section>
       </article>
     `;
@@ -149,7 +149,7 @@
     const dialog = ensureDialog();
     const title = row.querySelector(".admin-row-title strong")?.textContent?.trim() || "Reporte";
     const status = row.querySelector(".admin-status")?.textContent?.trim() || "Sin estado";
-    const description = row.querySelector(".admin-row-main p")?.textContent?.trim() || "Sin descripcion.";
+    const description = row.querySelector(".admin-row-main p")?.textContent?.trim() || "Sin descripción.";
     const meta = row.querySelector(".admin-row-main small")?.textContent?.trim() || "";
     const [category = "Reporte", date = ""] = meta.split("·").map((item) => item.trim());
 

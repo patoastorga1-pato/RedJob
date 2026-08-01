@@ -9,7 +9,7 @@ export default async (req) => {
     const company = await getOwnedCompany(companyId, accessToken);
 
     if (!company.billing_customer_id) {
-      return jsonResponse({ error: "Esta empresa aun no tiene una suscripcion de Stripe." }, 400);
+      return jsonResponse({ error: "Esta empresa aún no tiene una suscripción de Stripe." }, 400);
     }
 
     const stripe = getStripe();

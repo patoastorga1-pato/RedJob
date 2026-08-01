@@ -80,7 +80,7 @@ function getPlanFromSubscription(subscription, fallbackPlan = null) {
 async function syncSubscription(subscription, fallback = {}) {
   const companyId = await findCompanyBySubscriptionOrCustomer(subscription, fallback.companyId);
   if (!companyId) {
-    throw new Error(`No se encontro empresa para la suscripcion ${subscription.id || "sin id"}.`);
+    throw new Error(`No se encontró empresa para la suscripción ${subscription.id || "sin id"}.`);
   }
 
   const status = mapSubscriptionStatus(subscription.status);

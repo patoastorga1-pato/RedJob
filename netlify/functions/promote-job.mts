@@ -13,7 +13,7 @@ export default async (req) => {
     const { jobId } = await req.json();
     const accessToken = getBearerToken(req);
     if (!jobId) return jsonResponse({ error: "Selecciona una vacante." }, 400);
-    if (!accessToken) return jsonResponse({ error: "Inicia sesion para continuar." }, 401);
+    if (!accessToken) return jsonResponse({ error: "Inicia sesión para continuar." }, 401);
 
     const rows = await supabaseRequest(
       `/jobs?select=id,company_id,company_profiles(id,plan,plan_status)&id=eq.${encodeURIComponent(jobId)}&limit=1`,
