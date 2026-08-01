@@ -1,4 +1,4 @@
-const CACHE_NAME = "redjob-shell-20260801b";
+const CACHE_NAME = "redjob-shell-20260729i";
 const APP_SHELL = [
   "/",
   "/index.html",
