@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="es">
   <head>
     <meta charset="utf-8" />
@@ -8,29 +8,29 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="RedJob" />
-    <meta name="description" content="Encuentra empleo en México, publica vacantes y conversa directamente con candidatos y empresas en RedJob." />
+    <meta name="description" content="Encuentra empleo en MÃ©xico, publica vacantes y conversa directamente con candidatos y empresas en RedJob." />
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="es_MX" />
     <meta property="og:site_name" content="RedJob" />
-    <meta property="og:title" content="RedJob | Tu próxima oportunidad" />
-    <meta property="og:description" content="Vacantes, postulaciones y contacto directo entre candidatos y empresas en México." />
+    <meta property="og:title" content="RedJob | Tu prÃ³xima oportunidad" />
+    <meta property="og:description" content="Vacantes, postulaciones y contacto directo entre candidatos y empresas en MÃ©xico." />
     <meta property="og:url" content="https://redjob.com.mx/" />
     <meta property="og:image" content="https://redjob.com.mx/assets/redjob-social-preview.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="RedJob | Tu próxima oportunidad" />
-    <meta name="twitter:description" content="Encuentra empleo y conecta directamente con empresas en México." />
+    <meta name="twitter:title" content="RedJob | Tu prÃ³xima oportunidad" />
+    <meta name="twitter:description" content="Encuentra empleo y conecta directamente con empresas en MÃ©xico." />
     <meta name="twitter:image" content="https://redjob.com.mx/assets/redjob-social-preview.png" />
     <link rel="canonical" href="https://redjob.com.mx/" />
-    <title>RedJob | Empleos y vacantes en México</title>
+    <title>RedJob | Empleos y vacantes en MÃ©xico</title>
     <link rel="manifest" href="./manifest.json?v=20260609b" />
     <link rel="icon" type="image/png" sizes="512x512" href="./assets/redjob-favicon.png?v=20260609a" />
     <link rel="apple-touch-icon" href="./assets/redjob-icon-192.png?v=20260609b" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./styles.css?v=20260729i" />
+    <link rel="stylesheet" href="./styles.css?v=20260801d" />
   </head>
   <body>
     <header class="site-header">
@@ -38,7 +38,7 @@
           <img src="./assets/redjob-logo-header.png" alt="RedJob" />
       </a>
 
-      <nav class="desktop-nav" aria-label="Navegación principal">
+      <nav class="desktop-nav" aria-label="NavegaciÃ³n principal">
         <a class="nav-link active" href="#vacantes" data-view-link="inicio" data-role-nav="candidate">Vacantes</a>
         <a class="nav-link" href="#empresas" data-view-link="empresas" data-role-nav="company">Empresas</a>
         <a class="nav-link messages-nav-link" href="#mensajes" data-view-link="mensajes">
@@ -46,7 +46,7 @@
           <span class="unread-badge is-hidden" id="unreadMessagesBadge">0</span>
         </a>
         <a class="nav-link admin-nav-link is-hidden" href="#administracion" data-view-link="administracion" id="adminNavLink">
-          Administración
+          AdministraciÃ³n
         </a>
       </nav>
 
@@ -55,7 +55,7 @@
           Buscar
         </button>
         <button class="auth-header-button" type="button" data-view-link="acceso" id="headerSignInButton">
-          Iniciar sesión
+          Iniciar sesiÃ³n
         </button>
         <button class="auth-header-button primary" type="button" data-view-link="acceso" data-auth-create id="headerCreateAccountButton">
           Crear cuenta
@@ -71,9 +71,9 @@
       <section class="view active-view" id="inicio">
         <section class="hero">
           <div class="hero-copy">
-            <p class="eyebrow">RedJob - Tu próxima oportunidad</p>
-            <h1>Encuentra tu próximo empleo</h1>
-            <p class="hero-subtitle">Conecta con empresas, postúlate fácilmente y conversa directamente con reclutadores.</p>
+            <p class="eyebrow">RedJob - Tu prÃ³xima oportunidad</p>
+            <h1>Encuentra tu prÃ³ximo empleo</h1>
+            <p class="hero-subtitle">Conecta con empresas, postÃºlate fÃ¡cilmente y conversa directamente con reclutadores.</p>
             <div class="hero-actions">
               <button class="primary-button" type="button" data-scroll-target="jobSearch">Buscar empleo</button>
               <button class="secondary-button" type="button" data-view-link="acceso" data-auth-create>Crear cuenta</button>
@@ -86,14 +86,14 @@
           <form class="job-search" aria-label="Buscador de empleo">
             <label>
               <span>Puesto o habilidad</span>
-              <input id="searchInput" type="search" placeholder="React, ventas, diseño..." />
+              <input id="searchInput" type="search" placeholder="React, ventas, diseÃ±o..." />
             </label>
             <label>
               <span>Estado</span>
               <select id="locationInput"></select>
             </label>
             <label>
-              <span>Municipio o alcaldía</span>
+              <span>Municipio o alcaldÃ­a</span>
               <select id="locationCityInput"></select>
             </label>
             <label>
@@ -101,12 +101,12 @@
               <select id="modeFilter">
                 <option value="all">Todas</option>
                 <option value="Remoto">Remoto</option>
-                <option value="Hibrido">Híbrido</option>
+                <option value="Hibrido">HÃ­brido</option>
                 <option value="Presencial">Presencial</option>
               </select>
             </label>
             <label>
-              <span>Categoría</span>
+              <span>CategorÃ­a</span>
               <select id="categoryFilter"></select>
             </label>
             <button class="primary-button" type="submit">Buscar empleo</button>
@@ -115,16 +115,16 @@
 
         <section class="section-block">
           <div class="section-title">
-            <span>Categorías</span>
-            <h2>Explora por área profesional</h2>
+            <span>CategorÃ­as</span>
+            <h2>Explora por Ã¡rea profesional</h2>
           </div>
           <div class="category-grid">
-            <button class="category-card" type="button" data-category-filter="Tecnologia"><span>IT</span>Tecnología</button>
+            <button class="category-card" type="button" data-category-filter="Tecnologia"><span>IT</span>TecnologÃ­a</button>
             <button class="category-card" type="button" data-category-filter="Ventas"><span>$</span>Ventas</button>
-            <button class="category-card" type="button" data-category-filter="Atencion al Cliente"><span>AC</span>Atención al Cliente</button>
+            <button class="category-card" type="button" data-category-filter="Atencion al Cliente"><span>AC</span>AtenciÃ³n al Cliente</button>
             <button class="category-card" type="button" data-category-filter="Marketing"><span>M</span>Marketing</button>
-            <button class="category-card" type="button" data-category-filter="Administracion"><span>AD</span>Administración</button>
-            <button class="category-card" type="button" data-category-filter="Logistica"><span>LG</span>Logística</button>
+            <button class="category-card" type="button" data-category-filter="Administracion"><span>AD</span>AdministraciÃ³n</button>
+            <button class="category-card" type="button" data-category-filter="Logistica"><span>LG</span>LogÃ­stica</button>
             <button class="category-card" type="button" data-category-filter="Manufactura"><span>IN</span>Manufactura</button>
             <button class="category-card" type="button" data-category-filter="Salud"><span>+</span>Salud</button>
           </div>
@@ -145,15 +145,15 @@
           <div class="section-title split">
             <div>
               <span>Empresas destacadas</span>
-              <h2>Compañías contratando ahora</h2>
+              <h2>CompaÃ±Ã­as contratando ahora</h2>
             </div>
             <button class="text-button" type="button" data-view-link="empresas">Ver todas</button>
           </div>
           <div class="companies-grid" id="hiringCompaniesList">
             <article class="company-card">
               <span class="company-logo">RJ</span>
-              <strong>Sin empresas destacadas aún</strong>
-              <p>Publica una vacante real para empezar a mostrar empresas aquí.</p>
+              <strong>Sin empresas destacadas aÃºn</strong>
+              <p>Publica una vacante real para empezar a mostrar empresas aquÃ­.</p>
             </article>
           </div>
         </section>
@@ -169,7 +169,7 @@
                 <span id="detailCompany">Empresa</span>
                 <h1 id="detailTitle">Vacante</h1>
                 <div class="job-commercial-badges" id="detailCommercialBadges"></div>
-                <p id="detailMeta">Ubicación - Modalidad - Salario</p>
+                <p id="detailMeta">UbicaciÃ³n - Modalidad - Salario</p>
               </div>
             </div>
             <div class="match-block">
@@ -182,16 +182,16 @@
               </div>
             </div>
             <section>
-              <h2>Descripción</h2>
-              <p id="detailDescription">Descripción de la vacante.</p>
+              <h2>DescripciÃ³n</h2>
+              <p id="detailDescription">DescripciÃ³n de la vacante.</p>
             </section>
             <section class="company-about-section">
               <h2>Sobre la empresa</h2>
-              <p id="detailCompanyDescription">Información de la empresa.</p>
+              <p id="detailCompanyDescription">InformaciÃ³n de la empresa.</p>
               <div class="company-rating-panel" id="detailCompanyRating">
                 <div>
-                  <span>Calificación de empresa</span>
-                  <strong id="detailCompanyRatingSummary">Sin calificaciones todavía</strong>
+                  <span>CalificaciÃ³n de empresa</span>
+                  <strong id="detailCompanyRatingSummary">Sin calificaciones todavÃ­a</strong>
                 </div>
                 <div class="rating-actions" id="detailCompanyRatingActions"></div>
               </div>
@@ -228,7 +228,7 @@
               <span class="company-logo">R</span>
               <div>
                 <strong>RedJob</strong>
-                <small>Selecciona una conversación</small>
+                <small>Selecciona una conversaciÃ³n</small>
               </div>
               <button class="secondary-button subtle is-hidden" type="button" id="chatJobDetailButton">Ver vacante</button>
               <button class="secondary-button subtle chat-close-button" type="button" id="closeChatPanel" aria-label="Cerrar chat">Cerrar</button>
@@ -244,18 +244,18 @@
               <p id="candidatePreviewSummary">Sin resumen disponible.</p>
               <div class="candidate-preview-actions">
                 <button class="secondary-button subtle" type="button" id="candidatePreviewProfile">Ver perfil</button>
-                <button class="secondary-button subtle" type="button" id="candidatePreviewResume">Ver currículum</button>
+                <button class="secondary-button subtle" type="button" id="candidatePreviewResume">Ver currÃ­culum</button>
               </div>
               <div class="candidate-preview-status" id="candidatePreviewStatusActions"></div>
             </aside>
             <div class="chat-body">
               <article class="bubble candidate">
                 <span>RedJob</span>
-                <p>Cuando una postulación cree una conversación, aparecerá aquí.</p>
+                <p>Cuando una postulaciÃ³n cree una conversaciÃ³n, aparecerÃ¡ aquÃ­.</p>
               </article>
             </div>
             <form class="compose-bar" id="messageForm">
-              <textarea id="messageInput" rows="1" placeholder="Escribe un mensaje. Enter crea otro renglón."></textarea>
+              <textarea id="messageInput" rows="1" placeholder="Escribe un mensaje. Enter crea otro renglÃ³n."></textarea>
               <button class="primary-button" type="submit">Enviar</button>
             </form>
           </section>
@@ -269,12 +269,12 @@
             <div class="profile-overview-copy">
               <h1 id="profileDisplayName">Tu perfil RedJob</h1>
               <p id="profileDisplayMeta">Completa tu perfil para mejorar tus postulaciones.</p>
-              <small class="resume-status" id="resumeStatus">Sin currículum cargado</small>
+              <small class="resume-status" id="resumeStatus">Sin currÃ­culum cargado</small>
             </div>
             <div class="profile-overview-actions">
-              <button class="primary-button" type="button" id="resumeButton">Actualizar currículum</button>
+              <button class="primary-button" type="button" id="resumeButton">Actualizar currÃ­culum</button>
               <button class="secondary-button subtle" type="button" data-view-link="empresas">Publicar vacante</button>
-              <button class="logout-profile-button" type="button" id="profileSignOutButton">Cerrar sesión</button>
+              <button class="logout-profile-button" type="button" id="profileSignOutButton">Cerrar sesiÃ³n</button>
             </div>
             <input class="is-hidden" id="resumeInput" type="file" accept=".pdf,.doc,.docx" />
           </section>
@@ -283,7 +283,7 @@
               <summary>
                 <span>
                   <strong>Editar perfil</strong>
-                  <small>Información personal, ubicación y habilidades</small>
+                  <small>InformaciÃ³n personal, ubicaciÃ³n y habilidades</small>
                 </span>
                 <span class="profile-editor-chevron" aria-hidden="true"></span>
               </summary>
@@ -299,27 +299,27 @@
                 </label>
                 <label>
                   Rol objetivo
-                  <input id="candidateTargetRole" type="text" placeholder="Puesto o área que buscas" />
+                  <input id="candidateTargetRole" type="text" placeholder="Puesto o Ã¡rea que buscas" />
                 </label>
                 <label>
                   Estado
                   <select id="candidateLocation"></select>
                 </label>
                 <label>
-                  Municipio o alcaldía
+                  Municipio o alcaldÃ­a
                   <select id="candidateCity"></select>
                 </label>
                 <label>
                   Modalidad
                   <select id="candidateWorkMode">
                     <option value="remote">Remoto</option>
-                    <option value="hybrid" selected>Híbrido</option>
+                    <option value="hybrid" selected>HÃ­brido</option>
                     <option value="onsite">Presencial</option>
                   </select>
                 </label>
                 <label>
                   Habilidades
-                  <textarea id="candidateSkills" rows="6" placeholder="Escribe una habilidad por renglón.&#10;Ej. Atención al cliente&#10;Excel&#10;Logística"></textarea>
+                  <textarea id="candidateSkills" rows="6" placeholder="Escribe una habilidad por renglÃ³n.&#10;Ej. AtenciÃ³n al cliente&#10;Excel&#10;LogÃ­stica"></textarea>
                 </label>
                 <button class="primary-button" type="submit">Guardar perfil</button>
                 </form>
@@ -410,8 +410,8 @@
                 <input id="companyNameInput" type="text" placeholder="Nombre de tu empresa" />
               </label>
               <label>
-                Descripción de empresa
-                <textarea id="companyDescriptionInput" rows="3" placeholder="Qué hace tu empresa y qué tipo de talento busca."></textarea>
+                DescripciÃ³n de empresa
+                <textarea id="companyDescriptionInput" rows="3" placeholder="QuÃ© hace tu empresa y quÃ© tipo de talento busca."></textarea>
               </label>
               <div class="logo-upload-field">
                 <div>
@@ -426,7 +426,7 @@
                 <input id="jobTitleInput" type="text" placeholder="Nombre del puesto" />
               </label>
               <label>
-                Descripción de vacante
+                DescripciÃ³n de vacante
                 <textarea id="jobDescriptionInput" rows="4" placeholder="Responsabilidades, equipo y expectativas."></textarea>
               </label>
               <label>
@@ -434,52 +434,52 @@
                 <select id="jobLocationInput"></select>
               </label>
               <label>
-                Municipio o alcaldía
+                Municipio o alcaldÃ­a
                 <select id="jobCityInput"></select>
               </label>
               <label>
                 Modalidad
                 <select id="jobWorkModeInput">
                   <option value="remote">Remoto</option>
-                  <option value="hybrid">Híbrido</option>
+                  <option value="hybrid">HÃ­brido</option>
                   <option value="onsite">Presencial</option>
                 </select>
               </label>
               <label>
-                Categoría
+                CategorÃ­a
                 <select id="jobCategoryInput"></select>
               </label>
               <label class="is-hidden" id="jobCustomCategoryLabel">
-                Categoría personalizada
+                CategorÃ­a personalizada
                 <input id="jobCustomCategoryInput" type="text" placeholder="Ej. Turismo, Construccion, Legal" />
               </label>
               <label>
-                Salario mínimo
+                Salario mÃ­nimo
                 <input id="jobSalaryMinInput" type="number" placeholder="35000" />
               </label>
               <label>
-                Salario máximo
+                Salario mÃ¡ximo
                 <input id="jobSalaryMaxInput" type="number" placeholder="50000" />
               </label>
               <label>
                 Requisitos
-                <textarea id="jobSkillsInput" rows="6" placeholder="Escribe un requisito por renglón.&#10;Ej. Experiencia en ventas&#10;Manejo de Excel&#10;Disponibilidad de horario"></textarea>
+                <textarea id="jobSkillsInput" rows="6" placeholder="Escribe un requisito por renglÃ³n.&#10;Ej. Experiencia en ventas&#10;Manejo de Excel&#10;Disponibilidad de horario"></textarea>
               </label>
               <button class="primary-button" type="submit" id="companyJobSubmitButton">Publicar vacante real</button>
-                <button class="secondary-button subtle is-hidden" type="button" id="cancelJobEditButton">Cancelar edición</button>
+                <button class="secondary-button subtle is-hidden" type="button" id="cancelJobEditButton">Cancelar ediciÃ³n</button>
               </form>
             </div>
           </details>
           <section class="info-card">
             <h2>Vacantes activas</h2>
             <div class="mini-job-list" id="companyJobsList">
-              <p class="empty-list">Aún no hay vacantes publicadas para esta empresa.</p>
+              <p class="empty-list">AÃºn no hay vacantes publicadas para esta empresa.</p>
             </div>
           </section>
           <section class="info-card">
             <h2>Candidatos recibidos</h2>
             <div class="candidate-inbox" id="receivedCandidatesList">
-              <p class="empty-list">Aún no hay candidatos recibidos.</p>
+              <p class="empty-list">AÃºn no hay candidatos recibidos.</p>
             </div>
           </section>
           <section class="info-card promotion-card">
@@ -492,7 +492,7 @@
               <div class="promotion-summary">
                 <strong id="promotionActivePlan">Free</strong>
                 <small id="promotionActiveBenefits">Publicacion basica activa</small>
-                <button class="secondary-button subtle is-hidden" type="button" id="manageBillingButton">Administrar suscripción</button>
+                <button class="secondary-button subtle is-hidden" type="button" id="manageBillingButton">Administrar suscripciÃ³n</button>
               </div>
             </div>
             <div class="promotion-plans" id="promotionPlanCards">
@@ -543,13 +543,13 @@
           <header class="admin-heading">
             <div>
               <span>RedJob</span>
-              <h1>Panel de administración</h1>
-              <p>Moderación, seguridad y estado general de la plataforma.</p>
+              <h1>Panel de administraciÃ³n</h1>
+              <p>ModeraciÃ³n, seguridad y estado general de la plataforma.</p>
             </div>
             <button class="secondary-button subtle" type="button" id="adminRefreshButton">Actualizar datos</button>
           </header>
 
-          <section class="admin-stats" aria-label="Estadísticas globales">
+          <section class="admin-stats" aria-label="EstadÃ­sticas globales">
             <article>
               <span>Usuarios registrados</span>
               <strong id="adminUsersCount">0</strong>
@@ -580,9 +580,9 @@
             <div class="admin-section-content">
               <label class="admin-search">
                 <span>Buscar reporte</span>
-                <input id="adminReportsSearch" type="search" placeholder="Asunto, descripción o tipo de reporte" />
+                <input id="adminReportsSearch" type="search" placeholder="Asunto, descripciÃ³n o tipo de reporte" />
               </label>
-              <p class="admin-search-result is-hidden" id="adminReportsEmpty">No encontramos reportes con esa búsqueda.</p>
+              <p class="admin-search-result is-hidden" id="adminReportsEmpty">No encontramos reportes con esa bÃºsqueda.</p>
               <div class="admin-list" id="adminReportsList">
                 <p class="empty-list">No hay reportes pendientes.</p>
               </div>
@@ -602,7 +602,7 @@
                 <span>Buscar vacante</span>
                 <input id="adminJobsSearch" type="search" placeholder="Nombre de la vacante, empresa o estado" />
               </label>
-              <p class="admin-search-result is-hidden" id="adminJobsEmpty">No encontramos vacantes con esa búsqueda.</p>
+              <p class="admin-search-result is-hidden" id="adminJobsEmpty">No encontramos vacantes con esa bÃºsqueda.</p>
               <div class="admin-list" id="adminJobsList">
                 <p class="empty-list">No hay vacantes disponibles.</p>
               </div>
@@ -622,7 +622,7 @@
                 <span>Buscar usuario</span>
                 <input id="adminUsersSearch" type="search" placeholder="Correo, tipo de cuenta o estado" />
               </label>
-              <p class="admin-search-result is-hidden" id="adminUsersEmpty">No encontramos usuarios con esa búsqueda.</p>
+              <p class="admin-search-result is-hidden" id="adminUsersEmpty">No encontramos usuarios con esa bÃºsqueda.</p>
               <div class="admin-list" id="adminUsersList">
                 <p class="empty-list">No hay usuarios disponibles.</p>
               </div>
@@ -640,9 +640,9 @@
             <div class="admin-section-content">
               <label class="admin-search">
                 <span>Buscar empresa</span>
-                <input id="adminCompaniesSearch" type="search" placeholder="Nombre de empresa o verificación" />
+                <input id="adminCompaniesSearch" type="search" placeholder="Nombre de empresa o verificaciÃ³n" />
               </label>
-              <p class="admin-search-result is-hidden" id="adminCompaniesEmpty">No encontramos empresas con esa búsqueda.</p>
+              <p class="admin-search-result is-hidden" id="adminCompaniesEmpty">No encontramos empresas con esa bÃºsqueda.</p>
               <div class="admin-list" id="adminCompaniesList">
                 <p class="empty-list">No hay empresas disponibles.</p>
               </div>
@@ -656,33 +656,33 @@
           <div class="access-copy">
             <span>Acceso</span>
             <h1>Accede a RedJob</h1>
-            <p>Inicia sesión rápido o crea una cuenta nueva cuando quieras comenzar.</p>
+            <p>Inicia sesiÃ³n rÃ¡pido o crea una cuenta nueva cuando quieras comenzar.</p>
             <figure class="access-briefcase">
-              <img src="./assets/redjob-briefcase-access.png" alt="Maletín RedJob" />
+              <img src="./assets/redjob-briefcase-access.png" alt="MaletÃ­n RedJob" />
             </figure>
           </div>
           <div class="access-card access-accordion">
             <details class="auth-panel" id="signInPanel" open>
               <summary>
                 <span>
-                  <strong>Iniciar sesión</strong>
-                  <small>Entra con tu correo y contraseña.</small>
+                  <strong>Iniciar sesiÃ³n</strong>
+                  <small>Entra con tu correo y contraseÃ±a.</small>
                 </span>
                 <span class="auth-panel-chevron" aria-hidden="true"></span>
               </summary>
               <div class="auth-panel-content">
                 <label>
-                  Correo electrónico
+                  Correo electrÃ³nico
                   <input id="authEmail" type="email" placeholder="tu@correo.com" autocomplete="email" />
                 </label>
                 <label>
-                  Contraseña
-                  <input id="authPassword" type="password" placeholder="Tu contraseña" autocomplete="current-password" />
+                  ContraseÃ±a
+                  <input id="authPassword" type="password" placeholder="Tu contraseÃ±a" autocomplete="current-password" />
                 </label>
                 <div class="auth-actions">
-                  <button class="primary-button" type="button" id="signInButton">Iniciar sesión</button>
+                  <button class="primary-button" type="button" id="signInButton">Iniciar sesiÃ³n</button>
                 </div>
-                <button class="link-button" type="button" id="forgotPasswordButton">Recuperar contraseña</button>
+                <button class="link-button" type="button" id="forgotPasswordButton">Recuperar contraseÃ±a</button>
               </div>
             </details>
 
@@ -690,7 +690,7 @@
               <summary>
                 <span>
                   <strong>Crear cuenta</strong>
-                  <small>Elige tu tipo de cuenta y acepta los términos.</small>
+                  <small>Elige tu tipo de cuenta y acepta los tÃ©rminos.</small>
                 </span>
                 <span class="auth-panel-chevron" aria-hidden="true"></span>
               </summary>
@@ -700,12 +700,12 @@
               <button class="role-option" type="button" data-role="company">Empresa</button>
             </div>
             <label>
-              Correo electrónico
+              Correo electrÃ³nico
               <input id="signupEmail" type="email" placeholder="tu@correo.com" autocomplete="email" />
             </label>
             <label>
-              Contraseña
-              <input id="signupPassword" type="password" placeholder="Mínimo 8 caracteres" autocomplete="new-password" />
+              ContraseÃ±a
+              <input id="signupPassword" type="password" placeholder="MÃ­nimo 8 caracteres" autocomplete="new-password" />
             </label>
             <label id="accountNameLabel">
               Nombre completo
@@ -714,8 +714,8 @@
             <label class="legal-consent">
               <input id="legalConsent" type="checkbox" />
               <span>
-                He leído y acepto los
-                <button type="button" data-view-link="terminos">Términos y Condiciones</button>
+                He leÃ­do y acepto los
+                <button type="button" data-view-link="terminos">TÃ©rminos y Condiciones</button>
                 y el
                 <button type="button" data-view-link="privacidad">Aviso de Privacidad</button>
                 de RedJob.
@@ -724,8 +724,8 @@
             <button class="primary-button" type="button" id="simulateSignup" data-auth-create>Crear cuenta</button>
               </div>
             </details>
-            <button class="text-danger-button" type="button" id="signOutButton">Cerrar sesión</button>
-            <p id="signupMessage">Puedes iniciar sesión o crear una cuenta nueva.</p>
+            <button class="text-danger-button" type="button" id="signOutButton">Cerrar sesiÃ³n</button>
+            <p id="signupMessage">Puedes iniciar sesiÃ³n o crear una cuenta nueva.</p>
           </div>
           <aside class="auth-status-panel is-hidden" aria-hidden="true">
             <h2>Estado</h2>
@@ -734,8 +734,8 @@
               <strong>Configurable</strong>
             </div>
             <div>
-              <span>Sesión</span>
-              <strong id="sessionStatus">Sin sesión</strong>
+              <span>SesiÃ³n</span>
+              <strong id="sessionStatus">Sin sesiÃ³n</strong>
             </div>
             <div>
               <span>Rol seleccionado</span>
@@ -749,14 +749,14 @@
     <dialog class="application-dialog" id="applicationDialog">
       <form method="dialog" class="dialog-card">
         <button class="dialog-close" type="button" id="closeApplicationDialog" aria-label="Cerrar">x</button>
-        <span>Postulación</span>
+        <span>PostulaciÃ³n</span>
         <h2 id="applicationJobTitle">Postularme</h2>
         <p id="applicationJobMeta">Agrega una nota breve para el reclutador.</p>
         <label>
           Mensaje inicial
-          <textarea id="coverNote" rows="5" placeholder="Cuéntale al reclutador por qué te interesa esta vacante."></textarea>
+          <textarea id="coverNote" rows="5" placeholder="CuÃ©ntale al reclutador por quÃ© te interesa esta vacante."></textarea>
         </label>
-        <button class="primary-button" type="button" id="confirmApplication">Enviar postulación</button>
+        <button class="primary-button" type="button" id="confirmApplication">Enviar postulaciÃ³n</button>
       </form>
     </dialog>
 
@@ -768,19 +768,19 @@
           <span class="profile-photo" id="receivedCandidateAvatar">RJ</span>
           <div>
             <h2 id="receivedCandidateName">Candidato</h2>
-            <p id="receivedCandidateMeta">Información profesional</p>
+            <p id="receivedCandidateMeta">InformaciÃ³n profesional</p>
           </div>
         </div>
         <div class="candidate-profile-context">
-          <span>Postulación para</span>
+          <span>PostulaciÃ³n para</span>
           <strong id="receivedCandidateJob">Vacante</strong>
-          <small id="receivedCandidateApplicationStatus">Estado de postulación</small>
+          <small id="receivedCandidateApplicationStatus">Estado de postulaciÃ³n</small>
         </div>
         <section>
           <h3>Acerca del candidato</h3>
           <p id="receivedCandidateSummary">Sin resumen disponible.</p>
         </section>
-        <button class="primary-button" type="button" id="receivedCandidateResume">Ver currículum</button>
+        <button class="primary-button" type="button" id="receivedCandidateResume">Ver currÃ­culum</button>
       </article>
     </dialog>
 
@@ -797,77 +797,94 @@
             <option value="user">Cuenta de usuario</option>
             <option value="company">Empresa</option>
             <option value="message">Mensaje</option>
-            <option value="application">Postulación</option>
+            <option value="application">PostulaciÃ³n</option>
             <option value="other">Otro</option>
           </select>
         </label>
         <label>
           Asunto
-          <input id="reportSubject" type="text" maxlength="140" placeholder="Ej. Vacante que solicita depósitos" />
+          <input id="reportSubject" type="text" maxlength="140" placeholder="Ej. Vacante que solicita depÃ³sitos" />
         </label>
         <label>
-          Descripción
+          DescripciÃ³n
           <textarea id="reportDescription" rows="6" maxlength="3000" placeholder="Incluye nombres, enlaces o detalles que ayuden a revisar el caso."></textarea>
         </label>
         <button class="primary-button" type="submit" id="submitReportButton">Enviar reporte</button>
-        <a class="link-button report-email-link" href="mailto:redjobmx@gmail.com?subject=Reporte%20de%20seguridad%20en%20RedJob">También puedes reportar por correo</a>
+        <a class="link-button report-email-link" href="mailto:redjobmx@gmail.com?subject=Reporte%20de%20seguridad%20en%20RedJob">TambiÃ©n puedes reportar por correo</a>
       </form>
     </dialog>
 
-    <section class="legal-pages" aria-label="Información legal">
+    <dialog class="application-dialog admin-report-dialog" id="adminReportDialog">
+      <article class="dialog-card admin-report-detail">
+        <button class="dialog-close" type="button" id="closeAdminReportDialog" aria-label="Cerrar">x</button>
+        <span id="adminReportDialogCategory">Reporte</span>
+        <h2 id="adminReportDialogSubject">Reporte</h2>
+        <div class="admin-report-meta" id="adminReportDialogMeta"></div>
+        <section>
+          <h3>Lo que dice el reporte</h3>
+          <p id="adminReportDialogDescription">Sin descripciÃ³n.</p>
+        </section>
+        <section>
+          <h3>Nota administrativa</h3>
+          <p id="adminReportDialogNote">Sin nota administrativa.</p>
+        </section>
+      </article>
+    </dialog>
+
+    <section class="legal-pages" aria-label="InformaciÃ³n legal">
       <article class="view legal-view" id="privacidad">
         <section class="section-block legal-copy privacy-copy">
           <header class="legal-copy-heading">
             <span>Privacidad</span>
             <h1>Aviso de privacidad</h1>
-            <p>Última actualización: julio de 2026</p>
+            <p>Ãšltima actualizaciÃ³n: julio de 2026</p>
           </header>
 
-          <p>RedJob, accesible a través de <a href="https://www.redjob.com.mx" target="_blank" rel="noopener noreferrer">www.redjob.com.mx</a>, es una plataforma digital dedicada a conectar candidatos con empleadores y facilitar procesos de reclutamiento y selección de personal en México.</p>
+          <p>RedJob, accesible a travÃ©s de <a href="https://www.redjob.com.mx" target="_blank" rel="noopener noreferrer">www.redjob.com.mx</a>, es una plataforma digital dedicada a conectar candidatos con empleadores y facilitar procesos de reclutamiento y selecciÃ³n de personal en MÃ©xico.</p>
 
-          <p>La plataforma es operada por el titular de RedJob con domicilio en México. Para cualquier asunto relacionado con privacidad, protección de datos personales o el ejercicio de derechos ARCO, los usuarios pueden comunicarse al correo electrónico <a href="mailto:redjobmx@gmail.com">redjobmx@gmail.com</a>.</p>
+          <p>La plataforma es operada por el titular de RedJob con domicilio en MÃ©xico. Para cualquier asunto relacionado con privacidad, protecciÃ³n de datos personales o el ejercicio de derechos ARCO, los usuarios pueden comunicarse al correo electrÃ³nico <a href="mailto:redjobmx@gmail.com">redjobmx@gmail.com</a>.</p>
 
           <h2>Datos personales recabados</h2>
-          <p>RedJob podrá recopilar los siguientes datos de los candidatos:</p>
+          <p>RedJob podrÃ¡ recopilar los siguientes datos de los candidatos:</p>
           <ul>
             <li>Nombre completo.</li>
-            <li>Correo electrónico.</li>
-            <li>Número telefónico.</li>
+            <li>Correo electrÃ³nico.</li>
+            <li>NÃºmero telefÃ³nico.</li>
             <li>Ciudad y estado de residencia.</li>
-            <li>Currículum Vitae (CV).</li>
+            <li>CurrÃ­culum Vitae (CV).</li>
             <li>Experiencia laboral.</li>
             <li>Escolaridad.</li>
-            <li>Fotografía de perfil.</li>
+            <li>FotografÃ­a de perfil.</li>
             <li>Redes sociales profesionales.</li>
-            <li>Información adicional proporcionada voluntariamente por el usuario.</li>
+            <li>InformaciÃ³n adicional proporcionada voluntariamente por el usuario.</li>
           </ul>
 
-          <p>Asimismo, RedJob podrá recopilar los siguientes datos de empresas y reclutadores:</p>
+          <p>Asimismo, RedJob podrÃ¡ recopilar los siguientes datos de empresas y reclutadores:</p>
           <ul>
             <li>Nombre de la empresa.</li>
             <li>Nombre del representante o reclutador.</li>
-            <li>Correo electrónico.</li>
-            <li>Número telefónico.</li>
-            <li>Datos fiscales o de facturación, cuando correspondan.</li>
+            <li>Correo electrÃ³nico.</li>
+            <li>NÃºmero telefÃ³nico.</li>
+            <li>Datos fiscales o de facturaciÃ³n, cuando correspondan.</li>
           </ul>
 
-          <p>Cuando un usuario contrate alguno de los planes disponibles dentro de la plataforma, RedJob también podrá recopilar información relacionada con la suscripción, incluyendo:</p>
+          <p>Cuando un usuario contrate alguno de los planes disponibles dentro de la plataforma, RedJob tambiÃ©n podrÃ¡ recopilar informaciÃ³n relacionada con la suscripciÃ³n, incluyendo:</p>
           <ul>
             <li>Plan contratado.</li>
-            <li>Estado de la suscripción.</li>
-            <li>Fecha de contratación.</li>
-            <li>Fecha de renovación o vencimiento.</li>
+            <li>Estado de la suscripciÃ³n.</li>
+            <li>Fecha de contrataciÃ³n.</li>
+            <li>Fecha de renovaciÃ³n o vencimiento.</li>
             <li>Historial de pagos.</li>
             <li>Identificadores de transacciones generados por el proveedor de pagos.</li>
           </ul>
-          <p>RedJob no almacena información completa de tarjetas bancarias, números de tarjeta, códigos de seguridad (CVV) ni credenciales de pago.</p>
+          <p>RedJob no almacena informaciÃ³n completa de tarjetas bancarias, nÃºmeros de tarjeta, cÃ³digos de seguridad (CVV) ni credenciales de pago.</p>
 
           <h2>Finalidades del tratamiento de datos</h2>
-          <p>Los datos personales serán utilizados para:</p>
+          <p>Los datos personales serÃ¡n utilizados para:</p>
           <ul>
             <li>Crear y administrar cuentas de usuario.</li>
-            <li>Permitir la publicación y administración de vacantes.</li>
-            <li>Facilitar la postulación de candidatos.</li>
+            <li>Permitir la publicaciÃ³n y administraciÃ³n de vacantes.</li>
+            <li>Facilitar la postulaciÃ³n de candidatos.</li>
             <li>Conectar candidatos con empleadores.</li>
             <li>Verificar la autenticidad de perfiles y empresas.</li>
             <li>Administrar suscripciones y beneficios de los planes de pago.</li>
@@ -878,104 +895,104 @@
             <li>Cumplir obligaciones legales y fiscales aplicables.</li>
           </ul>
 
-          <h2>Información relacionada con pagos</h2>
-          <p>Cuando un usuario contrate alguno de los planes de pago disponibles en RedJob, la plataforma podrá procesar información relacionada con la contratación y administración de la suscripción.</p>
-          <p>Los pagos son procesados por proveedores especializados en servicios de pago, quienes son responsables del tratamiento de la información financiera necesaria para completar la transacción.</p>
-          <p>RedJob únicamente recibe la información necesaria para:</p>
+          <h2>InformaciÃ³n relacionada con pagos</h2>
+          <p>Cuando un usuario contrate alguno de los planes de pago disponibles en RedJob, la plataforma podrÃ¡ procesar informaciÃ³n relacionada con la contrataciÃ³n y administraciÃ³n de la suscripciÃ³n.</p>
+          <p>Los pagos son procesados por proveedores especializados en servicios de pago, quienes son responsables del tratamiento de la informaciÃ³n financiera necesaria para completar la transacciÃ³n.</p>
+          <p>RedJob Ãºnicamente recibe la informaciÃ³n necesaria para:</p>
           <ul>
             <li>Confirmar que el pago fue realizado.</li>
-            <li>Activar o renovar la suscripción correspondiente.</li>
+            <li>Activar o renovar la suscripciÃ³n correspondiente.</li>
             <li>Registrar el historial de pagos.</li>
-            <li>Atender aclaraciones relacionadas con la contratación.</li>
+            <li>Atender aclaraciones relacionadas con la contrataciÃ³n.</li>
             <li>Cumplir obligaciones legales y fiscales.</li>
           </ul>
 
-          <h2>Compartición de información</h2>
-          <p>Los datos proporcionados por los candidatos podrán ser compartidos con las empresas a las que decidan postularse mediante la plataforma.</p>
-          <p>RedJob no vende, alquila ni comercializa información personal a terceros.</p>
-          <p>Sin embargo, RedJob podrá compartir información estrictamente necesaria con proveedores tecnológicos que participan en la operación de la plataforma, incluyendo servicios de:</p>
+          <h2>ComparticiÃ³n de informaciÃ³n</h2>
+          <p>Los datos proporcionados por los candidatos podrÃ¡n ser compartidos con las empresas a las que decidan postularse mediante la plataforma.</p>
+          <p>RedJob no vende, alquila ni comercializa informaciÃ³n personal a terceros.</p>
+          <p>Sin embargo, RedJob podrÃ¡ compartir informaciÃ³n estrictamente necesaria con proveedores tecnolÃ³gicos que participan en la operaciÃ³n de la plataforma, incluyendo servicios de:</p>
           <ul>
             <li>Procesamiento de pagos.</li>
             <li>Alojamiento de servidores.</li>
             <li>Bases de datos.</li>
-            <li>Autenticación de usuarios.</li>
-            <li>Envío de correos electrónicos.</li>
-            <li>Analítica y monitoreo del servicio.</li>
+            <li>AutenticaciÃ³n de usuarios.</li>
+            <li>EnvÃ­o de correos electrÃ³nicos.</li>
+            <li>AnalÃ­tica y monitoreo del servicio.</li>
           </ul>
-          <p>Estos proveedores únicamente podrán utilizar la información para prestar los servicios contratados por RedJob y conforme a sus propias políticas de privacidad.</p>
+          <p>Estos proveedores Ãºnicamente podrÃ¡n utilizar la informaciÃ³n para prestar los servicios contratados por RedJob y conforme a sus propias polÃ­ticas de privacidad.</p>
 
-          <h2>Seguridad de la información</h2>
-          <p>RedJob implementa medidas técnicas, administrativas y organizativas razonables para proteger la información personal contra pérdida, uso indebido, acceso no autorizado, alteración o divulgación.</p>
-          <p>La información relacionada con pagos es procesada mediante conexiones seguras y mecanismos de protección implementados por el proveedor de pagos correspondiente.</p>
-          <p>No obstante, ningún sistema de transmisión o almacenamiento electrónico puede garantizar una seguridad absoluta.</p>
+          <h2>Seguridad de la informaciÃ³n</h2>
+          <p>RedJob implementa medidas tÃ©cnicas, administrativas y organizativas razonables para proteger la informaciÃ³n personal contra pÃ©rdida, uso indebido, acceso no autorizado, alteraciÃ³n o divulgaciÃ³n.</p>
+          <p>La informaciÃ³n relacionada con pagos es procesada mediante conexiones seguras y mecanismos de protecciÃ³n implementados por el proveedor de pagos correspondiente.</p>
+          <p>No obstante, ningÃºn sistema de transmisiÃ³n o almacenamiento electrÃ³nico puede garantizar una seguridad absoluta.</p>
 
-          <h2>Conservación de la información</h2>
-          <p>Los datos personales serán conservados mientras exista una relación entre el usuario y RedJob o durante el tiempo necesario para cumplir obligaciones legales, fiscales, contractuales o resolver controversias.</p>
-          <p>Una vez concluido dicho periodo, los datos podrán eliminarse, anonimizarse o conservarse únicamente cuando la legislación aplicable así lo requiera.</p>
+          <h2>ConservaciÃ³n de la informaciÃ³n</h2>
+          <p>Los datos personales serÃ¡n conservados mientras exista una relaciÃ³n entre el usuario y RedJob o durante el tiempo necesario para cumplir obligaciones legales, fiscales, contractuales o resolver controversias.</p>
+          <p>Una vez concluido dicho periodo, los datos podrÃ¡n eliminarse, anonimizarse o conservarse Ãºnicamente cuando la legislaciÃ³n aplicable asÃ­ lo requiera.</p>
 
           <h2>Derechos ARCO</h2>
-          <p>Los usuarios podrán ejercer sus derechos de Acceso, Rectificación, Cancelación y Oposición (ARCO) enviando una solicitud al correo:</p>
+          <p>Los usuarios podrÃ¡n ejercer sus derechos de Acceso, RectificaciÃ³n, CancelaciÃ³n y OposiciÃ³n (ARCO) enviando una solicitud al correo:</p>
           <p><a href="mailto:redjobmx@gmail.com">redjobmx@gmail.com</a></p>
-          <p>La solicitud deberá incluir:</p>
+          <p>La solicitud deberÃ¡ incluir:</p>
           <ul>
             <li>Nombre completo.</li>
-            <li>Correo electrónico asociado a la cuenta.</li>
-            <li>Descripción clara de la solicitud.</li>
-            <li>Documentación que permita acreditar la identidad del solicitante cuando sea necesario.</li>
+            <li>Correo electrÃ³nico asociado a la cuenta.</li>
+            <li>DescripciÃ³n clara de la solicitud.</li>
+            <li>DocumentaciÃ³n que permita acreditar la identidad del solicitante cuando sea necesario.</li>
           </ul>
 
-          <h2>Cookies y tecnologías similares</h2>
-          <p>RedJob podrá utilizar cookies y tecnologías similares para:</p>
+          <h2>Cookies y tecnologÃ­as similares</h2>
+          <p>RedJob podrÃ¡ utilizar cookies y tecnologÃ­as similares para:</p>
           <ul>
             <li>Recordar preferencias del usuario.</li>
-            <li>Mantener la sesión iniciada.</li>
-            <li>Mejorar la experiencia de navegación.</li>
+            <li>Mantener la sesiÃ³n iniciada.</li>
+            <li>Mejorar la experiencia de navegaciÃ³n.</li>
             <li>Analizar el uso de la plataforma.</li>
             <li>Optimizar el rendimiento del servicio.</li>
           </ul>
-          <p>El usuario podrá configurar su navegador para rechazar el uso de cookies; sin embargo, algunas funciones de la plataforma podrían verse limitadas.</p>
+          <p>El usuario podrÃ¡ configurar su navegador para rechazar el uso de cookies; sin embargo, algunas funciones de la plataforma podrÃ­an verse limitadas.</p>
 
           <h2>Proveedores de servicios</h2>
-          <p>Para el funcionamiento de la plataforma, RedJob podrá utilizar proveedores externos que prestan servicios relacionados con:</p>
+          <p>Para el funcionamiento de la plataforma, RedJob podrÃ¡ utilizar proveedores externos que prestan servicios relacionados con:</p>
           <ul>
             <li>Hospedaje y servidores.</li>
             <li>Base de datos.</li>
-            <li>Autenticación.</li>
-            <li>Envío de correos electrónicos.</li>
+            <li>AutenticaciÃ³n.</li>
+            <li>EnvÃ­o de correos electrÃ³nicos.</li>
             <li>Procesamiento de pagos.</li>
-            <li>Analítica y monitoreo.</li>
+            <li>AnalÃ­tica y monitoreo.</li>
           </ul>
-          <p>Cada proveedor tratará únicamente la información necesaria para prestar sus servicios conforme a la legislación aplicable y sus propias políticas de privacidad.</p>
+          <p>Cada proveedor tratarÃ¡ Ãºnicamente la informaciÃ³n necesaria para prestar sus servicios conforme a la legislaciÃ³n aplicable y sus propias polÃ­ticas de privacidad.</p>
 
           <h2>Modificaciones al aviso</h2>
-          <p>RedJob podrá actualizar el presente Aviso de Privacidad en cualquier momento para reflejar cambios en la plataforma, en la legislación aplicable o en los servicios ofrecidos.</p>
-          <p>Las modificaciones serán publicadas en <a href="https://www.redjob.com.mx" target="_blank" rel="noopener noreferrer">www.redjob.com.mx</a> y entrarán en vigor desde la fecha de su publicación.</p>
+          <p>RedJob podrÃ¡ actualizar el presente Aviso de Privacidad en cualquier momento para reflejar cambios en la plataforma, en la legislaciÃ³n aplicable o en los servicios ofrecidos.</p>
+          <p>Las modificaciones serÃ¡n publicadas en <a href="https://www.redjob.com.mx" target="_blank" rel="noopener noreferrer">www.redjob.com.mx</a> y entrarÃ¡n en vigor desde la fecha de su publicaciÃ³n.</p>
 
-          <h2>Aceptación</h2>
-          <p>Al registrarse, utilizar la plataforma, contratar cualquiera de los planes disponibles o proporcionar información mediante RedJob, el usuario declara haber leído, comprendido y aceptado el presente Aviso de Privacidad.</p>
+          <h2>AceptaciÃ³n</h2>
+          <p>Al registrarse, utilizar la plataforma, contratar cualquiera de los planes disponibles o proporcionar informaciÃ³n mediante RedJob, el usuario declara haber leÃ­do, comprendido y aceptado el presente Aviso de Privacidad.</p>
         </section>
       </article>
 
       <article class="view legal-view" id="terminos">
         <section class="section-block legal-copy terms-copy">
           <header class="legal-copy-heading">
-            <span>Términos</span>
-            <h1>Términos y condiciones de uso</h1>
-            <p>Última actualización: julio de 2026</p>
+            <span>TÃ©rminos</span>
+            <h1>TÃ©rminos y condiciones de uso</h1>
+            <p>Ãšltima actualizaciÃ³n: julio de 2026</p>
           </header>
 
           <p>Bienvenido a RedJob ("la Plataforma"), disponible en <a href="https://www.redjob.com.mx" target="_blank" rel="noopener noreferrer">www.redjob.com.mx</a>.</p>
-          <p>Los presentes Términos y Condiciones regulan el acceso y uso de la Plataforma. Al registrarse, acceder o utilizar RedJob, el usuario declara haber leído, comprendido y aceptado estos términos. Si no está de acuerdo con ellos, deberá abstenerse de utilizar la Plataforma.</p>
+          <p>Los presentes TÃ©rminos y Condiciones regulan el acceso y uso de la Plataforma. Al registrarse, acceder o utilizar RedJob, el usuario declara haber leÃ­do, comprendido y aceptado estos tÃ©rminos. Si no estÃ¡ de acuerdo con ellos, deberÃ¡ abstenerse de utilizar la Plataforma.</p>
 
           <h2>1. Objeto</h2>
-          <p>RedJob es una plataforma digital que permite conectar candidatos, empresas y reclutadores mediante la publicación de vacantes, búsqueda de talento y postulación a oportunidades laborales.</p>
-          <p>RedJob actúa únicamente como intermediario tecnológico y no forma parte de la relación laboral que pudiera surgir entre candidatos y empleadores.</p>
+          <p>RedJob es una plataforma digital que permite conectar candidatos, empresas y reclutadores mediante la publicaciÃ³n de vacantes, bÃºsqueda de talento y postulaciÃ³n a oportunidades laborales.</p>
+          <p>RedJob actÃºa Ãºnicamente como intermediario tecnolÃ³gico y no forma parte de la relaciÃ³n laboral que pudiera surgir entre candidatos y empleadores.</p>
 
           <h2>2. Registro de usuarios</h2>
-          <p>Para utilizar determinadas funciones será necesario crear una cuenta.</p>
+          <p>Para utilizar determinadas funciones serÃ¡ necesario crear una cuenta.</p>
           <p>El usuario se compromete a:</p>
           <ul>
-            <li>Proporcionar información veraz y actualizada.</li>
+            <li>Proporcionar informaciÃ³n veraz y actualizada.</li>
             <li>Mantener la confidencialidad de sus credenciales de acceso.</li>
             <li>No compartir su cuenta con terceros.</li>
             <li>Actualizar sus datos cuando sea necesario.</li>
@@ -983,109 +1000,109 @@
           <p>El usuario es responsable de todas las actividades realizadas desde su cuenta.</p>
 
           <h2>3. Uso permitido</h2>
-          <p>El usuario acepta utilizar la Plataforma únicamente para fines legales y relacionados con oportunidades de empleo.</p>
+          <p>El usuario acepta utilizar la Plataforma Ãºnicamente para fines legales y relacionados con oportunidades de empleo.</p>
           <p>Queda prohibido:</p>
           <ul>
-            <li>Publicar información falsa o engañosa.</li>
+            <li>Publicar informaciÃ³n falsa o engaÃ±osa.</li>
             <li>Suplantar la identidad de otra persona o empresa.</li>
             <li>Publicar vacantes inexistentes o fraudulentas.</li>
             <li>Compartir contenido ofensivo, ilegal o discriminatorio.</li>
             <li>Utilizar herramientas automatizadas que afecten el funcionamiento de la Plataforma.</li>
-            <li>Intentar acceder sin autorización a sistemas o información de otros usuarios.</li>
+            <li>Intentar acceder sin autorizaciÃ³n a sistemas o informaciÃ³n de otros usuarios.</li>
           </ul>
-          <p>RedJob podrá suspender o cancelar cuentas que incumplan estos términos.</p>
+          <p>RedJob podrÃ¡ suspender o cancelar cuentas que incumplan estos tÃ©rminos.</p>
 
-          <h2>4. Publicación de vacantes</h2>
+          <h2>4. PublicaciÃ³n de vacantes</h2>
           <p>Las empresas son responsables del contenido publicado y garantizan que:</p>
           <ul>
-            <li>La información es veraz.</li>
-            <li>Cuentan con autorización para publicar las vacantes.</li>
-            <li>Las condiciones laborales cumplen con la legislación aplicable.</li>
+            <li>La informaciÃ³n es veraz.</li>
+            <li>Cuentan con autorizaciÃ³n para publicar las vacantes.</li>
+            <li>Las condiciones laborales cumplen con la legislaciÃ³n aplicable.</li>
           </ul>
-          <p>RedJob podrá eliminar publicaciones que considere falsas, engañosas, fraudulentas o que incumplan estos Términos.</p>
+          <p>RedJob podrÃ¡ eliminar publicaciones que considere falsas, engaÃ±osas, fraudulentas o que incumplan estos TÃ©rminos.</p>
 
-          <h2>5. Postulación de candidatos</h2>
-          <p>Los candidatos deciden libremente a qué vacantes desean postularse.</p>
-          <p>Al postularse, autorizan que la información necesaria de su perfil sea compartida con la empresa correspondiente.</p>
-          <p>RedJob no garantiza que una empresa contacte al candidato ni que exista una contratación.</p>
+          <h2>5. PostulaciÃ³n de candidatos</h2>
+          <p>Los candidatos deciden libremente a quÃ© vacantes desean postularse.</p>
+          <p>Al postularse, autorizan que la informaciÃ³n necesaria de su perfil sea compartida con la empresa correspondiente.</p>
+          <p>RedJob no garantiza que una empresa contacte al candidato ni que exista una contrataciÃ³n.</p>
 
-          <h2>6. Planes de suscripción</h2>
-          <p>RedJob ofrece planes de suscripción que permiten acceder a funciones adicionales dentro de la Plataforma.</p>
+          <h2>6. Planes de suscripciÃ³n</h2>
+          <p>RedJob ofrece planes de suscripciÃ³n que permiten acceder a funciones adicionales dentro de la Plataforma.</p>
           <p>Actualmente los planes disponibles son:</p>
           <ul>
             <li>Plan Pro: $499 MXN por mes.</li>
             <li>Plan Premium: $999 MXN por mes.</li>
           </ul>
-          <p>Las funciones incluidas en cada plan serán las publicadas dentro de la Plataforma y podrán actualizarse o modificarse para mejorar el servicio.</p>
+          <p>Las funciones incluidas en cada plan serÃ¡n las publicadas dentro de la Plataforma y podrÃ¡n actualizarse o modificarse para mejorar el servicio.</p>
 
           <h2>7. Pagos</h2>
           <p>Los pagos de las suscripciones son procesados de forma segura mediante Stripe.</p>
-          <p>RedJob no almacena información completa de tarjetas bancarias ni credenciales de pago.</p>
-          <p>Al contratar un plan, el usuario autoriza el cobro correspondiente conforme al precio vigente al momento de la contratación.</p>
+          <p>RedJob no almacena informaciÃ³n completa de tarjetas bancarias ni credenciales de pago.</p>
+          <p>Al contratar un plan, el usuario autoriza el cobro correspondiente conforme al precio vigente al momento de la contrataciÃ³n.</p>
 
-          <h2>8. Renovación de suscripciones</h2>
-          <p>Las suscripciones se renovarán automáticamente al finalizar cada periodo de facturación utilizando el método de pago registrado en Stripe, salvo que el usuario cancele la renovación antes del siguiente ciclo de cobro.</p>
-          <p>La fecha de renovación dependerá de la fecha en que se contrató la suscripción.</p>
+          <h2>8. RenovaciÃ³n de suscripciones</h2>
+          <p>Las suscripciones se renovarÃ¡n automÃ¡ticamente al finalizar cada periodo de facturaciÃ³n utilizando el mÃ©todo de pago registrado en Stripe, salvo que el usuario cancele la renovaciÃ³n antes del siguiente ciclo de cobro.</p>
+          <p>La fecha de renovaciÃ³n dependerÃ¡ de la fecha en que se contratÃ³ la suscripciÃ³n.</p>
 
-          <h2>9. Cancelación</h2>
-          <p>El usuario podrá cancelar la renovación automática de su suscripción en cualquier momento.</p>
-          <p>La cancelación impedirá futuros cobros, pero el usuario conservará el acceso a los beneficios del plan hasta la conclusión del periodo ya pagado.</p>
+          <h2>9. CancelaciÃ³n</h2>
+          <p>El usuario podrÃ¡ cancelar la renovaciÃ³n automÃ¡tica de su suscripciÃ³n en cualquier momento.</p>
+          <p>La cancelaciÃ³n impedirÃ¡ futuros cobros, pero el usuario conservarÃ¡ el acceso a los beneficios del plan hasta la conclusiÃ³n del periodo ya pagado.</p>
 
           <h2>10. Reembolsos</h2>
-          <p>Salvo que la legislación aplicable disponga lo contrario, los pagos realizados por suscripciones no son reembolsables una vez activado el servicio.</p>
-          <p>Si existiera un error de cobro atribuible a RedJob o al procesamiento del pago, el usuario podrá contactar al soporte para que su caso sea revisado.</p>
+          <p>Salvo que la legislaciÃ³n aplicable disponga lo contrario, los pagos realizados por suscripciones no son reembolsables una vez activado el servicio.</p>
+          <p>Si existiera un error de cobro atribuible a RedJob o al procesamiento del pago, el usuario podrÃ¡ contactar al soporte para que su caso sea revisado.</p>
 
           <h2>11. Cambios de precios</h2>
-          <p>RedJob podrá modificar los precios de sus planes de suscripción.</p>
-          <p>Cuando corresponda, dichos cambios serán informados antes de que entren en vigor y no afectarán los periodos ya pagados.</p>
+          <p>RedJob podrÃ¡ modificar los precios de sus planes de suscripciÃ³n.</p>
+          <p>Cuando corresponda, dichos cambios serÃ¡n informados antes de que entren en vigor y no afectarÃ¡n los periodos ya pagados.</p>
 
           <h2>12. Disponibilidad del servicio</h2>
           <p>RedJob procura mantener la Plataforma disponible de forma continua.</p>
-          <p>No obstante, podrán existir interrupciones por mantenimiento, actualizaciones, fallas técnicas, problemas de conectividad o causas ajenas al control de RedJob.</p>
+          <p>No obstante, podrÃ¡n existir interrupciones por mantenimiento, actualizaciones, fallas tÃ©cnicas, problemas de conectividad o causas ajenas al control de RedJob.</p>
           <p>RedJob no garantiza disponibilidad ininterrumpida del servicio.</p>
 
           <h2>13. Propiedad intelectual</h2>
-          <p>Todo el contenido de RedJob, incluyendo su nombre, logotipos, diseño, software, código fuente, bases de datos, imágenes, textos y demás elementos, es propiedad de RedJob o de sus respectivos titulares y se encuentra protegido por la legislación aplicable.</p>
-          <p>Queda prohibida su reproducción, distribución o utilización sin autorización previa.</p>
+          <p>Todo el contenido de RedJob, incluyendo su nombre, logotipos, diseÃ±o, software, cÃ³digo fuente, bases de datos, imÃ¡genes, textos y demÃ¡s elementos, es propiedad de RedJob o de sus respectivos titulares y se encuentra protegido por la legislaciÃ³n aplicable.</p>
+          <p>Queda prohibida su reproducciÃ³n, distribuciÃ³n o utilizaciÃ³n sin autorizaciÃ³n previa.</p>
 
           <h2>14. Responsabilidad</h2>
-          <p>RedJob proporciona únicamente la infraestructura tecnológica para facilitar el contacto entre candidatos y empleadores.</p>
+          <p>RedJob proporciona Ãºnicamente la infraestructura tecnolÃ³gica para facilitar el contacto entre candidatos y empleadores.</p>
           <p>RedJob no garantiza:</p>
           <ul>
-            <li>La contratación de candidatos.</li>
+            <li>La contrataciÃ³n de candidatos.</li>
             <li>Que una vacante permanezca disponible.</li>
-            <li>La veracidad absoluta de la información publicada por los usuarios.</li>
-            <li>El desempeño profesional de los candidatos.</li>
+            <li>La veracidad absoluta de la informaciÃ³n publicada por los usuarios.</li>
+            <li>El desempeÃ±o profesional de los candidatos.</li>
             <li>La solvencia, legalidad o cumplimiento de las empresas registradas.</li>
           </ul>
-          <p>Las decisiones de contratación corresponden exclusivamente a las partes involucradas.</p>
+          <p>Las decisiones de contrataciÃ³n corresponden exclusivamente a las partes involucradas.</p>
 
-          <h2>15. Suspensión y cancelación de cuentas</h2>
-          <p>RedJob podrá suspender o cancelar cuentas cuando detecte:</p>
+          <h2>15. SuspensiÃ³n y cancelaciÃ³n de cuentas</h2>
+          <p>RedJob podrÃ¡ suspender o cancelar cuentas cuando detecte:</p>
           <ul>
-            <li>Información falsa.</li>
+            <li>InformaciÃ³n falsa.</li>
             <li>Actividad fraudulenta.</li>
-            <li>Incumplimiento de estos Términos.</li>
+            <li>Incumplimiento de estos TÃ©rminos.</li>
             <li>Uso indebido de la Plataforma.</li>
             <li>Actividades que afecten la seguridad o funcionamiento del servicio.</li>
           </ul>
-          <p>En caso de suspensión o cancelación por incumplimiento, RedJob podrá cancelar los beneficios asociados a la cuenta sin obligación de realizar reembolsos cuando corresponda conforme a estos Términos y a la legislación aplicable.</p>
+          <p>En caso de suspensiÃ³n o cancelaciÃ³n por incumplimiento, RedJob podrÃ¡ cancelar los beneficios asociados a la cuenta sin obligaciÃ³n de realizar reembolsos cuando corresponda conforme a estos TÃ©rminos y a la legislaciÃ³n aplicable.</p>
 
-          <h2>16. Protección de datos personales</h2>
+          <h2>16. ProtecciÃ³n de datos personales</h2>
           <p>El tratamiento de los datos personales se realiza conforme al Aviso de Privacidad de RedJob, disponible en la Plataforma.</p>
 
           <h2>17. Modificaciones</h2>
-          <p>RedJob podrá modificar estos Términos y Condiciones en cualquier momento para adaptarlos a cambios legales, técnicos o de funcionamiento de la Plataforma.</p>
-          <p>Las modificaciones serán publicadas en <a href="https://www.redjob.com.mx" target="_blank" rel="noopener noreferrer">www.redjob.com.mx</a> e indicarán la fecha de su última actualización.</p>
-          <p>El uso continuo de la Plataforma después de la publicación de las modificaciones implicará la aceptación de los nuevos Términos.</p>
+          <p>RedJob podrÃ¡ modificar estos TÃ©rminos y Condiciones en cualquier momento para adaptarlos a cambios legales, tÃ©cnicos o de funcionamiento de la Plataforma.</p>
+          <p>Las modificaciones serÃ¡n publicadas en <a href="https://www.redjob.com.mx" target="_blank" rel="noopener noreferrer">www.redjob.com.mx</a> e indicarÃ¡n la fecha de su Ãºltima actualizaciÃ³n.</p>
+          <p>El uso continuo de la Plataforma despuÃ©s de la publicaciÃ³n de las modificaciones implicarÃ¡ la aceptaciÃ³n de los nuevos TÃ©rminos.</p>
 
-          <h2>18. Legislación aplicable</h2>
-          <p>Estos Términos y Condiciones se regirán por las leyes de los Estados Unidos Mexicanos.</p>
-          <p>Cualquier controversia relacionada con la Plataforma será resuelta por los tribunales competentes conforme a la legislación mexicana, salvo disposición legal en contrario.</p>
+          <h2>18. LegislaciÃ³n aplicable</h2>
+          <p>Estos TÃ©rminos y Condiciones se regirÃ¡n por las leyes de los Estados Unidos Mexicanos.</p>
+          <p>Cualquier controversia relacionada con la Plataforma serÃ¡ resuelta por los tribunales competentes conforme a la legislaciÃ³n mexicana, salvo disposiciÃ³n legal en contrario.</p>
 
           <h2>19. Contacto</h2>
-          <p>Para cualquier duda relacionada con estos Términos y Condiciones o con el funcionamiento de la Plataforma, el usuario podrá comunicarse a:</p>
-          <p>Correo electrónico: <a href="mailto:redjobmx@gmail.com">redjobmx@gmail.com</a></p>
+          <p>Para cualquier duda relacionada con estos TÃ©rminos y Condiciones o con el funcionamiento de la Plataforma, el usuario podrÃ¡ comunicarse a:</p>
+          <p>Correo electrÃ³nico: <a href="mailto:redjobmx@gmail.com">redjobmx@gmail.com</a></p>
           <p>Sitio web: <a href="https://www.redjob.com.mx" target="_blank" rel="noopener noreferrer">www.redjob.com.mx</a></p>
         </section>
       </article>
@@ -1099,14 +1116,14 @@
         <section class="section-block contact-panel">
           <article class="contact-option">
             <span>Contacto general</span>
-            <h2>Escríbenos</h2>
-            <p>Para soporte, dudas sobre tu cuenta, privacidad o información para empresas.</p>
+            <h2>EscrÃ­benos</h2>
+            <p>Para soporte, dudas sobre tu cuenta, privacidad o informaciÃ³n para empresas.</p>
             <a class="primary-button" href="mailto:redjobmx@gmail.com">redjobmx@gmail.com</a>
           </article>
           <article class="contact-option report-option">
             <span>Reportes y seguridad</span>
-            <h2>¿Viste algo sospechoso?</h2>
-            <p>Reporta una vacante, postulación, mensaje o cuenta que parezca falsa, fraudulenta, ofensiva o insegura.</p>
+            <h2>Â¿Viste algo sospechoso?</h2>
+            <p>Reporta una vacante, postulaciÃ³n, mensaje o cuenta que parezca falsa, fraudulenta, ofensiva o insegura.</p>
             <button class="secondary-button" type="button" id="openReportDialog">Enviar un reporte</button>
           </article>
         </section>
@@ -1115,14 +1132,15 @@
 
     <footer class="site-footer">
       <button type="button" data-view-link="privacidad">Privacidad</button>
-      <button type="button" data-view-link="terminos">Términos</button>
+      <button type="button" data-view-link="terminos">TÃ©rminos</button>
       <button type="button" data-view-link="contacto">Contacto</button>
       <button class="install-app-button is-hidden" type="button" id="installAppButton">Instalar RedJob</button>
     </footer>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-    <script src="./config.js?v=20260729i"></script>
-    <script src="./app.js?v=20260729i"></script>
+    <script src="./config.js?v=20260801d"></script>
+    <script src="./app.js?v=20260801d"></script>
+    <script src="./admin-report-viewer.js?v=20260801d"></script>
   </body>
 </html>

@@ -1,4 +1,4 @@
-let jobs = [];
+﻿let jobs = [];
 
 const jobsList = document.querySelector("#jobsList");
 const hiringCompaniesList = document.querySelector("#hiringCompaniesList");
@@ -165,12 +165,19 @@ const reportSubject = document.querySelector("#reportSubject");
 const reportDescription = document.querySelector("#reportDescription");
 const submitReportButton = document.querySelector("#submitReportButton");
 const openReportDialogButton = document.querySelector("#openReportDialog");
+const adminReportDialog = document.querySelector("#adminReportDialog");
+const adminReportDialogCategory = document.querySelector("#adminReportDialogCategory");
+const adminReportDialogSubject = document.querySelector("#adminReportDialogSubject");
+const adminReportDialogMeta = document.querySelector("#adminReportDialogMeta");
+const adminReportDialogDescription = document.querySelector("#adminReportDialogDescription");
+const adminReportDialogNote = document.querySelector("#adminReportDialogNote");
 const installAppButton = document.querySelector("#installAppButton");
 
 const savedJobs = new Set();
 const applications = [];
 const companyRatingSummary = new Map();
 const ownCompanyRatings = new Map();
+const adminReportsById = new Map();
 let activeApplicationJob = null;
 let toastTimer = null;
 let deferredInstallPrompt = null;
@@ -275,38 +282,38 @@ const mexicoStates = [
 ];
 
 const mexicoCitiesByState = {
-  Aguascalientes: ["Aguascalientes", "Calvillo", "Jesús María", "Pabellón de Arteaga", "Rincón de Romos"],
-  "Baja California": ["Tijuana", "Mexicali", "Ensenada", "Tecate", "Rosarito", "San Quintín"],
-  "Baja California Sur": ["La Paz", "Cabo San Lucas", "San José del Cabo", "Ciudad Constitución", "Loreto"],
-  Campeche: ["Campeche", "Ciudad del Carmen", "Champotón", "Escárcega", "Calkiní"],
-  Chiapas: ["Tuxtla Gutiérrez", "Tapachula", "San Cristóbal de las Casas", "Comitán", "Palenque", "Tonalá"],
-  Chihuahua: ["Chihuahua", "Ciudad Juárez", "Cuauhtémoc", "Delicias", "Hidalgo del Parral", "Nuevo Casas Grandes"],
-  "Ciudad de Mexico": ["Álvaro Obregón", "Azcapotzalco", "Benito Juárez", "Coyoacán", "Cuajimalpa", "Cuauhtémoc", "Gustavo A. Madero", "Iztacalco", "Iztapalapa", "Miguel Hidalgo", "Tlalpan", "Xochimilco"],
-  Coahuila: ["Saltillo", "Torreón", "Monclova", "Piedras Negras", "Acuña", "Sabinas"],
-  Colima: ["Colima", "Manzanillo", "Villa de Álvarez", "Tecomán", "Armería"],
-  Durango: ["Durango", "Gómez Palacio", "Lerdo", "Santiago Papasquiaro", "Pueblo Nuevo"],
-  "Estado de Mexico": ["Toluca", "Ecatepec", "Naucalpan", "Tlalnepantla", "Nezahualcóyotl", "Metepec", "Cuautitlán Izcalli", "Atizapán de Zaragoza", "Texcoco", "Chalco"],
-  Guanajuato: ["León", "Irapuato", "Celaya", "Guanajuato", "Salamanca", "San Miguel de Allende", "Silao"],
+  Aguascalientes: ["Aguascalientes", "Calvillo", "JesÃºs MarÃ­a", "PabellÃ³n de Arteaga", "RincÃ³n de Romos"],
+  "Baja California": ["Tijuana", "Mexicali", "Ensenada", "Tecate", "Rosarito", "San QuintÃ­n"],
+  "Baja California Sur": ["La Paz", "Cabo San Lucas", "San JosÃ© del Cabo", "Ciudad ConstituciÃ³n", "Loreto"],
+  Campeche: ["Campeche", "Ciudad del Carmen", "ChampotÃ³n", "EscÃ¡rcega", "CalkinÃ­"],
+  Chiapas: ["Tuxtla GutiÃ©rrez", "Tapachula", "San CristÃ³bal de las Casas", "ComitÃ¡n", "Palenque", "TonalÃ¡"],
+  Chihuahua: ["Chihuahua", "Ciudad JuÃ¡rez", "CuauhtÃ©moc", "Delicias", "Hidalgo del Parral", "Nuevo Casas Grandes"],
+  "Ciudad de Mexico": ["Ãlvaro ObregÃ³n", "Azcapotzalco", "Benito JuÃ¡rez", "CoyoacÃ¡n", "Cuajimalpa", "CuauhtÃ©moc", "Gustavo A. Madero", "Iztacalco", "Iztapalapa", "Miguel Hidalgo", "Tlalpan", "Xochimilco"],
+  Coahuila: ["Saltillo", "TorreÃ³n", "Monclova", "Piedras Negras", "AcuÃ±a", "Sabinas"],
+  Colima: ["Colima", "Manzanillo", "Villa de Ãlvarez", "TecomÃ¡n", "ArmerÃ­a"],
+  Durango: ["Durango", "GÃ³mez Palacio", "Lerdo", "Santiago Papasquiaro", "Pueblo Nuevo"],
+  "Estado de Mexico": ["Toluca", "Ecatepec", "Naucalpan", "Tlalnepantla", "NezahualcÃ³yotl", "Metepec", "CuautitlÃ¡n Izcalli", "AtizapÃ¡n de Zaragoza", "Texcoco", "Chalco"],
+  Guanajuato: ["LeÃ³n", "Irapuato", "Celaya", "Guanajuato", "Salamanca", "San Miguel de Allende", "Silao"],
   Guerrero: ["Acapulco", "Chilpancingo", "Iguala", "Zihuatanejo", "Taxco", "Tlapa"],
   Hidalgo: ["Pachuca", "Tulancingo", "Tula de Allende", "Mineral de la Reforma", "Huejutla", "Ixmiquilpan"],
-  Jalisco: ["Guadalajara", "Zapopan", "Tlaquepaque", "Tonalá", "Puerto Vallarta", "Tlajomulco", "Lagos de Moreno", "Tepatitlán"],
-  Michoacan: ["Morelia", "Uruapan", "Zamora", "Lázaro Cárdenas", "Pátzcuaro", "La Piedad", "Zitácuaro"],
+  Jalisco: ["Guadalajara", "Zapopan", "Tlaquepaque", "TonalÃ¡", "Puerto Vallarta", "Tlajomulco", "Lagos de Moreno", "TepatitlÃ¡n"],
+  Michoacan: ["Morelia", "Uruapan", "Zamora", "LÃ¡zaro CÃ¡rdenas", "PÃ¡tzcuaro", "La Piedad", "ZitÃ¡cuaro"],
   Morelos: ["Cuernavaca", "Jiutepec", "Cuautla", "Temixco", "Yautepec", "Jojutla"],
-  Nayarit: ["Tepic", "Bahía de Banderas", "Santiago Ixcuintla", "Compostela", "Ixtlán del Río"],
-  "Nuevo Leon": ["Monterrey", "Guadalupe", "San Nicolás de los Garza", "Apodaca", "Escobedo", "Santa Catarina", "San Pedro Garza García"],
-  Oaxaca: ["Oaxaca de Juárez", "Salina Cruz", "Juchitán", "Tuxtepec", "Huajuapan de León", "Puerto Escondido"],
-  Puebla: ["Puebla", "Tehuacán", "San Martín Texmelucan", "Atlixco", "Cholula", "Teziutlán"],
-  Queretaro: ["Querétaro", "San Juan del Río", "El Marqués", "Corregidora", "Tequisquiapan"],
-  "Quintana Roo": ["Cancún", "Playa del Carmen", "Chetumal", "Tulum", "Cozumel", "Bacalar"],
-  "San Luis Potosi": ["San Luis Potosí", "Soledad de Graciano Sánchez", "Ciudad Valles", "Matehuala", "Rioverde"],
-  Sinaloa: ["Culiacán", "Mazatlán", "Los Mochis", "Guasave", "Guamúchil"],
-  Sonora: ["Hermosillo", "Ciudad Obregón", "Nogales", "San Luis Río Colorado", "Guaymas", "Navojoa"],
-  Tabasco: ["Villahermosa", "Cárdenas", "Comalcalco", "Macuspana", "Paraíso"],
+  Nayarit: ["Tepic", "BahÃ­a de Banderas", "Santiago Ixcuintla", "Compostela", "IxtlÃ¡n del RÃ­o"],
+  "Nuevo Leon": ["Monterrey", "Guadalupe", "San NicolÃ¡s de los Garza", "Apodaca", "Escobedo", "Santa Catarina", "San Pedro Garza GarcÃ­a"],
+  Oaxaca: ["Oaxaca de JuÃ¡rez", "Salina Cruz", "JuchitÃ¡n", "Tuxtepec", "Huajuapan de LeÃ³n", "Puerto Escondido"],
+  Puebla: ["Puebla", "TehuacÃ¡n", "San MartÃ­n Texmelucan", "Atlixco", "Cholula", "TeziutlÃ¡n"],
+  Queretaro: ["QuerÃ©taro", "San Juan del RÃ­o", "El MarquÃ©s", "Corregidora", "Tequisquiapan"],
+  "Quintana Roo": ["CancÃºn", "Playa del Carmen", "Chetumal", "Tulum", "Cozumel", "Bacalar"],
+  "San Luis Potosi": ["San Luis PotosÃ­", "Soledad de Graciano SÃ¡nchez", "Ciudad Valles", "Matehuala", "Rioverde"],
+  Sinaloa: ["CuliacÃ¡n", "MazatlÃ¡n", "Los Mochis", "Guasave", "GuamÃºchil"],
+  Sonora: ["Hermosillo", "Ciudad ObregÃ³n", "Nogales", "San Luis RÃ­o Colorado", "Guaymas", "Navojoa"],
+  Tabasco: ["Villahermosa", "CÃ¡rdenas", "Comalcalco", "Macuspana", "ParaÃ­so"],
   Tamaulipas: ["Reynosa", "Matamoros", "Nuevo Laredo", "Tampico", "Ciudad Victoria", "Ciudad Madero", "Altamira"],
   Tlaxcala: ["Tlaxcala", "Apizaco", "Huamantla", "Chiautempan", "Calpulalpan"],
-  Veracruz: ["Veracruz", "Xalapa", "Coatzacoalcos", "Córdoba", "Orizaba", "Poza Rica", "Boca del Río", "Tuxpan"],
-  Yucatan: ["Mérida", "Valladolid", "Tizimín", "Progreso", "Umán"],
-  Zacatecas: ["Zacatecas", "Guadalupe", "Fresnillo", "Jerez", "Río Grande"]
+  Veracruz: ["Veracruz", "Xalapa", "Coatzacoalcos", "CÃ³rdoba", "Orizaba", "Poza Rica", "Boca del RÃ­o", "Tuxpan"],
+  Yucatan: ["MÃ©rida", "Valladolid", "TizimÃ­n", "Progreso", "UmÃ¡n"],
+  Zacatecas: ["Zacatecas", "Guadalupe", "Fresnillo", "Jerez", "RÃ­o Grande"]
 };
 
 const mexicoStateCodes = {
@@ -348,30 +355,30 @@ const municipalityCache = new Map();
 
 function formatCategoryLabel(category) {
   return {
-    Tecnologia: "Tecnología",
-    "Atencion al Cliente": "Atención al Cliente",
-    Administracion: "Administración",
-    Logistica: "Logística",
-    Educacion: "Educación"
+    Tecnologia: "TecnologÃ­a",
+    "Atencion al Cliente": "AtenciÃ³n al Cliente",
+    Administracion: "AdministraciÃ³n",
+    Logistica: "LogÃ­stica",
+    Educacion: "EducaciÃ³n"
   }[category] ?? category;
 }
 
 function formatLocationLabel(location) {
   return {
-    "Todo Mexico": "Todo México",
-    "Ciudad de Mexico": "Ciudad de México",
-    "Estado de Mexico": "Estado de México",
-    Michoacan: "Michoacán",
-    "Nuevo Leon": "Nuevo León",
-    Queretaro: "Querétaro",
-    "San Luis Potosi": "San Luis Potosí",
-    Yucatan: "Yucatán",
-    Mexico: "México"
+    "Todo Mexico": "Todo MÃ©xico",
+    "Ciudad de Mexico": "Ciudad de MÃ©xico",
+    "Estado de Mexico": "Estado de MÃ©xico",
+    Michoacan: "MichoacÃ¡n",
+    "Nuevo Leon": "Nuevo LeÃ³n",
+    Queretaro: "QuerÃ©taro",
+    "San Luis Potosi": "San Luis PotosÃ­",
+    Yucatan: "YucatÃ¡n",
+    Mexico: "MÃ©xico"
   }[location] ?? location;
 }
 
 function formatWorkModeLabel(mode) {
-  return mode === "Hibrido" ? "Híbrido" : mode;
+  return mode === "Hibrido" ? "HÃ­brido" : mode;
 }
 
 function cityOptionsForState(state, includeAll = false) {
@@ -410,13 +417,13 @@ async function loadMunicipalities(state) {
   if (!stateCode) return mexicoCitiesByState[state] ?? [];
 
   const response = await fetch(`https://gaia.inegi.org.mx/wscatgeo/v2/mgem/${stateCode}`);
-  if (!response.ok) throw new Error("No se pudo consultar el catálogo de municipios.");
+  if (!response.ok) throw new Error("No se pudo consultar el catÃ¡logo de municipios.");
   const payload = await response.json();
   const municipalities = (payload?.datos ?? payload ?? [])
     .map((entry) => entry.nomgeo ?? entry.nom_agem ?? entry.nom_mun)
     .filter(Boolean)
     .sort((left, right) => left.localeCompare(right, "es-MX"));
-  if (!municipalities.length) throw new Error("El catálogo no devolvió municipios.");
+  if (!municipalities.length) throw new Error("El catÃ¡logo no devolviÃ³ municipios.");
   municipalityCache.set(state, municipalities);
   return municipalities;
 }
@@ -566,15 +573,15 @@ function resetUserState({ clearJobs = false } = {}) {
 
   if (clearJobs) jobs = [];
 
-  conversationList.innerHTML = `<p class="empty-list">Inicia sesión para ver tus conversaciones.</p>`;
-  chatBody.innerHTML = `<p class="empty-list">Selecciona una conversación.</p>`;
+  conversationList.innerHTML = `<p class="empty-list">Inicia sesiÃ³n para ver tus conversaciones.</p>`;
+  chatBody.innerHTML = `<p class="empty-list">Selecciona una conversaciÃ³n.</p>`;
   conversationCount.textContent = "0";
   profileMessagesCount.textContent = "0";
   companyCandidatesCount.textContent = "0";
   companyInterviewCount.textContent = "0";
 }
 
-function clearExpiredSession(message = "Tu sesión expiró. Inicia sesión de nuevo.") {
+function clearExpiredSession(message = "Tu sesiÃ³n expirÃ³. Inicia sesiÃ³n de nuevo.") {
   resetUserState({ clearJobs: true });
   localStorage.removeItem(SESSION_STORAGE_KEY);
   renderSessionStatus();
@@ -616,7 +623,7 @@ function getInitials(name) {
 
 function renderResumeStatus() {
   const resumeName = currentCandidateProfile?.resume_name;
-  resumeStatus.textContent = resumeName ? `Currículum listo: ${resumeName}` : "Sin currículum cargado";
+  resumeStatus.textContent = resumeName ? `CurrÃ­culum listo: ${resumeName}` : "Sin currÃ­culum cargado";
 }
 
 function renderProfileHeader() {
@@ -665,7 +672,7 @@ function renderProfilePlanSummary() {
 
 function renderSessionStatus() {
   const session = getStoredSession();
-  sessionStatus.textContent = session?.user?.email ?? "Sin sesión";
+  sessionStatus.textContent = session?.user?.email ?? "Sin sesiÃ³n";
   signOutButton.classList.toggle("is-hidden", !session?.access_token);
   renderHeaderAuthState();
   renderProfileHeader();
@@ -947,8 +954,8 @@ function renderStars(value, interactive = false, selected = 0) {
     const starValue = index + 1;
     const filled = interactive ? starValue <= selected : starValue <= Math.round(rating);
     const className = filled ? "star filled" : "star";
-    if (!interactive) return `<span class="${className}" aria-hidden="true">★</span>`;
-    return `<button class="${className}" type="button" data-rate-company="${starValue}" aria-label="Calificar con ${starValue} estrellas">★</button>`;
+    if (!interactive) return `<span class="${className}" aria-hidden="true">â˜…</span>`;
+    return `<button class="${className}" type="button" data-rate-company="${starValue}" aria-label="Calificar con ${starValue} estrellas">â˜…</button>`;
   }).join("");
 }
 
@@ -978,22 +985,22 @@ function renderCompanyRatingControls(job) {
 
   const rating = getCompanyRating(job.companyId);
   detailCompanyRatingSummary.innerHTML = rating.count
-    ? `${renderStars(rating.average)} <span>${rating.average.toFixed(1)} de 5 · ${rating.count} calificación${rating.count === 1 ? "" : "es"}</span>`
-    : "Sin calificaciones todavía";
+    ? `${renderStars(rating.average)} <span>${rating.average.toFixed(1)} de 5 Â· ${rating.count} calificaciÃ³n${rating.count === 1 ? "" : "es"}</span>`
+    : "Sin calificaciones todavÃ­a";
 
   if (!getStoredSession()?.access_token) {
-    detailCompanyRatingActions.innerHTML = `<small>Inicia sesión para calificar después de postularte.</small>`;
+    detailCompanyRatingActions.innerHTML = `<small>Inicia sesiÃ³n para calificar despuÃ©s de postularte.</small>`;
     return;
   }
 
   if (!canRateCompany(job.companyId)) {
-    detailCompanyRatingActions.innerHTML = `<small>Podrás calificar esta empresa cuando te postules a una de sus vacantes.</small>`;
+    detailCompanyRatingActions.innerHTML = `<small>PodrÃ¡s calificar esta empresa cuando te postules a una de sus vacantes.</small>`;
     return;
   }
 
   const selectedRating = ownCompanyRatings.get(String(job.companyId)) ?? 0;
   detailCompanyRatingActions.innerHTML = `
-    <span>Tu calificación</span>
+    <span>Tu calificaciÃ³n</span>
     <div class="interactive-stars" data-rating-company-id="${escapeHtml(job.companyId)}">
       ${renderStars(0, true, selectedRating)}
     </div>
@@ -1105,7 +1112,7 @@ function renderCompanyJobs() {
         .map(
           (job) => {
             const verifiedMark = job.companyVerified
-              ? `<span class="company-job-verified" title="Empresa verificada" aria-label="Empresa verificada">✓</span>`
+              ? `<span class="company-job-verified" title="Empresa verificada" aria-label="Empresa verificada">âœ“</span>`
               : "";
 
             const promoteButton = isJobFeatured(job)
@@ -1121,9 +1128,9 @@ function renderCompanyJobs() {
                 <div class="company-job-meta">
                   <span class="company-job-company">${escapeHtml(job.company)}</span>
                   ${verifiedMark}
-                  <span aria-hidden="true">·</span>
+                  <span aria-hidden="true">Â·</span>
                   <span>${escapeHtml(formatLocationLabel(job.location))}</span>
-                  <span aria-hidden="true">·</span>
+                  <span aria-hidden="true">Â·</span>
                   <span>${escapeHtml(formatWorkModeLabel(job.mode))}</span>
                 </div>
               </div>
@@ -1141,7 +1148,7 @@ function renderCompanyJobs() {
           }
         )
         .join("")
-    : `<p class="empty-list">Aún no hay vacantes publicadas en tus empresas.</p>`;
+    : `<p class="empty-list">AÃºn no hay vacantes publicadas en tus empresas.</p>`;
 }
 
 function renderHiringCompanies() {
@@ -1180,7 +1187,7 @@ function renderHiringCompanies() {
               <span class="company-card-main">
                 <span class="company-card-title">
                   <strong>${escapeHtml(company.name)}</strong>
-                  ${company.isVerified ? '<span class="verified-check" title="Empresa verificada" aria-label="Empresa verificada">✓</span>' : ""}
+                  ${company.isVerified ? '<span class="verified-check" title="Empresa verificada" aria-label="Empresa verificada">âœ“</span>' : ""}
                 </span>
               </span>
               ${renderRatingSummary(company.id)}
@@ -1192,8 +1199,8 @@ function renderHiringCompanies() {
     : `
         <article class="company-card company-card-empty">
           ${renderCompanyLogoMarkup("RedJob", "")}
-          <strong>Aún no hay empresas contratando</strong>
-          <p>Las empresas aparecerán aquí cuando publiquen una vacante activa.</p>
+          <strong>AÃºn no hay empresas contratando</strong>
+          <p>Las empresas aparecerÃ¡n aquÃ­ cuando publiquen una vacante activa.</p>
         </article>
       `;
 }
@@ -1232,7 +1239,7 @@ async function toggleSavedJob(jobId) {
 
   if (!session?.user?.id) {
     switchView("acceso");
-    throw new Error("Inicia sesión para guardar vacantes en tu perfil.");
+    throw new Error("Inicia sesiÃ³n para guardar vacantes en tu perfil.");
   }
 
   if (isSaved) {
@@ -1308,9 +1315,9 @@ async function openJobDetail(jobId) {
   detailMatchBar.style.width = detailMatchValue === null ? "0%" : `${safePercent(detailMatchValue)}%`;
   detailMatchBar.closest(".match-block")?.classList.toggle("match-block-incomplete", detailMatchValue === null);
   detailDescription.textContent =
-    job.description || "La empresa aún no agregó una descripción extensa para esta vacante.";
+    job.description || "La empresa aÃºn no agregÃ³ una descripciÃ³n extensa para esta vacante.";
   detailCompanyDescription.textContent =
-    job.companyDescription || "Esta empresa aún no agregó una descripción a su perfil.";
+    job.companyDescription || "Esta empresa aÃºn no agregÃ³ una descripciÃ³n a su perfil.";
   renderCompanyRatingControls(job);
   detailRequirements.innerHTML = job.tags.length
     ? job.tags.map((tag) => `<li>${escapeHtml(tag)}</li>`).join("")
@@ -1339,7 +1346,7 @@ async function supabaseAuthRequest(path, body, accessToken) {
   if (!response.ok) {
     const errorMessage = payload.msg || payload.message || payload.error_description || "No se pudo completar la solicitud.";
     if (response.status === 401 || errorMessage.toLowerCase().includes("jwt")) {
-      clearExpiredSession("Tu sesión expiró. Inicia sesión de nuevo.");
+      clearExpiredSession("Tu sesiÃ³n expirÃ³. Inicia sesiÃ³n de nuevo.");
     }
     throw new Error(errorMessage);
   }
@@ -1367,7 +1374,7 @@ async function supabaseRestRequest(path, options = {}) {
   if (!response.ok) {
     const errorMessage = payload?.message || payload?.hint || "Supabase no pudo completar la operacion.";
     if (response.status === 401 || errorMessage.toLowerCase().includes("jwt")) {
-      clearExpiredSession("Tu sesión expiró. Inicia sesión de nuevo.");
+      clearExpiredSession("Tu sesiÃ³n expirÃ³. Inicia sesiÃ³n de nuevo.");
     }
     if (isMissingSupabaseSchema(errorMessage)) {
       throw new Error(SUPABASE_SCHEMA_MESSAGE);
@@ -1442,7 +1449,7 @@ async function supabaseStorageUpload(path, file) {
 
   if (!response.ok) {
     const payload = await response.json().catch(() => ({}));
-    throw new Error(payload.message || payload.error || "No se pudo subir el currículum.");
+    throw new Error(payload.message || payload.error || "No se pudo subir el currÃ­culum.");
   }
 }
 
@@ -1482,7 +1489,7 @@ async function createResumeSignedUrl(path) {
   const payload = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    throw new Error(payload.message || payload.error || "No se pudo abrir el currículum.");
+    throw new Error(payload.message || payload.error || "No se pudo abrir el currÃ­culum.");
   }
 
   return `${SUPABASE_URL}/storage/v1${payload.signedURL}`;
@@ -1520,7 +1527,7 @@ function requireSession() {
   const session = getStoredSession();
 
   if (!session?.access_token || !session?.user?.id) {
-    throw new Error("Inicia sesión para guardar datos reales.");
+    throw new Error("Inicia sesiÃ³n para guardar datos reales.");
   }
 
   return session;
@@ -1676,7 +1683,7 @@ async function loadCurrentProfile() {
   if (currentProfile?.suspended_at) {
     const reason = currentProfile.suspension_reason ? ` Motivo: ${currentProfile.suspension_reason}` : "";
     await signOutFromSupabase();
-    throw new Error(`Esta cuenta está suspendida.${reason}`);
+    throw new Error(`Esta cuenta estÃ¡ suspendida.${reason}`);
   }
 
   try {
@@ -1770,7 +1777,7 @@ async function loadReceivedCandidates() {
               <article class="candidate-row-card" data-application-id="${escapeHtml(application.id)}">
                 <div class="candidate-row-main">
                   <strong>${escapeHtml(candidate?.full_name ?? "Candidato")}</strong>
-                  <small>${escapeHtml(candidate?.target_role ?? "Perfil candidato")} - ${escapeHtml(formatLocationLabel(candidate?.location ?? "Mexico"))}${candidate?.age ? ` - ${escapeHtml(candidate.age)} años` : ""}</small>
+                  <small>${escapeHtml(candidate?.target_role ?? "Perfil candidato")} - ${escapeHtml(formatLocationLabel(candidate?.location ?? "Mexico"))}${candidate?.age ? ` - ${escapeHtml(candidate.age)} aÃ±os` : ""}</small>
                   <small>${escapeHtml(company?.company_name ?? "Empresa")} - ${escapeHtml(job?.title ?? "Vacante")}${candidate?.resume_name ? ` - CV: ${escapeHtml(candidate.resume_name)}` : ""}</small>
                 </div>
                 <div class="candidate-match-score">
@@ -1796,7 +1803,7 @@ async function loadReceivedCandidates() {
             `;
           })
           .join("")
-      : `<p class="empty-list">Aún no hay candidatos recibidos.</p>`;
+      : `<p class="empty-list">AÃºn no hay candidatos recibidos.</p>`;
   } catch (error) {
     receivedCandidatesList.innerHTML = `<p class="empty-list">No se pudieron cargar candidatos: ${escapeHtml(error.message)}</p>`;
   }
@@ -1816,13 +1823,13 @@ function openReceivedCandidateProfile(applicationId) {
   receivedCandidateMeta.textContent = [
     candidate.target_role || "Perfil candidato",
     formatLocationLabel(candidate.location || "Mexico"),
-    candidate.age ? `${candidate.age} años` : "",
+    candidate.age ? `${candidate.age} aÃ±os` : "",
     candidate.work_mode ? formatWorkModeLabel(mapWorkModeToUi(candidate.work_mode)) : ""
   ].filter(Boolean).join(" - ");
   receivedCandidateJob.textContent = `${profile.jobTitle} en ${profile.companyName}`;
   receivedCandidateApplicationStatus.textContent = `${mapApplicationStatus(profile.status)} - ${safePercent(profile.matchScore)}% de compatibilidad`;
-  receivedCandidateSummary.textContent = candidate.summary || "Este candidato aún no agregó un resumen profesional.";
-  receivedCandidateResume.textContent = candidate.resume_name ? `Ver currículum: ${candidate.resume_name}` : "Sin currículum disponible";
+  receivedCandidateSummary.textContent = candidate.summary || "Este candidato aÃºn no agregÃ³ un resumen profesional.";
+  receivedCandidateResume.textContent = candidate.resume_name ? `Ver currÃ­culum: ${candidate.resume_name}` : "Sin currÃ­culum disponible";
   receivedCandidateResume.disabled = !candidate.resume_path;
   candidateProfileDialog.showModal();
 }
@@ -1874,10 +1881,61 @@ function adminJobStatusLabel(status) {
 function adminReportStatusLabel(status) {
   return {
     pending: "Pendiente",
-    reviewing: "En revisión",
+    reviewing: "En revisiÃ³n",
     resolved: "Resuelto",
     dismissed: "Descartado"
   }[status] ?? status;
+}
+
+function adminReportCategoryLabel(category) {
+  return {
+    job: "Vacante",
+    user: "Cuenta de usuario",
+    company: "Empresa",
+    message: "Mensaje",
+    application: "PostulaciÃ³n",
+    other: "Otro"
+  }[category] ?? (category || "Reporte");
+}
+
+function adminReportTargetLabel(report) {
+  return {
+    job: "Vacante",
+    user: "Cuenta de usuario",
+    company: "Empresa",
+    message: "Mensaje",
+    application: "PostulaciÃ³n"
+  }[report?.target_type] ?? "General";
+}
+
+function openAdminReportDialog(reportId) {
+  const report = adminReportsById.get(String(reportId));
+  if (!report || !adminReportDialog) {
+    showToast("No se pudo abrir el reporte.");
+    return;
+  }
+
+  adminReportDialogCategory.textContent = adminReportCategoryLabel(report.category);
+  adminReportDialogSubject.textContent = report.subject || "Reporte sin asunto";
+  adminReportDialogDescription.textContent = report.description || "Sin descripciÃ³n.";
+  adminReportDialogNote.textContent = report.admin_note?.trim() || "Sin nota administrativa.";
+  adminReportDialogMeta.innerHTML = "";
+
+  [
+    `Estado: ${adminReportStatusLabel(report.status)}`,
+    `Tipo: ${adminReportCategoryLabel(report.category)}`,
+    `Destino: ${adminReportTargetLabel(report)}`,
+    `Fecha: ${formatMessageTime(report.created_at)}`,
+    report.target_id ? `ID relacionado: ${report.target_id}` : ""
+  ]
+    .filter(Boolean)
+    .forEach((item) => {
+      const chip = document.createElement("span");
+      chip.textContent = item;
+      adminReportDialogMeta.appendChild(chip);
+    });
+
+  adminReportDialog.showModal();
 }
 
 function normalizeAdminSearch(value) {
@@ -1911,7 +1969,7 @@ function refreshAdminFilters() {
 
 async function loadAdminDashboard() {
   if (!isCurrentAdmin()) {
-    throw new Error("No tienes permisos de administración.");
+    throw new Error("No tienes permisos de administraciÃ³n.");
   }
 
   const [stats, reports, adminJobs, users, companies, roleRows] = await Promise.all([
@@ -1942,6 +2000,9 @@ async function loadAdminDashboard() {
     companiesByUser.set(ownerId, ownedCompanies);
   });
 
+  adminReportsById.clear();
+  (reports ?? []).forEach((report) => adminReportsById.set(String(report.id), report));
+
   adminReportsList.innerHTML = reports?.length
     ? reports.map((report) => `
         <article class="admin-row" data-search="${escapeHtml(`${report.subject} ${report.description} ${report.category} ${adminReportStatusLabel(report.status)}`)}">
@@ -1951,9 +2012,10 @@ async function loadAdminDashboard() {
               <span class="admin-status ${escapeHtml(report.status)}">${escapeHtml(adminReportStatusLabel(report.status))}</span>
             </div>
             <p>${escapeHtml(report.description)}</p>
-            <small>${escapeHtml(report.category)} · ${escapeHtml(formatMessageTime(report.created_at))}</small>
+            <small>${escapeHtml(report.category)} Â· ${escapeHtml(formatMessageTime(report.created_at))}</small>
           </div>
           <div class="admin-row-actions">
+            <button class="admin-action strong" type="button" data-admin-view-report="${escapeHtml(report.id)}">Ver reporte</button>
             ${report.target_type === "job" && report.target_id ? `<button class="admin-action" type="button" data-admin-open-job="${escapeHtml(report.target_id)}">Ver vacante</button>` : ""}
             <button class="admin-action" type="button" data-admin-report-status="reviewing" data-report-id="${escapeHtml(report.id)}">Revisar</button>
             <button class="admin-action success" type="button" data-admin-report-status="resolved" data-report-id="${escapeHtml(report.id)}">Resolver</button>
@@ -2013,7 +2075,7 @@ async function loadAdminDashboard() {
                         <button class="admin-action ${company.is_verified ? "" : "success"}" type="button"
                           data-admin-company-id="${escapeHtml(company.id)}"
                           data-admin-verified="${company.is_verified ? "false" : "true"}">
-                          ${company.is_verified ? "Quitar verificación" : "Verificar"}
+                          ${company.is_verified ? "Quitar verificaciÃ³n" : "Verificar"}
                         </button>
                         <button class="admin-action ${user.suspended_at ? "success" : "danger"}" type="button"
                           data-admin-user-id="${escapeHtml(user.id)}"
@@ -2024,7 +2086,7 @@ async function loadAdminDashboard() {
                       </div>
                     </article>
                   `).join("")
-                : `<small>Este usuario aún no tiene empresas creadas.</small>`}
+                : `<small>Este usuario aÃºn no tiene empresas creadas.</small>`}
             </div>
           </div>
           <div class="admin-row-actions">
@@ -2054,7 +2116,7 @@ async function loadAdminDashboard() {
             <button class="admin-action ${company.is_verified ? "" : "success"}" type="button"
               data-admin-company-id="${escapeHtml(company.id)}"
               data-admin-verified="${company.is_verified ? "false" : "true"}">
-              ${company.is_verified ? "Quitar verificación" : "Verificar"}
+              ${company.is_verified ? "Quitar verificaciÃ³n" : "Verificar"}
             </button>
           </div>
         </article>
@@ -2070,7 +2132,7 @@ async function submitSafetyReport() {
   const description = reportDescription.value.trim();
 
   if (!subject || !description) {
-    throw new Error("Agrega el asunto y la descripción del reporte.");
+    throw new Error("Agrega el asunto y la descripciÃ³n del reporte.");
   }
 
   await supabaseRestRequest("/reports", {
@@ -2186,7 +2248,7 @@ async function rateCompany(companyId, rating) {
 function mapApplicationStatus(status) {
   return {
     submitted: "Enviada",
-    reviewing: "En revisión",
+    reviewing: "En revisiÃ³n",
     interview: "En entrevista",
     rejected: "No seleccionada",
     hired: "Contratada",
@@ -2234,7 +2296,7 @@ async function loadUnreadMessagesByConversation() {
       unreadConversationCounts.set(key, (unreadConversationCounts.get(key) ?? 0) + 1);
     });
   } catch (error) {
-    console.warn("No se pudieron contar los mensajes por conversaciÃ³n.", error);
+    console.warn("No se pudieron contar los mensajes por conversaciÃƒÂ³n.", error);
   }
 }
 
@@ -2345,7 +2407,7 @@ async function markConversationMessagesAsRead(conversationId) {
       body: { conversation_uuid: conversationId }
     });
   } catch (error) {
-    console.warn("No se pudo marcar la conversación como leída.", error);
+    console.warn("No se pudo marcar la conversaciÃ³n como leÃ­da.", error);
   }
 }
 
@@ -2369,7 +2431,7 @@ function getConversationDisplay(conversation) {
     primaryName: isCompanyView ? candidate?.full_name || "Candidato" : companyName || "Empresa",
     secondaryLabel: isCompanyView
       ? `${companyName ?? "Empresa"} - ${jobTitle ?? "Vacante"}`
-      : `${jobTitle ?? "Vacante"} - conversación`,
+      : `${jobTitle ?? "Vacante"} - conversaciÃ³n`,
     logoPath: isCompanyView ? "" : companyRecord?.logo_path
   };
 }
@@ -2390,7 +2452,7 @@ function renderConversationList(conversations) {
           const conversationDisplay = getConversationDisplay(conversation);
           const unreadCount = unreadConversationCounts.get(String(conversation.id)) ?? 0;
           const unreadLabel = unreadCount > 9 ? "9+" : String(unreadCount);
-          const primaryName = candidate?.full_name || company || "Conversación";
+          const primaryName = candidate?.full_name || company || "ConversaciÃ³n";
           const secondaryLabel = candidate?.full_name ? `${company ?? "Empresa"} - ${jobTitle ?? "Vacante"}` : jobTitle ?? "Vacante";
           return `
             <button class="conversation-item ${sameId(conversation.id, activeConversationId) ? "active" : ""}" type="button" data-conversation-id="${escapeHtml(conversation.id)}">
@@ -2405,7 +2467,7 @@ function renderConversationList(conversations) {
           `;
         })
         .join("")
-    : `<p class="empty-list">Aún no hay conversaciones reales. Se crea una al postularte.</p>`;
+    : `<p class="empty-list">AÃºn no hay conversaciones reales. Se crea una al postularte.</p>`;
 }
 
 function renderActiveConversation() {
@@ -2428,7 +2490,7 @@ function renderChatMessages(messages, conversation) {
   const conversationDisplay = getConversationDisplay(conversation);
   const chatSubtitle = isCompanyView
     ? `${candidate?.target_role ?? "Perfil candidato"} - ${jobTitle ?? "Vacante"}`
-    : `${jobTitle ?? "Vacante"} - conversación real`;
+    : `${jobTitle ?? "Vacante"} - conversaciÃ³n real`;
 
   setLogoElement(document.querySelector(".chat-head .company-logo"), chatTitle, conversationDisplay.logoPath);
   document.querySelector(".chat-head strong").textContent = chatTitle;
@@ -2454,7 +2516,7 @@ function renderChatMessages(messages, conversation) {
           `;
         })
         .join("")
-    : `<article class="bubble candidate"><span>RedJob</span><p>Conversación lista. Escribe el primer mensaje.</p></article>`;
+    : `<article class="bubble candidate"><span>RedJob</span><p>ConversaciÃ³n lista. Escribe el primer mensaje.</p></article>`;
 }
 
 function getConversationApplicationRecord(conversation) {
@@ -2504,9 +2566,9 @@ function renderCandidatePreview(candidate, isCompanyView, conversation = null, j
   candidatePreview.classList.remove("is-hidden");
   candidatePreviewAvatar.textContent = getInitials(candidate.full_name ?? "Candidato");
   candidatePreviewName.textContent = candidate.full_name ?? "Candidato";
-  candidatePreviewMeta.textContent = `${candidate.target_role ?? "Perfil candidato"} - ${formatLocationLabel(candidate.location ?? "Mexico")}${candidate.age ? ` - ${candidate.age} años` : ""}`;
-  candidatePreviewSummary.textContent = candidate.summary || "Este candidato aún no agregó un resumen.";
-  candidatePreviewResume.textContent = candidate.resume_name ? `Ver currículum: ${candidate.resume_name}` : "Sin currículum";
+  candidatePreviewMeta.textContent = `${candidate.target_role ?? "Perfil candidato"} - ${formatLocationLabel(candidate.location ?? "Mexico")}${candidate.age ? ` - ${candidate.age} aÃ±os` : ""}`;
+  candidatePreviewSummary.textContent = candidate.summary || "Este candidato aÃºn no agregÃ³ un resumen.";
+  candidatePreviewResume.textContent = candidate.resume_name ? `Ver currÃ­culum: ${candidate.resume_name}` : "Sin currÃ­culum";
   candidatePreviewResume.disabled = !candidate.resume_path;
   candidatePreviewProfile.disabled = !activePreviewApplication;
   candidatePreviewStatusActions.innerHTML = application?.id
@@ -2767,7 +2829,7 @@ async function uploadCompanyLogo(file) {
 
   const updatedCompany = rows?.[0] ?? null;
   if (!updatedCompany?.logo_path) {
-    throw new Error("La imagen se preparo, pero Supabase no la guardo en el perfil de empresa. Revisa que tu cuenta sea dueña de esta empresa.");
+    throw new Error("La imagen se preparo, pero Supabase no la guardo en el perfil de empresa. Revisa que tu cuenta sea dueÃ±a de esta empresa.");
   }
 
   currentCompanyProfile = {
@@ -2796,7 +2858,7 @@ async function publishRealJob() {
   const jobDescription = jobDescriptionInput.value.trim();
 
   if (!jobTitle || !jobDescription) {
-    throw new Error("Agrega el puesto y la descripción de la vacante.");
+    throw new Error("Agrega el puesto y la descripciÃ³n de la vacante.");
   }
 
   if (!companyProfile?.id) {
@@ -2971,7 +3033,7 @@ async function createRealApplication(job) {
       throw new Error("Ya te postulaste a esta vacante. Revisa Perfil o Mensajes.");
     }
     if (/row-level security|violates row-level security/i.test(error.message)) {
-    throw new Error("No fue posible enviar la postulación con esta cuenta. Intenta cerrar sesión y volver a entrar.");
+    throw new Error("No fue posible enviar la postulaciÃ³n con esta cuenta. Intenta cerrar sesiÃ³n y volver a entrar.");
     }
     throw error;
   }
@@ -2996,7 +3058,7 @@ async function createRealApplication(job) {
     });
   }
 
-  showToast("Postulación enviada correctamente.");
+  showToast("PostulaciÃ³n enviada correctamente.");
   await loadReceivedCandidates();
   return rows?.[0];
 }
@@ -3005,7 +3067,7 @@ async function sendRealMessage(body) {
   const session = requireSession();
 
   if (!activeConversationId) {
-    throw new Error("Aún no hay una conversación real. Postúlate a una vacante real primero.");
+    throw new Error("AÃºn no hay una conversaciÃ³n real. PostÃºlate a una vacante real primero.");
   }
 
   await supabaseRestRequest("/messages", {
@@ -3043,7 +3105,7 @@ function getAuthFormValues() {
   const role = document.querySelector(".role-option.active").dataset.role;
 
   if (!email || !password) {
-    throw new Error("Agrega tu correo y contraseña.");
+    throw new Error("Agrega tu correo y contraseÃ±a.");
   }
 
   return { email, password, name, role };
@@ -3054,7 +3116,7 @@ function getSignInFormValues() {
   const password = authPassword.value;
 
   if (!email || !password) {
-    throw new Error("Agrega tu correo y contraseña.");
+    throw new Error("Agrega tu correo y contraseÃ±a.");
   }
 
   return { email, password };
@@ -3068,7 +3130,7 @@ async function createSupabaseAccount() {
   }
 
   if (!legalConsent.checked) {
-    throw new Error("Debes aceptar los Términos y Condiciones y el Aviso de Privacidad para crear tu cuenta.");
+    throw new Error("Debes aceptar los TÃ©rminos y Condiciones y el Aviso de Privacidad para crear tu cuenta.");
   }
 
   signupMessage.textContent = "Creando tu cuenta...";
@@ -3089,9 +3151,9 @@ async function createSupabaseAccount() {
     setStoredSession(payload);
     await loadCurrentProfile();
     await recordLegalAcceptance();
-    signupMessage.textContent = "Cuenta creada y sesión iniciada.";
+    signupMessage.textContent = "Cuenta creada y sesiÃ³n iniciada.";
   } else {
-    signupMessage.textContent = "Cuenta creada. Si se requiere confirmación, revisa tu correo.";
+    signupMessage.textContent = "Cuenta creada. Si se requiere confirmaciÃ³n, revisa tu correo.";
   }
 
   showToast("Cuenta creada. Revisa tu correo si necesitas confirmarla.");
@@ -3118,7 +3180,7 @@ async function recordLegalAcceptance() {
 
 async function signInWithSupabase() {
   const { email, password } = getSignInFormValues();
-  signupMessage.textContent = "Iniciando sesión...";
+  signupMessage.textContent = "Iniciando sesiÃ³n...";
 
   const payload = await supabaseAuthRequest("/auth/v1/token?grant_type=password", {
     email,
@@ -3130,15 +3192,15 @@ async function signInWithSupabase() {
   await loadRealJobs();
   await loadSavedJobs();
   await loadFirstConversation(false);
-  signupMessage.textContent = "Sesión iniciada correctamente.";
-  showToast("Sesión iniciada.");
+  signupMessage.textContent = "SesiÃ³n iniciada correctamente.";
+  showToast("SesiÃ³n iniciada.");
   switchView("inicio");
 }
 
 async function sendPasswordRecovery() {
   const email = authEmail.value.trim();
   if (!email) {
-    throw new Error("Agrega tu correo para recuperar la contraseña.");
+    throw new Error("Agrega tu correo para recuperar la contraseÃ±a.");
   }
 
   signupMessage.textContent = "Enviando correo de recuperacion...";
@@ -3146,7 +3208,7 @@ async function sendPasswordRecovery() {
     email,
     redirect_to: window.location.origin
   });
-  signupMessage.textContent = "Te enviamos instrucciones para recuperar tu contraseña.";
+  signupMessage.textContent = "Te enviamos instrucciones para recuperar tu contraseÃ±a.";
   showToast("Correo de recuperacion enviado.");
 }
 
@@ -3163,8 +3225,8 @@ async function signOutFromSupabase() {
 
   setStoredSession(null);
   resetUserState({ clearJobs: true });
-  conversationList.innerHTML = `<p class="empty-list">Inicia sesión para ver tus conversaciones.</p>`;
-  chatBody.innerHTML = `<p class="empty-list">Selecciona una conversación.</p>`;
+  conversationList.innerHTML = `<p class="empty-list">Inicia sesiÃ³n para ver tus conversaciones.</p>`;
+  chatBody.innerHTML = `<p class="empty-list">Selecciona una conversaciÃ³n.</p>`;
   conversationCount.textContent = "0";
   profileMessagesCount.textContent = "0";
   applyRoleExperience();
@@ -3176,8 +3238,8 @@ async function signOutFromSupabase() {
   renderProfileActivity();
   renderCompanyProfileSelect();
   renderCompanyJobs();
-  signupMessage.textContent = "Sesión cerrada.";
-  showToast("Sesión cerrada.");
+  signupMessage.textContent = "SesiÃ³n cerrada.";
+  showToast("SesiÃ³n cerrada.");
 }
 
 async function checkSupabaseSchema() {
@@ -3196,7 +3258,7 @@ async function checkSupabaseSchema() {
       await supabaseRestRequest(path);
     } catch (error) {
       if (isMissingSupabaseSchema(error.message)) {
-        throw new Error(`El servicio de RedJob no está disponible en este momento (${tableName}).`);
+        throw new Error(`El servicio de RedJob no estÃ¡ disponible en este momento (${tableName}).`);
       }
       throw error;
     }
@@ -3240,7 +3302,7 @@ function renderJobs() {
     .map(
       (job) => {
         const verifiedMark = job.companyVerified
-          ? `<span class="job-company-verified" title="Empresa verificada" aria-label="Empresa verificada">✓</span>`
+          ? `<span class="job-company-verified" title="Empresa verificada" aria-label="Empresa verificada">âœ“</span>`
           : "";
         const visibleTags = job.tags.slice(0, 3);
         const remainingTagsCount = Math.max(job.tags.length - visibleTags.length, 0);
@@ -3302,7 +3364,7 @@ function renderProfileActivity() {
             <article class="profile-activity-row">
               <div class="profile-activity-copy">
                 <strong>${escapeHtml(job.title)}</strong>
-                <span>${escapeHtml(job.company)} · ${escapeHtml(formatLocationLabel(job.location))}</span>
+                <span>${escapeHtml(job.company)} Â· ${escapeHtml(formatLocationLabel(job.location))}</span>
               </div>
               <div class="profile-activity-actions">
                 <button class="secondary-button subtle compact-button" type="button" data-open-saved-job="${escapeHtml(job.id)}">Ver vacante</button>
@@ -3312,7 +3374,7 @@ function renderProfileActivity() {
           `
         )
         .join("")
-    : `<p class="empty-list">Aún no tienes vacantes guardadas.</p>`;
+    : `<p class="empty-list">AÃºn no tienes vacantes guardadas.</p>`;
 
   applicationsList.innerHTML = applications.length
     ? applications
@@ -3325,7 +3387,7 @@ function renderProfileActivity() {
             <article class="profile-activity-row">
               <div class="profile-activity-copy">
                 <strong>${escapeHtml(jobTitle)}</strong>
-                <span>${escapeHtml(companyName)} · ${escapeHtml(application.status)}</span>
+                <span>${escapeHtml(companyName)} Â· ${escapeHtml(application.status)}</span>
               </div>
               <div class="profile-activity-actions">
                 <button class="secondary-button subtle compact-button" type="button" data-open-application-job="${escapeHtml(application.jobId)}">Ver vacante</button>
@@ -3335,7 +3397,7 @@ function renderProfileActivity() {
           `;
         })
         .join("")
-    : `<p class="empty-list">Aún no has enviado postulaciones.</p>`;
+    : `<p class="empty-list">AÃºn no has enviado postulaciones.</p>`;
 }
 
 function showToast(message) {
@@ -3349,14 +3411,14 @@ function showToast(message) {
 }
 
 function friendlyError(error) {
-  const message = error?.message ?? "No se pudo completar la acción.";
+  const message = error?.message ?? "No se pudo completar la acciÃ³n.";
 
   if (/imagen|imagenes|empresa|SQL completo actualizado|ruta en el perfil/i.test(message)) return message;
   if (/duplicate key|unique/i.test(message)) return "Ese registro ya existe.";
-  if (/row-level security|violates row-level security/i.test(message)) return "No tienes permiso para hacer esta acción con esta cuenta.";
+  if (/row-level security|violates row-level security/i.test(message)) return "No tienes permiso para hacer esta acciÃ³n con esta cuenta.";
   if (/failed to fetch|network/i.test(message)) return "No se pudo conectar. Revisa tu internet e intenta de nuevo.";
-  if (/supabase|schema cache|database|relation|column/i.test(message)) return "No pudimos completar la acción. Intenta de nuevo más tarde.";
-  if (/jwt/i.test(message)) return "Tu sesión expiró. Inicia sesión de nuevo.";
+  if (/supabase|schema cache|database|relation|column/i.test(message)) return "No pudimos completar la acciÃ³n. Intenta de nuevo mÃ¡s tarde.";
+  if (/jwt/i.test(message)) return "Tu sesiÃ³n expirÃ³. Inicia sesiÃ³n de nuevo.";
   if (/not found|404/i.test(message)) return "No encontramos ese recurso.";
 
   return message;
@@ -3381,7 +3443,7 @@ async function withButtonLoading(button, loadingText, action) {
 
 function openApplicationDialog(job) {
   if (!getStoredSession()?.access_token) {
-    showToast("Inicia sesión para postularte.");
+    showToast("Inicia sesiÃ³n para postularte.");
     switchView("acceso");
     return;
   }
@@ -3395,7 +3457,7 @@ function openApplicationDialog(job) {
 
 function switchView(viewId) {
   if (viewId === "administracion" && !isCurrentAdmin()) {
-    showToast("No tienes permisos para acceder a Administración.");
+    showToast("No tienes permisos para acceder a AdministraciÃ³n.");
     viewId = "inicio";
   }
 
@@ -3585,7 +3647,7 @@ jobsList.addEventListener("click", async (event) => {
     if (!job) return;
 
     if (alreadyApplied) {
-      showToast("Ya enviaste una postulación para esta vacante.");
+      showToast("Ya enviaste una postulaciÃ³n para esta vacante.");
       return;
     }
 
@@ -3615,7 +3677,7 @@ detailApplyButton.addEventListener("click", () => {
   if (!job) return;
 
   if (hasApplication(job.id)) {
-    showToast("Ya enviaste una postulación para esta vacante.");
+    showToast("Ya enviaste una postulaciÃ³n para esta vacante.");
     return;
   }
 
@@ -3632,7 +3694,7 @@ detailCompanyRatingActions.addEventListener("click", async (event) => {
   ratingButton.disabled = true;
   try {
     await rateCompany(job.companyId, ratingButton.dataset.rateCompany);
-    showToast("Calificación guardada. Gracias por ayudar a otros candidatos.");
+    showToast("CalificaciÃ³n guardada. Gracias por ayudar a otros candidatos.");
   } catch (error) {
     showToast(friendlyError(error));
   } finally {
@@ -3760,12 +3822,12 @@ applicationsList.addEventListener("click", async (event) => {
   }
 
   if (!withdrawButton) return;
-  if (!window.confirm("¿Quieres retirar esta postulación? La empresa verá que fue retirada y ya no podrás reactivarla.")) return;
+  if (!window.confirm("Â¿Quieres retirar esta postulaciÃ³n? La empresa verÃ¡ que fue retirada y ya no podrÃ¡s reactivarla.")) return;
 
   withdrawButton.disabled = true;
   try {
     await withdrawCandidateApplication(withdrawButton.dataset.withdrawApplication);
-    showToast("Postulación retirada.");
+    showToast("PostulaciÃ³n retirada.");
   } catch (error) {
     showToast(friendlyError(error));
     withdrawButton.disabled = false;
@@ -3795,7 +3857,7 @@ companyJobsList.addEventListener("click", async (event) => {
 
   if (!deleteButton) return;
 
-  if (!window.confirm("¿Seguro que quieres borrar esta vacante? Esta acción no se puede deshacer.")) {
+  if (!window.confirm("Â¿Seguro que quieres borrar esta vacante? Esta acciÃ³n no se puede deshacer.")) {
     return;
   }
 
@@ -3853,7 +3915,7 @@ receivedCandidatesList.addEventListener("click", async (event) => {
 
   const removeButton = event.target.closest("[data-remove-candidate]");
   if (removeButton) {
-    if (!window.confirm("¿Quieres quitar a este candidato de la vacante? Su postulación y conversación se conservarán.")) {
+    if (!window.confirm("Â¿Quieres quitar a este candidato de la vacante? Su postulaciÃ³n y conversaciÃ³n se conservarÃ¡n.")) {
       return;
     }
 
@@ -3874,7 +3936,7 @@ receivedCandidatesList.addEventListener("click", async (event) => {
   statusButton.disabled = true;
   try {
     await updateApplicationStatus(statusButton.dataset.applicationId, statusButton.dataset.applicationStatus);
-    showToast("Estado de postulación actualizado.");
+    showToast("Estado de postulaciÃ³n actualizado.");
   } catch (error) {
     showToast(friendlyError(error));
   } finally {
@@ -3899,11 +3961,17 @@ document.querySelector("#administracion").addEventListener("click", async (event
   const jobStatusButton = event.target.closest("[data-admin-job-status]");
   const deleteJobButton = event.target.closest("[data-admin-delete-job]");
   const openJobButton = event.target.closest("[data-admin-open-job]");
+  const viewReportButton = event.target.closest("[data-admin-view-report]");
   const userButton = event.target.closest("[data-admin-user-id]");
   const companyButton = event.target.closest("[data-admin-company-id]");
   const reportButton = event.target.closest("[data-admin-report-status]");
 
   try {
+    if (viewReportButton) {
+      openAdminReportDialog(viewReportButton.dataset.adminViewReport);
+      return;
+    }
+
     if (openJobButton) {
       const rows = await supabaseRestRequest(
         `/jobs?select=id,title,description,location,work_mode,category,salary_min,salary_max,status,company_profiles(id,user_id,company_name,description,logo_path,logo_name,is_verified),job_skills(skill_name)&id=eq.${openJobButton.dataset.adminOpenJob}&limit=1`
@@ -3924,7 +3992,7 @@ document.querySelector("#administracion").addEventListener("click", async (event
       });
       showToast("Estado de vacante actualizado.");
     } else if (deleteJobButton) {
-      if (!window.confirm("¿Eliminar esta vacante definitivamente? También se eliminarán sus postulaciones y conversaciones relacionadas.")) return;
+      if (!window.confirm("Â¿Eliminar esta vacante definitivamente? TambiÃ©n se eliminarÃ¡n sus postulaciones y conversaciones relacionadas.")) return;
       await supabaseRestRequest("/rpc/admin_delete_job", {
         method: "POST",
         body: { job_uuid: deleteJobButton.dataset.adminDeleteJob }
@@ -3932,7 +4000,7 @@ document.querySelector("#administracion").addEventListener("click", async (event
       showToast("Vacante eliminada.");
     } else if (userButton) {
       const shouldSuspend = userButton.dataset.adminSuspend === "true";
-      const reason = shouldSuspend ? window.prompt("Motivo de la suspensión:") : "";
+      const reason = shouldSuspend ? window.prompt("Motivo de la suspensiÃ³n:") : "";
       if (shouldSuspend && reason === null) return;
       await supabaseRestRequest("/rpc/admin_set_user_suspension", {
         method: "POST",
@@ -3952,7 +4020,7 @@ document.querySelector("#administracion").addEventListener("click", async (event
           verified
         }
       });
-      showToast(verified ? "Empresa verificada." : "Verificación retirada.");
+      showToast(verified ? "Empresa verificada." : "VerificaciÃ³n retirada.");
     } else if (reportButton) {
       const nextStatus = reportButton.dataset.adminReportStatus;
       const note = window.prompt("Nota interna opcional para este reporte:") ?? "";
@@ -3978,7 +4046,7 @@ document.querySelector("#administracion").addEventListener("click", async (event
 
 openReportDialogButton.addEventListener("click", () => {
   if (!getStoredSession()?.access_token) {
-    showToast("Inicia sesión para enviar un reporte.");
+    showToast("Inicia sesiÃ³n para enviar un reporte.");
     switchView("acceso");
     return;
   }
@@ -3988,7 +4056,7 @@ openReportDialogButton.addEventListener("click", () => {
 
 detailReportButton.addEventListener("click", () => {
   if (!getStoredSession()?.access_token) {
-    showToast("Inicia sesión para reportar una vacante.");
+    showToast("Inicia sesiÃ³n para reportar una vacante.");
     switchView("acceso");
     return;
   }
@@ -4004,6 +4072,10 @@ detailReportButton.addEventListener("click", () => {
 document.querySelector("#closeReportDialog").addEventListener("click", () => {
   activeReportTarget = null;
   reportDialog.close();
+});
+
+document.querySelector("#closeAdminReportDialog")?.addEventListener("click", () => {
+  adminReportDialog.close();
 });
 
 reportForm.addEventListener("submit", async (event) => {
@@ -4036,7 +4108,7 @@ document.querySelector("#closeCandidateProfileDialog").addEventListener("click",
 receivedCandidateResume.addEventListener("click", async () => {
   try {
     if (!activeReceivedCandidate?.resume_path) {
-      showToast("Este candidato aún no subió su currículum.");
+      showToast("Este candidato aÃºn no subiÃ³ su currÃ­culum.");
       return;
     }
 
@@ -4049,7 +4121,7 @@ receivedCandidateResume.addEventListener("click", async () => {
 
 companyLogoButton.addEventListener("click", () => {
   if (!getStoredSession()?.access_token) {
-    showToast("Inicia sesión para subir el logo de tu empresa.");
+    showToast("Inicia sesiÃ³n para subir el logo de tu empresa.");
     switchView("acceso");
     return;
   }
@@ -4114,7 +4186,7 @@ deleteCompanyButton.addEventListener("click", async () => {
     return;
   }
 
-  if (!window.confirm("¿Seguro que quieres eliminar esta empresa y sus vacantes? Esta acción no se puede deshacer.")) {
+  if (!window.confirm("Â¿Seguro que quieres eliminar esta empresa y sus vacantes? Esta acciÃ³n no se puede deshacer.")) {
     return;
   }
 
@@ -4135,7 +4207,7 @@ deleteCompanyButton.addEventListener("click", async () => {
 cancelJobEditButton.addEventListener("click", () => {
   resetJobForm();
   companyJobEditor.open = false;
-  showToast("Edición cancelada.");
+  showToast("EdiciÃ³n cancelada.");
 });
 
 conversationList.addEventListener("click", async (event) => {
@@ -4170,7 +4242,7 @@ chatBody.addEventListener("click", async (event) => {
 candidatePreviewResume.addEventListener("click", async () => {
   try {
     if (!activePreviewCandidate?.resume_path) {
-      showToast("Este candidato aún no subió su currículum.");
+      showToast("Este candidato aÃºn no subiÃ³ su currÃ­culum.");
       return;
     }
 
@@ -4210,7 +4282,7 @@ candidatePreviewStatusActions.addEventListener("click", async (event) => {
 
 chatJobDetailButton.addEventListener("click", async () => {
   if (!activeConversationJobId) {
-    showToast("Selecciona una conversación con vacante.");
+    showToast("Selecciona una conversaciÃ³n con vacante.");
     return;
   }
 
@@ -4237,7 +4309,7 @@ resumeInput.addEventListener("change", async () => {
     }
 
     if (file.size > 8 * 1024 * 1024) {
-      throw new Error("El currículum debe pesar menos de 8 MB.");
+      throw new Error("El currÃ­culum debe pesar menos de 8 MB.");
     }
 
     if (!currentCandidateProfile?.id) {
@@ -4248,7 +4320,7 @@ resumeInput.addEventListener("change", async () => {
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
     const resumePath = `${session.user.id}/${Date.now()}-${safeName}`;
 
-    resumeStatus.textContent = "Subiendo currículum...";
+    resumeStatus.textContent = "Subiendo currÃ­culum...";
     await supabaseStorageUpload(resumePath, file);
 
     const rows = await supabaseRestRequest(`/candidate_profiles?id=eq.${currentCandidateProfile.id}`, {
@@ -4262,7 +4334,7 @@ resumeInput.addEventListener("change", async () => {
 
     currentCandidateProfile = rows?.[0] ?? currentCandidateProfile;
     renderResumeStatus();
-    showToast("Currículum subido correctamente.");
+    showToast("CurrÃ­culum subido correctamente.");
   } catch (error) {
     renderResumeStatus();
     showToast(error.message);
@@ -4299,7 +4371,7 @@ document.querySelector("#confirmApplication").addEventListener("click", async ()
     renderJobs();
     renderProfileActivity();
     if (activeDetailJobId) await openJobDetail(activeApplicationJob.id);
-    showToast(`Postulación enviada a ${activeApplicationJob.company}.`);
+    showToast(`PostulaciÃ³n enviada a ${activeApplicationJob.company}.`);
     activeApplicationJob = null;
   } catch (error) {
     showToast(error.message);
@@ -4315,7 +4387,7 @@ messageForm.addEventListener("submit", async (event) => {
   try {
     if (!getStoredSession()?.access_token) {
       switchView("acceso");
-      showToast("Inicia sesión para enviar mensajes.");
+      showToast("Inicia sesiÃ³n para enviar mensajes.");
       return;
     }
 
@@ -4329,7 +4401,7 @@ messageForm.addEventListener("submit", async (event) => {
       await openConversation(activeConversationId);
       showToast("Mensaje enviado.");
     } else {
-      showToast("Primero necesitas una conversación real. Se crea al postularte a una vacante real.");
+      showToast("Primero necesitas una conversaciÃ³n real. Se crea al postularte a una vacante real.");
     }
     messageInput.value = "";
     resizeMessageComposer();
@@ -4393,14 +4465,14 @@ window.addEventListener("beforeinstallprompt", (event) => {
 installAppButton.addEventListener("click", async () => {
   if (!deferredInstallPrompt) {
     if (isIosDevice) {
-      showToast("En Safari toca Compartir y después Agregar a pantalla de inicio.");
+      showToast("En Safari toca Compartir y despuÃ©s Agregar a pantalla de inicio.");
     }
     return;
   }
   deferredInstallPrompt.prompt();
   const choice = await deferredInstallPrompt.userChoice;
   if (choice.outcome === "accepted") {
-    showToast("RedJob se está instalando.");
+    showToast("RedJob se estÃ¡ instalando.");
   }
   deferredInstallPrompt = null;
   installAppButton.classList.add("is-hidden");
@@ -4409,7 +4481,7 @@ installAppButton.addEventListener("click", async () => {
 window.addEventListener("appinstalled", () => {
   deferredInstallPrompt = null;
   installAppButton.classList.add("is-hidden");
-  showToast("RedJob quedó instalada.");
+  showToast("RedJob quedÃ³ instalada.");
 });
 
 if (window.matchMedia("(display-mode: standalone)").matches) {

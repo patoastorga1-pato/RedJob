@@ -1,4 +1,4 @@
-:root {
+﻿:root {
   --red: #dc2626;
   --black: #111111;
   --dark: #18181b;
@@ -2702,6 +2702,55 @@ textarea:focus {
   margin: 0;
 }
 
+.admin-report-dialog {
+  width: min(680px, calc(100% - 28px));
+}
+
+.admin-report-detail {
+  gap: 18px;
+}
+
+.admin-report-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-report-meta span {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0 10px;
+  background: #f8fafc;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.admin-report-detail section {
+  display: grid;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px;
+  background: #ffffff;
+}
+
+.admin-report-detail section h3 {
+  margin: 0;
+  color: var(--black);
+  font-size: 15px;
+  font-weight: 950;
+}
+
+.admin-report-detail section p {
+  color: #111827;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
 .dialog-close {
   position: absolute;
   top: 14px;
@@ -3194,6 +3243,18 @@ textarea:focus {
 .admin-action.success {
   border-color: rgba(22, 163, 74, 0.22);
   color: #15803d;
+}
+
+.admin-action.strong {
+  border-color: rgba(220, 38, 38, 0.25);
+  background: var(--red);
+  color: #ffffff;
+  box-shadow: 0 10px 20px rgba(220, 38, 38, 0.16);
+}
+
+.admin-action.strong:hover {
+  color: #ffffff;
+  filter: brightness(0.96);
 }
 
 .admin-action.danger {
