@@ -140,6 +140,20 @@ function buildPostalAddress(location, workMode) {
   };
 }
 
+function buildApplicantLocationRequirements(location, workMode) {
+  if (String(workMode) !== "remote") return null;
+  const normalizedLocation = String(location ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+  if (!["remoto", "mexico", "todo mexico"].includes(normalizedLocation)) return null;
+  return {
+    "@type": "Country",
+    name: "México"
+  };
+}
+
 function buildBaseSalary(min, max) {
   const minimum = Number(min);
   const maximum = Number(max);
@@ -196,9 +210,11 @@ function buildJobPosting(job, company, canonical, supabaseUrl) {
     if (/^(todo\s+m[eé]xico|m[eé]xico|mexico)$/i.test(location)) {
       schema.applicantLocationRequirements = {
         "@type": "Country",
-        name: "MX"
+        name: "México"
       };
     }
+    const applicantLocationRequirements = buildApplicantLocationRequirements(job.location, job.work_mode);
+    if (applicantLocationRequirements) schema.applicantLocationRequirements = applicantLocationRequirements;
   }
 
   const baseSalary = buildBaseSalary(job.salary_min, job.salary_max);
