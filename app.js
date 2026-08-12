@@ -106,11 +106,23 @@ const cancelJobEditButton = document.querySelector("#cancelJobEditButton");
 const companyJobsList = document.querySelector("#companyJobsList");
 const receivedCandidatesList = document.querySelector("#receivedCandidatesList");
 const companyActiveJobsCount = document.querySelector("#companyActiveJobsCount");
+const companyActiveJobsMeta = document.querySelector("#companyActiveJobsMeta");
 const companyCandidatesCount = document.querySelector("#companyCandidatesCount");
+const companyCandidatesMeta = document.querySelector("#companyCandidatesMeta");
 const companyInterviewCount = document.querySelector("#companyInterviewCount");
+const companyInterviewMeta = document.querySelector("#companyInterviewMeta");
+const companyHiredCount = document.querySelector("#companyHiredCount");
+const companyHiredMeta = document.querySelector("#companyHiredMeta");
 const companyHeroLogo = document.querySelector("#companyHeroLogo");
 const companyHeroName = document.querySelector("#companyHeroName");
 const companyHeroDescription = document.querySelector("#companyHeroDescription");
+const companyViewProfileButton = document.querySelector("#companyViewProfileButton");
+const companyEditButton = document.querySelector("#companyEditButton");
+const companySettingsButton = document.querySelector("#companySettingsButton");
+const companySettingsInlineButton = document.querySelector("#companySettingsInlineButton");
+const companySettingsPanel = document.querySelector("#companySettingsPanel");
+const closeCompanySettingsButton = document.querySelector("#closeCompanySettingsButton");
+const openJobEditorButton = document.querySelector("#openJobEditorButton");
 const companyVerifiedBadge = document.querySelector("#companyVerifiedBadge");
 const companyPlanBadge = document.querySelector("#companyPlanBadge");
 const companyPlanStatus = document.querySelector("#companyPlanStatus");
@@ -118,6 +130,7 @@ const promotionActivePlan = document.querySelector("#promotionActivePlan");
 const promotionActiveBenefits = document.querySelector("#promotionActiveBenefits");
 const promotionPlanCards = document.querySelector("#promotionPlanCards");
 const promotionBillingStatus = document.querySelector("#promotionBillingStatus");
+const showPlanOptionsButton = document.querySelector("#showPlanOptionsButton");
 const manageBillingButton = document.querySelector("#manageBillingButton");
 const companyProfileSelect = document.querySelector("#companyProfileSelect");
 const companyPrivateIdCard = document.querySelector("#companyPrivateIdCard");
@@ -125,6 +138,12 @@ const companyPrivateId = document.querySelector("#companyPrivateId");
 const copyCompanyIdButton = document.querySelector("#copyCompanyIdButton");
 const newCompanyButton = document.querySelector("#newCompanyButton");
 const deleteCompanyButton = document.querySelector("#deleteCompanyButton");
+const candidateStatusTabs = document.querySelector("#candidateStatusTabs");
+const candidateSearchInput = document.querySelector("#candidateSearchInput");
+const performanceViewsCount = document.querySelector("#performanceViewsCount");
+const performanceApplicationsCount = document.querySelector("#performanceApplicationsCount");
+const performanceInterviewsCount = document.querySelector("#performanceInterviewsCount");
+const performanceHiresCount = document.querySelector("#performanceHiresCount");
 const detailCompanyLogo = document.querySelector("#detailCompanyLogo");
 const detailCompany = document.querySelector("#detailCompany");
 const detailTitle = document.querySelector("#detailTitle");
@@ -219,6 +238,8 @@ let activeEditingJobId = null;
 let activeConversationJobId = null;
 let activeReportTarget = null;
 let currentConversations = [];
+let receivedCandidateRows = [];
+let activeCandidateFilter = "all";
 const unreadConversationCounts = new Map();
 let messageRefreshTimer = null;
 let lastBackgroundRefreshAt = 0;
@@ -566,6 +587,7 @@ function resetUserState({ clearJobs = false } = {}) {
   activeEditingJobId = null;
   activeReportTarget = null;
   currentConversations = [];
+  receivedCandidateRows = [];
   unreadConversationCounts.clear();
   stopMessageRefresh();
   chatPanel?.classList.add("is-hidden");
@@ -579,6 +601,8 @@ function resetUserState({ clearJobs = false } = {}) {
   profileMessagesCount.textContent = "0";
   companyCandidatesCount.textContent = "0";
   companyInterviewCount.textContent = "0";
+  if (companyHiredCount) companyHiredCount.textContent = "0";
+  renderPerformanceMetrics([]);
 }
 
 function clearExpiredSession(message = "Tu sesión expiró. Inicia sesión de nuevo.") {
@@ -830,6 +854,7 @@ function renderPromotionState() {
   const planCopy = promotionPlans[activePlan];
   const status = currentCompanyProfile?.plan_status || "beta";
   const hasStripeCustomer = Boolean(currentCompanyProfile?.billing_customer_id);
+  const showPlanOptions = promotionPlanCards?.classList.contains("show-options") || false;
 
   if (companyPlanBadge) {
     companyPlanBadge.dataset.plan = activePlan;
@@ -841,8 +866,12 @@ function renderPromotionState() {
   }
 
   if (promotionActivePlan) promotionActivePlan.textContent = planCopy.label;
-  if (promotionActiveBenefits) promotionActiveBenefits.textContent = planCopy.benefits;
+  if (promotionActiveBenefits) {
+    const priceCopy = activePlan === "premium" ? "$999 MXN / mes" : activePlan === "pro" ? "$499 MXN / mes" : "$0 MXN";
+    promotionActiveBenefits.textContent = `${priceCopy} - ${getPlanStatusCopy(status, planCopy)}`;
+  }
   manageBillingButton?.classList.toggle("is-hidden", !hasStripeCustomer);
+  promotionPlanCards?.classList.toggle("is-collapsed", !showPlanOptions);
 
   promotionPlanCards?.querySelectorAll("[data-plan-card]").forEach((card) => {
     const isActive = card.dataset.planCard === activePlan;
@@ -850,7 +879,13 @@ function renderPromotionState() {
     card.setAttribute("aria-current", isActive ? "true" : "false");
     const button = card.querySelector("[data-plan-request]");
     if (button) {
-      button.textContent = isActive ? "Plan actual" : `Solicitar ${promotionPlans[card.dataset.planCard]?.label || "plan"}`;
+      if (isActive) {
+        button.textContent = "Plan actual";
+      } else if (activePlan === "pro" && card.dataset.planCard === "premium") {
+        button.textContent = "Mejorar a Premium";
+      } else {
+        button.textContent = `Solicitar ${promotionPlans[card.dataset.planCard]?.label || "plan"}`;
+      }
       button.disabled = isActive;
     }
   });
@@ -920,13 +955,17 @@ function renderCompanyHeader() {
   companyVerifiedBadge.classList.toggle("is-hidden", !currentCompanyProfile?.is_verified);
   renderCompanyPrivateId();
   renderPromotionState();
+  companyViewProfileButton.disabled = !currentCompanyProfile?.id;
+  companyEditButton.disabled = !currentCompanyProfile?.id;
+  companySettingsButton.disabled = !currentCompanyProfile?.id;
+  companySettingsInlineButton.disabled = !currentCompanyProfile?.id;
 }
 
 function renderCompanyPrivateId() {
   if (!companyPrivateIdCard || !companyPrivateId || !copyCompanyIdButton) return;
 
   const id = currentCompanyProfile?.id ?? "";
-  companyPrivateIdCard.classList.toggle("is-hidden", !id);
+  companyPrivateIdCard.classList.add("is-hidden");
   companyPrivateId.textContent = id || "Sin empresa guardada";
   copyCompanyIdButton.disabled = !id;
 }
@@ -1100,12 +1139,26 @@ async function promoteCompanyJob(jobId) {
   showToast("Vacante destacada por 30 dias.");
 }
 
+function getApplicationCountsByJob() {
+  return receivedCandidateRows.reduce((counts, application) => {
+    const job = Array.isArray(application.jobs) ? application.jobs[0] : application.jobs;
+    const jobId = job?.id;
+    if (!jobId) return counts;
+    counts.set(String(jobId), (counts.get(String(jobId)) ?? 0) + 1);
+    return counts;
+  }, new Map());
+}
+
 function renderCompanyJobs() {
   const companyIds = new Set(currentCompanyProfiles.map((company) => String(company.id)));
   const companyJobs = companyIds.size
     ? jobs.filter((job) => companyIds.has(String(job.companyId)))
     : [];
   companyActiveJobsCount.textContent = companyJobs.length;
+  if (companyActiveJobsMeta) {
+    companyActiveJobsMeta.textContent = companyJobs.length === 1 ? "1 vacante publicada" : `${companyJobs.length} vacantes publicadas`;
+  }
+  const applicationsByJob = getApplicationCountsByJob();
 
   companyJobsList.innerHTML = companyJobs.length
     ? companyJobs
@@ -1116,15 +1169,15 @@ function renderCompanyJobs() {
               : "";
 
             const promoteButton = isJobFeatured(job)
-              ? `<button class="secondary-button subtle" type="button" disabled>Destacada</button>`
-              : `<button class="secondary-button subtle" type="button" data-promote-job="${escapeHtml(job.id)}">Destacar</button>`;
+              ? `<button class="secondary-button subtle compact" type="button" disabled>Destacada</button>`
+              : `<button class="secondary-button subtle compact" type="button" data-promote-job="${escapeHtml(job.id)}">Destacar</button>`;
+            const candidatesCount = applicationsByJob.get(String(job.id)) ?? 0;
 
             return `
             <article class="company-job-row">
               ${renderCompanyLogoMarkup(job.company, job.companyLogoPath, "compact")}
               <div class="company-job-info">
                 <strong class="company-job-title">${escapeHtml(job.title)}</strong>
-                <div class="job-commercial-badges">${renderCommercialBadges(job)}</div>
                 <div class="company-job-meta">
                   <span class="company-job-company">${escapeHtml(job.company)}</span>
                   ${verifiedMark}
@@ -1133,15 +1186,23 @@ function renderCompanyJobs() {
                   <span aria-hidden="true">·</span>
                   <span>${escapeHtml(formatWorkModeLabel(job.mode))}</span>
                 </div>
+                <div class="company-job-signal">
+                  <span>${candidatesCount} candidato${candidatesCount === 1 ? "" : "s"}</span>
+                  <span aria-hidden="true">·</span>
+                  <span>Vistas no disponibles</span>
+                </div>
               </div>
               <div class="company-job-actions">
                 ${promoteButton}
-                <button class="secondary-button subtle" type="button" data-edit-job="${escapeHtml(job.id)}">
-                  Editar
-                </button>
-                <button class="delete-job-button" type="button" data-delete-job="${escapeHtml(job.id)}">
-                  Borrar
-                </button>
+                <details class="job-actions-menu">
+                  <summary aria-label="Más acciones">•••</summary>
+                  <div>
+                    <button type="button" data-edit-job="${escapeHtml(job.id)}">Editar</button>
+                    <button type="button" disabled title="Requiere estado de pausa en flujo actual">Pausar / Activar</button>
+                    <button type="button" disabled title="Disponible cuando se defina duplicado seguro">Duplicar vacante</button>
+                    <button class="danger" type="button" data-delete-job="${escapeHtml(job.id)}">Eliminar</button>
+                  </div>
+                </details>
               </div>
             </article>
           `;
@@ -1737,15 +1798,18 @@ async function loadReceivedCandidates() {
   const companyIds = currentCompanyProfiles.map((company) => company.id);
   if (!companyIds.length) {
     receivedCandidateProfiles.clear();
+    receivedCandidateRows = [];
     receivedCandidatesList.innerHTML = `<p class="empty-list">Guarda tu perfil de empresa para ver candidatos.</p>`;
     companyCandidatesCount.textContent = "0";
     companyInterviewCount.textContent = "0";
+    if (companyHiredCount) companyHiredCount.textContent = "0";
+    renderPerformanceMetrics([]);
     return;
   }
 
   try {
     const applicationsQuery =
-      `/applications?select=id,status,match_score,created_at,candidate_profiles(full_name,age,target_role,location,work_mode,summary,resume_name,resume_path),jobs!inner(title,company_id,company_profiles(company_name))&jobs.company_id=in.(${companyIds.join(",")})`;
+      `/applications?select=id,status,match_score,created_at,candidate_profiles(full_name,age,target_role,location,work_mode,summary,resume_name,resume_path),jobs!inner(id,title,company_id,company_profiles(company_name))&jobs.company_id=in.(${companyIds.join(",")})`;
     let rows;
     try {
       rows = await supabaseRestRequest(`${applicationsQuery}&company_archived_at=is.null&order=created_at.desc`);
@@ -1755,58 +1819,114 @@ async function loadReceivedCandidates() {
     }
 
     receivedCandidateProfiles.clear();
-    companyCandidatesCount.textContent = String(rows?.length ?? 0);
-    companyInterviewCount.textContent = String((rows ?? []).filter((row) => row.status === "interview").length);
-
-    receivedCandidatesList.innerHTML = rows?.length
-      ? rows
-          .map((application) => {
-            const candidate = Array.isArray(application.candidate_profiles)
-              ? application.candidate_profiles[0]
-              : application.candidate_profiles;
-            const job = Array.isArray(application.jobs) ? application.jobs[0] : application.jobs;
-            const company = Array.isArray(job?.company_profiles) ? job.company_profiles[0] : job?.company_profiles;
-            receivedCandidateProfiles.set(String(application.id), {
-              candidate,
-              jobTitle: job?.title ?? "Vacante",
-              companyName: company?.company_name ?? "Empresa",
-              status: application.status,
-              matchScore: application.match_score
-            });
-            return `
-              <article class="candidate-row-card" data-application-id="${escapeHtml(application.id)}">
-                <div class="candidate-row-main">
-                  <strong>${escapeHtml(candidate?.full_name ?? "Candidato")}</strong>
-                  <small>${escapeHtml(candidate?.target_role ?? "Perfil candidato")} - ${escapeHtml(formatLocationLabel(candidate?.location ?? "Mexico"))}${candidate?.age ? ` - ${escapeHtml(candidate.age)} años` : ""}</small>
-                  <small>${escapeHtml(company?.company_name ?? "Empresa")} - ${escapeHtml(job?.title ?? "Vacante")}${candidate?.resume_name ? ` - CV: ${escapeHtml(candidate.resume_name)}` : ""}</small>
-                </div>
-                <div class="candidate-match-score">
-                  <strong>${safePercent(application.match_score)}%</strong>
-                  <span>compatibilidad</span>
-                </div>
-                <span class="application-status-badge ${getApplicationStatusClass(application.status)}">${escapeHtml(mapApplicationStatus(application.status))}</span>
-                <div class="candidate-row-actions">
-                  <button class="secondary-button subtle candidate-profile-button" type="button" data-view-candidate="${escapeHtml(application.id)}">
-                    Ver perfil
-                  </button>
-                  <details class="application-status-menu">
-                    <summary>Cambiar estado</summary>
-                    <div class="application-status-actions">
-                      ${renderApplicationStatusButtons(application.id, application.status)}
-                    </div>
-                  </details>
-                  <button class="remove-candidate-button icon-only" type="button" data-remove-candidate="${escapeHtml(application.id)}" title="Quitar candidato de esta vacante" aria-label="Quitar candidato">
-                    &#128465;
-                  </button>
-                </div>
-              </article>
-            `;
-          })
-          .join("")
-      : `<p class="empty-list">Aún no hay candidatos recibidos.</p>`;
+    receivedCandidateRows = rows ?? [];
+    renderCompanyCandidateMetrics(receivedCandidateRows);
+    renderReceivedCandidates();
+    renderCompanyJobs();
   } catch (error) {
+    receivedCandidateRows = [];
     receivedCandidatesList.innerHTML = `<p class="empty-list">No se pudieron cargar candidatos: ${escapeHtml(error.message)}</p>`;
   }
+}
+
+function renderCompanyCandidateMetrics(rows = receivedCandidateRows) {
+  const total = rows.length;
+  const interviews = rows.filter((row) => row.status === "interview").length;
+  const hires = rows.filter((row) => row.status === "hired").length;
+  companyCandidatesCount.textContent = String(total);
+  companyInterviewCount.textContent = String(interviews);
+  if (companyHiredCount) companyHiredCount.textContent = String(hires);
+  if (companyCandidatesMeta) companyCandidatesMeta.textContent = total === 1 ? "1 postulación total" : `${total} postulaciones totales`;
+  if (companyInterviewMeta) companyInterviewMeta.textContent = interviews === 1 ? "1 candidato activo" : `${interviews} candidatos activos`;
+  if (companyHiredMeta) companyHiredMeta.textContent = hires === 1 ? "1 contratación" : `${hires} contrataciones`;
+  renderPerformanceMetrics(rows);
+}
+
+function normalizeCandidateSearch(value) {
+  return String(value ?? "").trim().toLowerCase();
+}
+
+function shouldShowCandidate(application, query) {
+  if (activeCandidateFilter !== "all" && application.status !== activeCandidateFilter) return false;
+  if (!query) return true;
+  const candidate = Array.isArray(application.candidate_profiles)
+    ? application.candidate_profiles[0]
+    : application.candidate_profiles;
+  const job = Array.isArray(application.jobs) ? application.jobs[0] : application.jobs;
+  const company = Array.isArray(job?.company_profiles) ? job.company_profiles[0] : job?.company_profiles;
+  const searchable = [
+    candidate?.full_name,
+    candidate?.target_role,
+    candidate?.location,
+    candidate?.age,
+    candidate?.resume_name,
+    job?.title,
+    company?.company_name,
+    mapApplicationStatus(application.status)
+  ].filter(Boolean).join(" ").toLowerCase();
+  return searchable.includes(query);
+}
+
+function renderReceivedCandidates() {
+  const query = normalizeCandidateSearch(candidateSearchInput?.value);
+  const visibleRows = receivedCandidateRows.filter((application) => shouldShowCandidate(application, query));
+
+  candidateStatusTabs?.querySelectorAll("[data-candidate-filter]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.candidateFilter === activeCandidateFilter);
+  });
+
+  receivedCandidateProfiles.clear();
+  receivedCandidatesList.innerHTML = visibleRows.length
+    ? visibleRows
+        .map((application) => {
+          const candidate = Array.isArray(application.candidate_profiles)
+            ? application.candidate_profiles[0]
+            : application.candidate_profiles;
+          const job = Array.isArray(application.jobs) ? application.jobs[0] : application.jobs;
+          const company = Array.isArray(job?.company_profiles) ? job.company_profiles[0] : job?.company_profiles;
+          receivedCandidateProfiles.set(String(application.id), {
+            candidate,
+            jobTitle: job?.title ?? "Vacante",
+            companyName: company?.company_name ?? "Empresa",
+            status: application.status,
+            matchScore: application.match_score
+          });
+          const candidateMeta = [
+            candidate?.location ? formatLocationLabel(candidate.location) : "Ubicación pendiente",
+            candidate?.age ? `${candidate.age} años` : "",
+            candidate?.target_role ?? "Perfil candidato"
+          ].filter(Boolean).join(" · ");
+          return `
+            <article class="candidate-row-card" data-application-id="${escapeHtml(application.id)}">
+              <div class="candidate-row-main">
+                <div class="candidate-row-heading">
+                  <strong>${escapeHtml(candidate?.full_name ?? "Candidato")}</strong>
+                  <span class="application-status-badge ${getApplicationStatusClass(application.status)}">${escapeHtml(mapApplicationStatus(application.status))}</span>
+                </div>
+                <small>${escapeHtml(candidateMeta)}</small>
+                <small>${escapeHtml(job?.title ?? "Vacante")} · ${escapeHtml(company?.company_name ?? "Empresa")}</small>
+                <small>${candidate?.resume_name ? `CV: ${escapeHtml(candidate.resume_name)}` : "Sin currículum cargado"}</small>
+              </div>
+              <div class="candidate-match-score">
+                <strong>${safePercent(application.match_score)}%</strong>
+                <span>compatibilidad</span>
+              </div>
+              <div class="candidate-row-actions">
+                <button class="secondary-button subtle compact candidate-profile-button" type="button" data-view-candidate="${escapeHtml(application.id)}">Ver perfil</button>
+                <button class="secondary-button subtle compact" type="button" data-view-candidate-resume="${escapeHtml(application.id)}" ${candidate?.resume_path ? "" : "disabled"}>Ver CV</button>
+                <label class="candidate-status-select">
+                  <span>Cambiar estado</span>
+                  <select data-application-status-select="${escapeHtml(application.id)}">
+                    ${renderApplicationStatusOptions(application.status)}
+                  </select>
+                </label>
+                <button class="remove-candidate-button icon-only" type="button" data-remove-candidate="${escapeHtml(application.id)}" title="Quitar candidato de esta vacante" aria-label="Quitar candidato">x</button>
+              </div>
+            </article>
+          `;
+        })
+        .join("")
+    : `<p class="empty-list">${receivedCandidateRows.length ? "No hay candidatos con ese filtro." : "Aún no hay candidatos recibidos."}</p>`;
 }
 
 function openReceivedCandidateProfile(applicationId) {
@@ -1851,6 +1971,31 @@ function renderApplicationStatusButtons(applicationId, status) {
       `
     )
     .join("");
+}
+
+function renderApplicationStatusOptions(status) {
+  const statuses = [
+    ["submitted", "Nuevo"],
+    ["reviewing", "En revisión"],
+    ["interview", "Entrevista"],
+    ["hired", "Contratado"],
+    ["rejected", "Descartado"]
+  ];
+
+  return statuses
+    .map(([value, label]) => `<option value="${escapeHtml(value)}" ${status === value ? "selected" : ""}>${escapeHtml(label)}</option>`)
+    .join("");
+}
+
+function renderPerformanceMetrics(rows = receivedCandidateRows) {
+  const applicationsCount = rows.length;
+  const interviewsCount = rows.filter((row) => row.status === "interview").length;
+  const hiresCount = rows.filter((row) => row.status === "hired").length;
+
+  if (performanceViewsCount) performanceViewsCount.textContent = "--";
+  if (performanceApplicationsCount) performanceApplicationsCount.textContent = String(applicationsCount);
+  if (performanceInterviewsCount) performanceInterviewsCount.textContent = String(interviewsCount);
+  if (performanceHiresCount) performanceHiresCount.textContent = String(hiresCount);
 }
 
 function getApplicationStatusClass(status) {
@@ -2247,11 +2392,11 @@ async function rateCompany(companyId, rating) {
 
 function mapApplicationStatus(status) {
   return {
-    submitted: "Enviada",
+    submitted: "Nuevo",
     reviewing: "En revisión",
     interview: "En entrevista",
-    rejected: "No seleccionada",
-    hired: "Contratada",
+    rejected: "Descartado",
+    hired: "Contratado",
     withdrawn: "Retirada"
   }[status] ?? status;
 }
@@ -3703,8 +3848,12 @@ detailCompanyRatingActions.addEventListener("click", async (event) => {
 });
 
 [searchInput, locationCityInput, modeFilter].forEach((control) => {
-  control.addEventListener("input", renderJobs);
-  control.addEventListener("change", renderJobs);
+  control.addEventListener("input", () => {
+    renderJobs();
+  });
+  control.addEventListener("change", () => {
+    renderJobs();
+  });
 });
 
 locationInput.addEventListener("change", () => {
@@ -3906,10 +4055,63 @@ manageBillingButton?.addEventListener("click", async () => {
   }
 });
 
+showPlanOptionsButton?.addEventListener("click", () => {
+  promotionPlanCards?.classList.toggle("show-options");
+  renderPromotionState();
+  showPlanOptionsButton.textContent = promotionPlanCards?.classList.contains("show-options") ? "Ocultar planes" : "Mejorar plan";
+});
+
+[openJobEditorButton, companyEditButton].forEach((button) => {
+  button?.addEventListener("click", () => {
+    companyJobEditor.open = true;
+    companyJobEditor.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+});
+
+companyViewProfileButton?.addEventListener("click", () => {
+  renderCompanyHeader();
+  showToast("Este es el perfil interno de tu empresa.");
+});
+
+function toggleCompanySettings(show = true) {
+  companySettingsPanel?.classList.toggle("is-hidden", !show);
+  if (show) companySettingsPanel?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+[companySettingsButton, companySettingsInlineButton].forEach((button) => {
+  button?.addEventListener("click", () => toggleCompanySettings(true));
+});
+
+closeCompanySettingsButton?.addEventListener("click", () => toggleCompanySettings(false));
+
+candidateStatusTabs?.addEventListener("click", (event) => {
+  const filterButton = event.target.closest("[data-candidate-filter]");
+  if (!filterButton) return;
+  activeCandidateFilter = filterButton.dataset.candidateFilter;
+  renderReceivedCandidates();
+});
+
+candidateSearchInput?.addEventListener("input", renderReceivedCandidates);
+
 receivedCandidatesList.addEventListener("click", async (event) => {
   const profileButton = event.target.closest("[data-view-candidate]");
   if (profileButton) {
     openReceivedCandidateProfile(profileButton.dataset.viewCandidate);
+    return;
+  }
+
+  const resumeButton = event.target.closest("[data-view-candidate-resume]");
+  if (resumeButton) {
+    const profile = receivedCandidateProfiles.get(String(resumeButton.dataset.viewCandidateResume));
+    if (!profile?.candidate?.resume_path) {
+      showToast("Este candidato aún no subió su currículum.");
+      return;
+    }
+    try {
+      window.open(await createResumeSignedUrl(profile.candidate.resume_path), "_blank", "noopener");
+    } catch (error) {
+      showToast(friendlyError(error));
+    }
     return;
   }
 
@@ -3941,6 +4143,21 @@ receivedCandidatesList.addEventListener("click", async (event) => {
     showToast(friendlyError(error));
   } finally {
     statusButton.disabled = false;
+  }
+});
+
+receivedCandidatesList.addEventListener("change", async (event) => {
+  const statusSelect = event.target.closest("[data-application-status-select]");
+  if (!statusSelect) return;
+
+  statusSelect.disabled = true;
+  try {
+    await updateApplicationStatus(statusSelect.dataset.applicationStatusSelect, statusSelect.value);
+    showToast("Estado de postulación actualizado.");
+  } catch (error) {
+    showToast(friendlyError(error));
+  } finally {
+    statusSelect.disabled = false;
   }
 });
 
@@ -4530,10 +4747,19 @@ renderSessionStatus();
 renderCompanyHeader();
 renderCompanyJobs();
 applyRoleExperience();
-loadCurrentProfile()
-  .then(loadRealJobs)
-  .then(loadSavedJobs)
-  .then(() => loadFirstConversation(false))
-  .then(loadReceivedCandidates)
-  .then(handleBillingReturn)
-  .catch((error) => showToast(friendlyError(error)));
+
+async function bootRedJob() {
+  await loadRealJobs();
+
+  if (getStoredSession()?.user?.id) {
+    await loadCurrentProfile();
+    renderCompanyJobs();
+    renderProfileActivity();
+    await loadSavedJobs();
+    await loadFirstConversation(false);
+  }
+
+  await handleBillingReturn();
+}
+
+bootRedJob().catch((error) => showToast(friendlyError(error)));
