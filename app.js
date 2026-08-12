@@ -1354,10 +1354,10 @@ async function fetchJobById(jobId) {
     rows = await supabaseRestRequest(
       `/jobs?select=id,title,description,location,work_mode,category,salary_min,salary_max,is_featured,featured_priority,featured_until,promotion_source,status,company_profiles(id,user_id,company_name,description,logo_path,logo_name,plan,plan_status,is_verified),job_skills(skill_name)&id=eq.${jobId}&status=eq.published&limit=1`
     );
-  } catch (error) {
-    if (!/category|schema cache|column|Falta instalar/i.test(error.message)) throw error;
-    rows = await supabaseRestRequest(
-      `/jobs?select=id,title,description,location,work_mode,salary_min,salary_max,status,company_profiles(id,user_id,company_name,description),job_skills(skill_name)&id=eq.${jobId}&status=eq.published&limit=1`
+    } catch (error) {
+      if (!/category|schema cache|column|Falta instalar/i.test(error.message)) throw error;
+      rows = await supabaseRestRequest(
+      `/jobs?select=id,title,description,location,work_mode,salary_min,salary_max,status,company_profiles(id,user_id,company_name,description,logo_path,logo_name,is_verified),job_skills(skill_name)&id=eq.${jobId}&status=eq.published&limit=1`
     );
   }
   const mapped = mapSupabaseJob(rows?.[0]);
@@ -2776,7 +2776,7 @@ async function loadRealJobs() {
     } catch (error) {
       if (!/category|schema cache|column|Falta instalar/i.test(error.message)) throw error;
       rows = await supabaseRestRequest(
-        "/jobs?select=id,title,description,location,work_mode,salary_min,salary_max,status,company_profiles(id,user_id,company_name,description),job_skills(skill_name)&status=eq.published"
+        "/jobs?select=id,title,description,location,work_mode,salary_min,salary_max,status,company_profiles(id,user_id,company_name,description,logo_path,logo_name,is_verified),job_skills(skill_name)&status=eq.published"
       );
     }
 

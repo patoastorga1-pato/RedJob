@@ -32,6 +32,36 @@ function extractJobId(pathname) {
   return pathname.match(/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i)?.[1] ?? "";
 }
 
+function getInitials(value) {
+  const parts = String(value || "RJ")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2);
+  return (parts.map((part) => part[0]).join("") || "RJ").toUpperCase();
+}
+
+function getCompanyLogoUrl(path) {
+  if (!path) return "";
+  if (/^data:image\/(png|jpe?g|webp);base64,/i.test(path)) return path;
+  if (/^https?:\/\//i.test(path)) return path;
+  if (!SUPABASE_URL) return "";
+  const safePath = String(path)
+    .split("/")
+    .map((part) => encodeURIComponent(part))
+    .join("/");
+  return `${SUPABASE_URL}/storage/v1/object/public/company-logos/${safePath}`;
+}
+
+function renderCompanyLogo(company, extraClass = "large") {
+  const name = company?.company_name || "Empresa";
+  const initials = getInitials(name);
+  const logoUrl = getCompanyLogoUrl(company?.logo_path);
+  const classes = `company-logo ${extraClass} ${logoUrl ? "has-image" : ""}`.trim();
+  if (!logoUrl) return `<span class="${classes}">${escapeHtml(initials)}</span>`;
+  return `<span class="${classes}" data-logo-fallback="${escapeHtml(initials)}"><img src="${escapeHtml(logoUrl)}" alt="Imagen de ${escapeHtml(name)}" loading="eager" decoding="async"></span>`;
+}
+
 function formatLocationLabel(location) {
   const labels = {
     "Todo Mexico": "Todo Mexico",
@@ -96,7 +126,7 @@ function renderUnavailable(status) {
   const title = status === "closed" ? "Vacante cerrada | RedJob" : "Vacante no disponible | RedJob";
   const body = status === "closed" ? "Esta vacante ya no esta activa." : "Esta vacante no esta disponible publicamente en este momento.";
   return new Response(
-    `<!doctype html><html lang="es-MX"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">${noindex ? '<meta name="robots" content="noindex, follow">' : ""}<title>${title}</title><link rel="stylesheet" href="/styles.css?v=20260812c"></head><body><main class="job-public-page"><section class="job-public-card"><p class="eyebrow">RedJob</p><h1>${title}</h1><p>${body}</p><a class="primary-button" href="/">Ver vacantes activas</a></section></main></body></html>`,
+    `<!doctype html><html lang="es-MX"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">${noindex ? '<meta name="robots" content="noindex, follow">' : ""}<title>${title}</title><link rel="stylesheet" href="/styles.css?v=20260812d"></head><body><main class="job-public-page"><section class="job-public-card"><p class="eyebrow">RedJob</p><h1>${title}</h1><p>${body}</p><a class="primary-button" href="/">Ver vacantes activas</a></section></main></body></html>`,
     {
       status: code,
       headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" }
@@ -134,7 +164,7 @@ function renderJob(job) {
     <meta property="og:image" content="${SITE_URL}/assets/redjob-social-preview.png">
     <meta name="twitter:card" content="summary_large_image">
     <link rel="icon" type="image/png" sizes="64x64" href="/assets/redjob-favicon-64.png?v=20260812c">
-    <link rel="stylesheet" href="/styles.css?v=20260812c">
+    <link rel="stylesheet" href="/styles.css?v=20260812d">
   </head>
   <body>
     <header class="site-header">
@@ -153,7 +183,7 @@ function renderJob(job) {
       <article class="job-public-card">
         <a class="text-button" href="/">Volver a vacantes</a>
         <header class="job-public-head">
-          <span class="company-logo large">${escapeHtml(String(company?.company_name ?? "R").slice(0, 2).toUpperCase())}</span>
+          ${renderCompanyLogo(company)}
           <div>
             <p class="eyebrow">${escapeHtml(company?.company_name ?? "Empresa")}</p>
             <h1>${escapeHtml(job.title)}</h1>
