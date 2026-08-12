@@ -361,7 +361,7 @@
         <section class="company-profile">
           <div class="company-hero">
             <span class="company-logo large" id="companyHeroLogo">RJ</span>
-            <div>
+            <div class="company-hero-copy">
               <span>Perfil de empresa</span>
               <h1 id="companyHeroName">Tu empresa</h1>
               <div class="company-plan-row">
@@ -371,11 +371,20 @@
               </div>
               <p id="companyHeroDescription">Completa el perfil de empresa para publicar vacantes reales.</p>
             </div>
+            <div class="company-hero-actions">
+              <button class="secondary-button subtle compact" type="button" id="companyViewProfileButton">Ver perfil</button>
+              <button class="secondary-button subtle compact" type="button" id="companyEditButton">Editar empresa</button>
+              <button class="secondary-button subtle compact" type="button" id="companySettingsButton">Configuración</button>
+            </div>
           </div>
           <div class="company-stats">
-            <article><strong id="companyActiveJobsCount">0</strong><span>Vacantes activas</span></article>
-            <article><strong id="companyCandidatesCount">0</strong><span>Candidatos recibidos</span></article>
-            <article><strong id="companyInterviewCount">0</strong><span>En entrevista</span></article>
+            <article><strong id="companyActiveJobsCount">0</strong><span>Vacantes activas</span><small id="companyActiveJobsMeta">Publicadas ahora</small></article>
+            <article><strong id="companyCandidatesCount">0</strong><span>Candidatos recibidos</span><small id="companyCandidatesMeta">Postulaciones totales</small></article>
+            <article><strong id="companyInterviewCount">0</strong><span>En entrevista</span><small id="companyInterviewMeta">Proceso activo</small></article>
+            <article><strong id="companyHiredCount">0</strong><span>Contratados</span><small id="companyHiredMeta">Cierres logrados</small></article>
+          </div>
+          <div class="company-primary-action">
+            <button class="primary-button" type="button" id="openJobEditorButton">+ Publicar vacante</button>
           </div>
           <section class="info-card">
             <h2>Mis empresas</h2>
@@ -392,7 +401,7 @@
                 <button class="secondary-button subtle compact" type="button" id="copyCompanyIdButton">Copiar ID</button>
               </div>
               <button class="secondary-button subtle" type="button" id="newCompanyButton">Crear otra empresa</button>
-              <button class="text-danger-button compact" type="button" id="deleteCompanyButton">Eliminar empresa</button>
+              <button class="secondary-button subtle" type="button" id="companySettingsInlineButton">Configuración</button>
             </div>
           </section>
           <details class="info-card profile-editor company-job-editor" id="companyJobEditor">
@@ -478,8 +487,37 @@
           </section>
           <section class="info-card">
             <h2>Candidatos recibidos</h2>
+            <div class="candidate-toolbar">
+              <div class="candidate-status-tabs" id="candidateStatusTabs" role="tablist" aria-label="Filtrar candidatos">
+                <button class="active" type="button" data-candidate-filter="all">Todos</button>
+                <button type="button" data-candidate-filter="submitted">Nuevos</button>
+                <button type="button" data-candidate-filter="reviewing">En revisión</button>
+                <button type="button" data-candidate-filter="interview">Entrevista</button>
+                <button type="button" data-candidate-filter="hired">Contratados</button>
+                <button type="button" data-candidate-filter="rejected">Descartados</button>
+              </div>
+              <label class="candidate-search">
+                <span>Buscar candidato</span>
+                <input id="candidateSearchInput" type="search" placeholder="Buscar candidato..." />
+              </label>
+            </div>
             <div class="candidate-inbox" id="receivedCandidatesList">
               <p class="empty-list">Aún no hay candidatos recibidos.</p>
+            </div>
+          </section>
+          <section class="info-card performance-card">
+            <div class="section-title split compact-title">
+              <div>
+                <span>Rendimiento</span>
+                <h2>Resumen de resultados</h2>
+              </div>
+              <small>Con datos reales disponibles</small>
+            </div>
+            <div class="performance-grid">
+              <article><strong id="performanceViewsCount">--</strong><span>Vistas de vacantes</span><small>No disponible aún</small></article>
+              <article><strong id="performanceApplicationsCount">0</strong><span>Postulaciones</span><small>Desde candidatos recibidos</small></article>
+              <article><strong id="performanceInterviewsCount">0</strong><span>Entrevistas</span><small>Estado entrevista</small></article>
+              <article><strong id="performanceHiresCount">0</strong><span>Contrataciones</span><small>Estado contratado</small></article>
             </div>
           </section>
           <section class="info-card promotion-card">
@@ -492,6 +530,7 @@
               <div class="promotion-summary">
                 <strong id="promotionActivePlan">Free</strong>
                 <small id="promotionActiveBenefits">Publicacion basica activa</small>
+                <button class="primary-button compact" type="button" id="showPlanOptionsButton">Mejorar plan</button>
                 <button class="secondary-button subtle is-hidden" type="button" id="manageBillingButton">Administrar suscripción</button>
               </div>
             </div>
@@ -534,6 +573,23 @@
               </article>
             </div>
             <p class="promotion-billing-status" id="promotionBillingStatus" role="status" aria-live="polite"></p>
+          </section>
+          <section class="info-card company-settings-panel is-hidden" id="companySettingsPanel">
+            <div class="section-title split compact-title">
+              <div>
+                <span>Configuración</span>
+                <h2>Configuración de empresa</h2>
+              </div>
+              <button class="secondary-button subtle compact" type="button" id="closeCompanySettingsButton">Cerrar</button>
+            </div>
+            <div class="danger-zone">
+              <div>
+                <span>Zona de peligro</span>
+                <strong>Eliminar empresa</strong>
+                <p>Esta acción elimina la empresa y sus vacantes. Las postulaciones y conversaciones relacionadas pueden verse afectadas.</p>
+              </div>
+              <button class="text-danger-button compact" type="button" id="deleteCompanyButton">Eliminar empresa</button>
+            </div>
           </section>
         </section>
       </section>
@@ -1131,6 +1187,7 @@
     </section>
 
     <footer class="site-footer">
+      <a href="./blog/">Blog</a>
       <button type="button" data-view-link="privacidad">Privacidad</button>
       <button type="button" data-view-link="terminos">Términos</button>
       <button type="button" data-view-link="contacto">Contacto</button>

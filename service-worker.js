@@ -2,6 +2,8 @@ const CACHE_NAME = "redjob-shell-20260801e";
 const APP_SHELL = [
   "/",
   "/index.html",
+  "/blog/",
+  "/blog/index.html",
   "/offline.html",
   "/styles.css?v=20260801e",
   "/app.js?v=20260801e",
@@ -17,6 +19,8 @@ const APP_SHELL = [
 const NETWORK_FIRST_PATHS = new Set([
   "/",
   "/index.html",
+  "/blog/",
+  "/blog/index.html",
   "/styles.css",
   "/app.js",
   "/admin-report-viewer.js",
