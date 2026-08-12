@@ -1,22 +1,22 @@
-const CACHE_NAME = "redjob-shell-20260812a";
+const CACHE_NAME = "redjob-shell-20260812b";
 const APP_SHELL = [
   "/",
   "/index.html",
   "/blog/",
   "/blog/index.html",
-  "/blog/blog.js?v=20260812a",
+  "/blog/blog.js?v=20260812b",
   "/offline.html",
-  "/styles.css?v=20260812a",
-  "/app.js?v=20260812a",
+  "/styles.css?v=20260812b",
+  "/app.js?v=20260812b",
   "/admin-report-viewer.js?v=20260801e",
   "/manifest.json?v=20260609b",
-  "/assets/redjob-logo-header-176.png?v=20260812a",
-  "/assets/redjob-logo-header-264.png?v=20260812a",
+  "/assets/redjob-logo-header-176.png?v=20260812b",
+  "/assets/redjob-logo-header-264.png?v=20260812b",
   "/assets/redjob-icon-192.png?v=20260609b",
   "/assets/redjob-icon-512.png?v=20260609b",
   "/assets/redjob-icon-maskable-512.png?v=20260609b",
-  "/assets/redjob-favicon-64.png?v=20260812a",
-  "/assets/redjob-briefcase-access-320.png?v=20260812a"
+  "/assets/redjob-favicon-64.png?v=20260812b",
+  "/assets/redjob-briefcase-access-320.png?v=20260812b"
 ];
 
 const NETWORK_FIRST_PATHS = new Set([
@@ -55,8 +55,10 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put("/index.html", copy));
+          if (url.pathname === "/" || url.pathname === "/index.html") {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put("/index.html", copy));
+          }
           return response;
         })
         .catch(async () => (await caches.match("/index.html")) || caches.match("/offline.html"))

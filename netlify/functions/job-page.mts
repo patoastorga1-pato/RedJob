@@ -96,7 +96,7 @@ function renderUnavailable(status) {
   const title = status === "closed" ? "Vacante cerrada | RedJob" : "Vacante no disponible | RedJob";
   const body = status === "closed" ? "Esta vacante ya no esta activa." : "Esta vacante no esta disponible publicamente en este momento.";
   return new Response(
-    `<!doctype html><html lang="es-MX"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">${noindex ? '<meta name="robots" content="noindex, follow">' : ""}<title>${title}</title><link rel="stylesheet" href="/styles.css?v=20260812a"></head><body><main class="job-public-page"><section class="job-public-card"><p class="eyebrow">RedJob</p><h1>${title}</h1><p>${body}</p><a class="primary-button" href="/">Ver vacantes activas</a></section></main></body></html>`,
+    `<!doctype html><html lang="es-MX"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">${noindex ? '<meta name="robots" content="noindex, follow">' : ""}<title>${title}</title><link rel="stylesheet" href="/styles.css?v=20260812b"></head><body><main class="job-public-page"><section class="job-public-card"><p class="eyebrow">RedJob</p><h1>${title}</h1><p>${body}</p><a class="primary-button" href="/">Ver vacantes activas</a></section></main></body></html>`,
     {
       status: code,
       headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" }
@@ -133,12 +133,12 @@ function renderJob(job) {
     <meta property="og:url" content="${escapeHtml(canonical)}">
     <meta property="og:image" content="${SITE_URL}/assets/redjob-social-preview.png">
     <meta name="twitter:card" content="summary_large_image">
-    <link rel="icon" type="image/png" sizes="64x64" href="/assets/redjob-favicon-64.png?v=20260812a">
-    <link rel="stylesheet" href="/styles.css?v=20260812a">
+    <link rel="icon" type="image/png" sizes="64x64" href="/assets/redjob-favicon-64.png?v=20260812b">
+    <link rel="stylesheet" href="/styles.css?v=20260812b">
   </head>
   <body>
     <header class="site-header">
-      <a class="brand" href="/" aria-label="RedJob inicio"><img src="/assets/redjob-logo-header-176.png?v=20260812a" width="88" height="78" alt="RedJob" decoding="async"></a>
+      <a class="brand" href="/" aria-label="RedJob inicio"><img src="/assets/redjob-logo-header-176.png?v=20260812b" width="88" height="78" alt="RedJob" decoding="async"></a>
       <nav class="desktop-nav" aria-label="Navegacion principal">
         <a class="nav-link" href="/">Vacantes</a>
         <a class="nav-link" href="/#empresas">Empresas</a>

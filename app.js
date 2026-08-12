@@ -4765,9 +4765,19 @@ const isLocalPreview = ["localhost", "127.0.0.1"].includes(window.location.hostn
 
 if ("serviceWorker" in navigator && isLocalPreview) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.getRegistrations().then((registrations) => {
-      registrations.forEach((registration) => registration.unregister());
-    });
+    Promise.all([
+      navigator.serviceWorker.getRegistrations().then((registrations) =>
+        Promise.all(registrations.map((registration) => registration.unregister()))
+      ),
+      "caches" in window ? caches.keys().then((keys) => Promise.all(keys.map((key) => caches.delete(key)))) : Promise.resolve()
+    ])
+      .then(() => {
+        if (navigator.serviceWorker.controller && sessionStorage.getItem("redjobLocalCacheCleared") !== "true") {
+          sessionStorage.setItem("redjobLocalCacheCleared", "true");
+          window.location.reload();
+        }
+      })
+      .catch(() => null);
   });
 }
 
