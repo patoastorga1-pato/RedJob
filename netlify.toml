@@ -37,6 +37,11 @@
   status = 200
 
 [[redirects]]
+  from = "/sitemap-jobs.xml"
+  to = "/.netlify/functions/sitemap-jobs"
+  status = 200
+
+[[redirects]]
   from = "/vacantes/assets/*"
   to = "/assets/:splat"
   status = 200
@@ -127,6 +132,18 @@
   for = "/sitemap.xml"
   [headers.values]
     Cache-Control = "public, max-age=3600"
+    Content-Type = "application/xml; charset=utf-8"
+
+[[headers]]
+  for = "/sitemap-pages.xml"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"
+    Content-Type = "application/xml; charset=utf-8"
+
+[[headers]]
+  for = "/sitemap-jobs.xml"
+  [headers.values]
+    Cache-Control = "public, max-age=900, stale-while-revalidate=3600"
     Content-Type = "application/xml; charset=utf-8"
 
 [[headers]]
