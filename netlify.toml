@@ -37,6 +37,36 @@
   status = 200
 
 [[redirects]]
+  from = "/vacantes/assets/*"
+  to = "/assets/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/vacantes/styles.css"
+  to = "/styles.css"
+  status = 200
+
+[[redirects]]
+  from = "/vacantes/app.js"
+  to = "/app.js"
+  status = 200
+
+[[redirects]]
+  from = "/vacantes/config.js"
+  to = "/config.js"
+  status = 200
+
+[[redirects]]
+  from = "/vacantes/admin-report-viewer.js"
+  to = "/admin-report-viewer.js"
+  status = 200
+
+[[redirects]]
+  from = "/vacantes/manifest.json"
+  to = "/manifest.json"
+  status = 200
+
+[[redirects]]
   from = "/vacantes/*"
   to = "/.netlify/functions/job-page"
   status = 200

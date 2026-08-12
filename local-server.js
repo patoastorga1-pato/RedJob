@@ -116,40 +116,62 @@ async function handleLocalJobPage(requestUrl, response) {
   }
 }
 
-const server = http.createServer(async (request, response) => {
-  const requestUrl = new URL(request.url, `http://${host}:${port}`);
-  if (requestUrl.pathname.startsWith("/vacantes/") && (await handleLocalJobPage(requestUrl, response))) {
-    log(`200 ${request.method} ${request.url}`);
-    return;
-  }
+function legacyVacantesAssetPath(pathname) {
+  if (pathname.startsWith("/vacantes/assets/")) return pathname.replace(/^\/vacantes/, "");
+  const legacyFiles = new Set([
+    "/styles.css",
+    "/app.js",
+    "/config.js",
+    "/admin-report-viewer.js",
+    "/manifest.json",
+    "/service-worker.js"
+  ]);
+  const filePath = pathname.replace(/^\/vacantes/, "");
+  return legacyFiles.has(filePath) ? filePath : "";
+}
 
-  const pathname = decodeURIComponent(requestUrl.pathname === "/" ? "/index.html" : requestUrl.pathname);
+function serveFile(response, pathname) {
   const normalized = path.normalize(path.join(root, pathname));
 
   if (!normalized.startsWith(root)) {
-    log(`403 ${request.method} ${request.url}`);
     response.writeHead(403, { "Content-Type": "text/plain; charset=utf-8" });
     response.end("Forbidden");
     return;
   }
 
   const filePath = pathname.endsWith("/") || !path.extname(normalized) ? path.join(normalized, "index.html") : normalized;
-
   fs.readFile(filePath, (error, data) => {
     if (error) {
-      log(`404 ${request.method} ${request.url}`);
       response.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
       response.end("Not found");
       return;
     }
 
-    log(`200 ${request.method} ${request.url}`);
     response.writeHead(200, {
       "Content-Type": types[path.extname(filePath).toLowerCase()] || "application/octet-stream",
       "Cache-Control": "no-store"
     });
     response.end(data);
   });
+}
+
+const server = http.createServer(async (request, response) => {
+  const requestUrl = new URL(request.url, `http://${host}:${port}`);
+  const legacyPath = legacyVacantesAssetPath(decodeURIComponent(requestUrl.pathname));
+  if (legacyPath) {
+    log(`200 ${request.method} ${request.url} -> ${legacyPath}`);
+    serveFile(response, legacyPath);
+    return;
+  }
+
+  if (requestUrl.pathname.startsWith("/vacantes/") && (await handleLocalJobPage(requestUrl, response))) {
+    log(`200 ${request.method} ${request.url}`);
+    return;
+  }
+
+  const pathname = decodeURIComponent(requestUrl.pathname === "/" ? "/index.html" : requestUrl.pathname);
+  log(`${request.method} ${request.url}`);
+  serveFile(response, pathname);
 });
 
 server.on("error", (error) => {
