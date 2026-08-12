@@ -1,22 +1,21 @@
-const CACHE_NAME = "redjob-shell-20260812b";
+const CACHE_NAME = "redjob-shell-20260812c";
 const APP_SHELL = [
   "/",
   "/index.html",
   "/blog/",
   "/blog/index.html",
-  "/blog/blog.js?v=20260812b",
+  "/blog/blog.js?v=20260812c",
   "/offline.html",
-  "/styles.css?v=20260812b",
-  "/app.js?v=20260812b",
+  "/styles.css?v=20260812c",
+  "/app.js?v=20260812c",
   "/admin-report-viewer.js?v=20260801e",
   "/manifest.json?v=20260609b",
-  "/assets/redjob-logo-header-176.png?v=20260812b",
-  "/assets/redjob-logo-header-264.png?v=20260812b",
+  "/assets/redjob-logo-optimizado.jpg?v=20260812c",
   "/assets/redjob-icon-192.png?v=20260609b",
   "/assets/redjob-icon-512.png?v=20260609b",
   "/assets/redjob-icon-maskable-512.png?v=20260609b",
-  "/assets/redjob-favicon-64.png?v=20260812b",
-  "/assets/redjob-briefcase-access-320.png?v=20260812b"
+  "/assets/redjob-favicon-64.png?v=20260812c",
+  "/assets/redjob-briefcase-login.png?v=20260812c"
 ];
 
 const NETWORK_FIRST_PATHS = new Set([
