@@ -70,7 +70,7 @@ button {
 }
 
 .brand img {
-  width: 104px;
+  width: 88px;
   height: auto;
   object-fit: contain;
   display: block;
@@ -4151,7 +4151,7 @@ textarea:focus {
   }
 
   .brand img {
-    width: 76px;
+    width: 64px;
     height: auto;
   }
 

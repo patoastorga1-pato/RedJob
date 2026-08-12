@@ -138,7 +138,7 @@ function renderJob(job) {
   </head>
   <body>
     <header class="site-header">
-      <a class="brand" href="/" aria-label="RedJob inicio"><img src="/assets/redjob-logo-optimizado.jpg?v=20260812c" width="88" height="78" alt="RedJob" decoding="async"></a>
+      <a class="brand" href="/" aria-label="RedJob inicio"><img src="/assets/redjob-logo-header.png?v=20260812d" width="88" height="78" alt="RedJob" decoding="async"></a>
       <nav class="desktop-nav" aria-label="Navegacion principal">
         <a class="nav-link" href="/">Vacantes</a>
         <a class="nav-link" href="/#empresas">Empresas</a>
