@@ -3683,7 +3683,7 @@ textarea:focus {
 
 .blog-page {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.82) 0%, rgba(248, 250, 252, 0) 360px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.88) 0%, rgba(248, 250, 252, 0) 300px),
     var(--light);
 }
 
@@ -3699,9 +3699,9 @@ textarea:focus {
 
 .blog-hero {
   display: grid;
-  min-height: 360px;
+  min-height: 285px;
   align-items: end;
-  padding: 72px 0 34px;
+  padding: 46px 0 18px;
 }
 
 .blog-hero > div {
@@ -3710,6 +3710,8 @@ textarea:focus {
 
 .blog-hero h1 {
   max-width: 760px;
+  margin-bottom: 14px;
+  font-size: clamp(34px, 6vw, 64px);
 }
 
 .blog-hero .primary-button,
@@ -3720,19 +3722,188 @@ textarea:focus {
   text-decoration: none;
 }
 
-.soro-blog-panel {
-  min-height: 420px;
-  border: 1px solid rgba(226, 232, 240, 0.95);
-  border-radius: 28px;
-  padding: clamp(14px, 3vw, 28px);
-  background: var(--white);
-  box-shadow: var(--soft-shadow);
-  overflow: hidden;
+.blog-page .hero-subtitle {
+  max-width: 700px;
+  font-size: clamp(17px, 2vw, 19px);
 }
 
-.soro-blog-panel:empty,
-#soro-blog:empty {
-  min-height: 260px;
+.blog-page .hero-actions {
+  margin-top: 24px;
+}
+
+.blog-shell {
+  padding-top: 24px;
+}
+
+.blog-pathways {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.blog-pathway {
+  display: grid;
+  gap: 4px;
+  min-height: 74px;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 18px;
+  padding: 16px 18px;
+  background: rgba(255, 255, 255, 0.86);
+  color: var(--black);
+  text-decoration: none;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.045);
+  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease, box-shadow 180ms ease;
+}
+
+.blog-pathway span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.blog-pathway strong {
+  font-size: clamp(1rem, 2vw, 1.12rem);
+  font-weight: 900;
+}
+
+.blog-pathway:hover {
+  border-color: var(--red-line);
+  background: #fffafa;
+  box-shadow: 0 16px 36px rgba(220, 38, 38, 0.08);
+  transform: translateY(-2px);
+}
+
+.soro-blog-panel {
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 28px;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.soro-blog {
+  width: 100%;
+}
+
+.soro-blog-header {
+  margin-bottom: 18px;
+}
+
+.soro-blog-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 900;
+  text-decoration: none;
+  transition: color 180ms ease, transform 180ms ease;
+}
+
+.soro-blog-back:hover {
+  color: var(--red);
+  transform: translateX(-2px);
+}
+
+.blog-page #soro-blog .soro-blog-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+}
+
+.blog-page #soro-blog .soro-blog-card {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 22px !important;
+  background: var(--white);
+  color: var(--text);
+  box-shadow: var(--card-shadow);
+  text-decoration: none;
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.blog-page #soro-blog .soro-blog-card:hover {
+  border-color: var(--red-line);
+  box-shadow: var(--hover-shadow);
+  transform: translateY(-4px);
+}
+
+.blog-page #soro-blog .soro-blog-card-image,
+.blog-page #soro-blog .soro-blog-card.has-image-fallback::before {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background:
+    linear-gradient(135deg, rgba(220, 38, 38, 0.12), rgba(17, 24, 39, 0.05)),
+    #fffafa;
+}
+
+.blog-page #soro-blog .soro-blog-card-image {
+  display: block;
+  height: auto;
+  object-fit: cover;
+}
+
+.blog-page #soro-blog .soro-blog-card-image.is-broken {
+  display: none;
+}
+
+.blog-page #soro-blog .soro-blog-card.has-image-fallback::before {
+  content: "RedJob";
+  display: grid;
+  place-items: center;
+  color: var(--red);
+  font-size: clamp(1.1rem, 3vw, 1.5rem);
+  font-weight: 950;
+  letter-spacing: 0;
+}
+
+.blog-page #soro-blog .soro-blog-card-content {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+}
+
+.blog-page #soro-blog .soro-blog-card-title {
+  margin: 0;
+  color: var(--black);
+  font-size: clamp(1.08rem, 2vw, 1.32rem);
+  line-height: 1.2;
+}
+
+.blog-page #soro-blog .soro-blog-card-excerpt {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.62;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.blog-page #soro-blog .soro-blog-card-date {
+  color: var(--red);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+@media (min-width: 760px) {
+  .blog-page #soro-blog .soro-blog-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1080px) {
+  .blog-page #soro-blog .soro-blog-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 @media (min-width: 700px) {
@@ -3999,7 +4170,11 @@ textarea:focus {
 
   .blog-hero {
     min-height: auto;
-    padding: 38px 0 18px;
+    padding: 34px 0 10px;
+  }
+
+  .blog-hero h1 {
+    font-size: clamp(2.3rem, 10vw, 3.4rem);
   }
 
   .blog-hero .hero-actions {
@@ -4011,9 +4186,32 @@ textarea:focus {
     width: 100%;
   }
 
+  .blog-shell {
+    padding-top: 22px;
+  }
+
+  .blog-pathways {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .blog-pathway {
+    min-height: 68px;
+    border-radius: 16px;
+    padding: 14px 16px;
+  }
+
   .soro-blog-panel {
     border-radius: 20px;
-    padding: 14px;
+  }
+
+  .blog-page #soro-blog .soro-blog-card {
+    border-radius: 18px !important;
+  }
+
+  .blog-page #soro-blog .soro-blog-card-content {
+    padding: 16px;
   }
 
   .section-title.split {

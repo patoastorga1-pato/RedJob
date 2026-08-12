@@ -4,6 +4,7 @@ const APP_SHELL = [
   "/index.html",
   "/blog/",
   "/blog/index.html",
+  "/blog/blog.js?v=20260812a",
   "/offline.html",
   "/styles.css?v=20260801e",
   "/app.js?v=20260801e",
