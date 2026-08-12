@@ -106,6 +106,109 @@ function plainText(value, maxLength = 160) {
   return `${text.slice(0, maxLength - 1).trim()}...`;
 }
 
+function toIsoDate(value) {
+  const date = value ? new Date(value) : null;
+  return date && !Number.isNaN(date.getTime()) ? date.toISOString() : "";
+}
+
+function buildPostalAddress(location, workMode) {
+  const rawLocation = String(location ?? "").trim();
+  if (!rawLocation || String(workMode) === "remote" || /^remoto$/i.test(rawLocation)) return null;
+
+  const parts = rawLocation.split(",").map((part) => part.trim()).filter(Boolean);
+  const address = {
+    "@type": "PostalAddress",
+    addressCountry: "MX"
+  };
+
+  if (parts.length >= 2) {
+    address.addressLocality = parts.slice(0, -1).join(", ");
+    address.addressRegion = parts[parts.length - 1];
+  } else {
+    address.addressRegion = rawLocation;
+  }
+
+  return {
+    "@type": "Place",
+    address
+  };
+}
+
+function buildBaseSalary(min, max) {
+  const minimum = Number(min);
+  const maximum = Number(max);
+  const value = {
+    "@type": "QuantitativeValue",
+    unitText: "MONTH"
+  };
+
+  if (minimum > 0 && maximum > 0 && minimum === maximum) value.value = minimum;
+  else {
+    if (minimum > 0) value.minValue = minimum;
+    if (maximum > 0) value.maxValue = maximum;
+  }
+
+  if (!value.value && !value.minValue && !value.maxValue) return null;
+
+  return {
+    "@type": "MonetaryAmount",
+    currency: "MXN",
+    value
+  };
+}
+
+function buildJobPosting(job, company, canonical) {
+  const jobTitle = String(job.title ?? "").trim();
+  const companyName = String(company?.company_name ?? "").trim();
+  if (!jobTitle || !companyName) return null;
+
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "JobPosting",
+    title: jobTitle,
+    description: plainText(job.description, 5000),
+    hiringOrganization: {
+      "@type": "Organization",
+      name: companyName
+    },
+    directApply: true,
+    url: canonical
+  };
+
+  const datePosted = toIsoDate(job.created_at);
+  if (datePosted) schema.datePosted = datePosted;
+
+  const logoUrl = getCompanyLogoUrl(company?.logo_path);
+  if (logoUrl) schema.hiringOrganization.logo = logoUrl;
+
+  const jobLocation = buildPostalAddress(job.location, job.work_mode);
+  if (jobLocation) schema.jobLocation = jobLocation;
+
+  if (String(job.work_mode) === "remote") {
+    schema.jobLocationType = "TELECOMMUTE";
+    const location = String(job.location ?? "").trim();
+    if (/^(todo\s+m[eé]xico|m[eé]xico|mexico)$/i.test(location)) {
+      schema.applicantLocationRequirements = {
+        "@type": "Country",
+        name: "MX"
+      };
+    }
+  }
+
+  const baseSalary = buildBaseSalary(job.salary_min, job.salary_max);
+  if (baseSalary) schema.baseSalary = baseSalary;
+
+  Object.keys(schema).forEach((key) => {
+    if (schema[key] === "" || schema[key] == null) delete schema[key];
+  });
+
+  return schema;
+}
+
+function renderJsonLd(data) {
+  return JSON.stringify(data).replace(/</g, "\\u003c");
+}
+
 async function fetchJob(jobId) {
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) throw new Error("Supabase no esta configurado.");
   const key = SUPABASE_SERVICE_ROLE_KEY || SUPABASE_ANON_KEY;
@@ -145,6 +248,8 @@ function renderJob(job) {
   const title = `${job.title} en ${location} | RedJob`;
   const appUrl = `/?job=${encodeURIComponent(job.id)}`;
   const tags = (job.job_skills ?? []).map((skill) => skill.skill_name).filter(Boolean);
+  const jobPosting = buildJobPosting(job, company, canonical);
+  const jobPostingJsonLd = jobPosting ? `<script type="application/ld+json">${renderJsonLd(jobPosting)}</script>` : "";
 
   return `<!doctype html>
 <html lang="es-MX">
@@ -165,6 +270,7 @@ function renderJob(job) {
     <meta name="twitter:card" content="summary_large_image">
     <link rel="icon" type="image/png" sizes="64x64" href="/assets/redjob-favicon-64.png?v=20260812c">
     <link rel="stylesheet" href="/styles.css?v=20260812d">
+    ${jobPostingJsonLd}
   </head>
   <body>
     <header class="site-header">

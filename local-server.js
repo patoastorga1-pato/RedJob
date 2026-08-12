@@ -104,6 +104,117 @@ function renderCompanyLogo(company, supabaseUrl) {
   return `<span class="${classes}" data-logo-fallback="${escapeHtml(initials)}"><img src="${escapeHtml(logoUrl)}" alt="Imagen de ${escapeHtml(name)}" loading="eager" decoding="async"></span>`;
 }
 
+function plainText(value, maxLength = 160) {
+  const text = String(value ?? "")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (text.length <= maxLength) return text;
+  return `${text.slice(0, maxLength - 1).trim()}...`;
+}
+
+function toIsoDate(value) {
+  const date = value ? new Date(value) : null;
+  return date && !Number.isNaN(date.getTime()) ? date.toISOString() : "";
+}
+
+function buildPostalAddress(location, workMode) {
+  const rawLocation = String(location ?? "").trim();
+  if (!rawLocation || String(workMode) === "remote" || /^remoto$/i.test(rawLocation)) return null;
+
+  const parts = rawLocation.split(",").map((part) => part.trim()).filter(Boolean);
+  const address = {
+    "@type": "PostalAddress",
+    addressCountry: "MX"
+  };
+
+  if (parts.length >= 2) {
+    address.addressLocality = parts.slice(0, -1).join(", ");
+    address.addressRegion = parts[parts.length - 1];
+  } else {
+    address.addressRegion = rawLocation;
+  }
+
+  return {
+    "@type": "Place",
+    address
+  };
+}
+
+function buildBaseSalary(min, max) {
+  const minimum = Number(min);
+  const maximum = Number(max);
+  const value = {
+    "@type": "QuantitativeValue",
+    unitText: "MONTH"
+  };
+
+  if (minimum > 0 && maximum > 0 && minimum === maximum) value.value = minimum;
+  else {
+    if (minimum > 0) value.minValue = minimum;
+    if (maximum > 0) value.maxValue = maximum;
+  }
+
+  if (!value.value && !value.minValue && !value.maxValue) return null;
+
+  return {
+    "@type": "MonetaryAmount",
+    currency: "MXN",
+    value
+  };
+}
+
+function buildJobPosting(job, company, canonical, supabaseUrl) {
+  const jobTitle = String(job.title ?? "").trim();
+  const companyName = String(company?.company_name ?? "").trim();
+  if (!jobTitle || !companyName) return null;
+
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "JobPosting",
+    title: jobTitle,
+    description: plainText(job.description, 5000),
+    hiringOrganization: {
+      "@type": "Organization",
+      name: companyName
+    },
+    directApply: true,
+    url: canonical
+  };
+
+  const datePosted = toIsoDate(job.created_at);
+  if (datePosted) schema.datePosted = datePosted;
+
+  const logoUrl = getCompanyLogoUrl(company?.logo_path, supabaseUrl);
+  if (logoUrl) schema.hiringOrganization.logo = logoUrl;
+
+  const jobLocation = buildPostalAddress(job.location, job.work_mode);
+  if (jobLocation) schema.jobLocation = jobLocation;
+
+  if (String(job.work_mode) === "remote") {
+    schema.jobLocationType = "TELECOMMUTE";
+    const location = String(job.location ?? "").trim();
+    if (/^(todo\s+m[eé]xico|m[eé]xico|mexico)$/i.test(location)) {
+      schema.applicantLocationRequirements = {
+        "@type": "Country",
+        name: "MX"
+      };
+    }
+  }
+
+  const baseSalary = buildBaseSalary(job.salary_min, job.salary_max);
+  if (baseSalary) schema.baseSalary = baseSalary;
+
+  Object.keys(schema).forEach((key) => {
+    if (schema[key] === "" || schema[key] == null) delete schema[key];
+  });
+
+  return schema;
+}
+
+function renderJsonLd(data) {
+  return JSON.stringify(data).replace(/</g, "\\u003c");
+}
+
 function renderLocalJobPage(job, origin) {
   const company = Array.isArray(job.company_profiles) ? job.company_profiles[0] : job.company_profiles;
   const config = getLocalSupabaseConfig();
@@ -111,7 +222,9 @@ function renderLocalJobPage(job, origin) {
   const localAppUrl = `/?job=${encodeURIComponent(job.id)}`;
   const description = String(job.description ?? "").replace(/\s+/g, " ").trim().slice(0, 155);
   const tags = (job.job_skills ?? []).map((skill) => skill.skill_name).filter(Boolean);
-  return `<!doctype html><html lang="es-MX"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="index, follow"><title>${escapeHtml(job.title)} | RedJob</title><meta name="description" content="${escapeHtml(description)}"><link rel="canonical" href="${escapeHtml(canonical)}"><meta property="og:title" content="${escapeHtml(job.title)} | RedJob"><meta property="og:description" content="${escapeHtml(description)}"><meta property="og:url" content="${escapeHtml(canonical)}"><meta property="og:image" content="https://redjob.com.mx/assets/redjob-social-preview.png"><link rel="stylesheet" href="/styles.css?v=20260812d"></head><body><header class="site-header"><a class="brand" href="/"><img src="/assets/redjob-logo-header.png?v=20260812d" width="88" height="78" alt="RedJob"></a><nav class="desktop-nav" aria-label="NavegaciÃ³n principal"><a class="nav-link" href="/">Vacantes</a><a class="nav-link" href="/#empresas">Empresas</a><a class="nav-link messages-nav-link" href="/#mensajes">Mensajes</a></nav></header><main class="job-public-page"><article class="job-public-card"><a class="text-button" href="/">Volver a vacantes</a><header class="job-public-head">${renderCompanyLogo(company, config.url)}<div><p class="eyebrow">${escapeHtml(company?.company_name ?? "Empresa")}</p><h1>${escapeHtml(job.title)}</h1><p>${escapeHtml(job.location ?? "MÃ©xico")} - ${escapeHtml(job.work_mode ?? "")} - ${escapeHtml(formatSalary(job.salary_min, job.salary_max))} - ${escapeHtml(job.category ?? "Otra")}</p></div></header><section><h2>DescripciÃ³n</h2><p>${escapeHtml(job.description)}</p></section>${tags.length ? `<section><h2>Requisitos</h2><div class="tags">${tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}</div></section>` : ""}<section><h2>Sobre la empresa</h2><p>${escapeHtml(company?.description || "Esta empresa publica sus vacantes en RedJob.")}</p></section><div class="job-public-actions"><a class="primary-button" href="${localAppUrl}">Postularme en RedJob</a><a class="secondary-button" href="${localAppUrl}">Guardar o ver detalle</a></div></article></main></body></html>`;
+  const jobPosting = buildJobPosting(job, company, canonical, config.url);
+  const jobPostingJsonLd = jobPosting ? `<script type="application/ld+json">${renderJsonLd(jobPosting)}</script>` : "";
+  return `<!doctype html><html lang="es-MX"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="index, follow"><title>${escapeHtml(job.title)} | RedJob</title><meta name="description" content="${escapeHtml(description)}"><link rel="canonical" href="${escapeHtml(canonical)}"><meta property="og:title" content="${escapeHtml(job.title)} | RedJob"><meta property="og:description" content="${escapeHtml(description)}"><meta property="og:url" content="${escapeHtml(canonical)}"><meta property="og:image" content="https://redjob.com.mx/assets/redjob-social-preview.png"><link rel="stylesheet" href="/styles.css?v=20260812d">${jobPostingJsonLd}</head><body><header class="site-header"><a class="brand" href="/"><img src="/assets/redjob-logo-header.png?v=20260812d" width="88" height="78" alt="RedJob"></a><nav class="desktop-nav" aria-label="NavegaciÃ³n principal"><a class="nav-link" href="/">Vacantes</a><a class="nav-link" href="/#empresas">Empresas</a><a class="nav-link messages-nav-link" href="/#mensajes">Mensajes</a></nav></header><main class="job-public-page"><article class="job-public-card"><a class="text-button" href="/">Volver a vacantes</a><header class="job-public-head">${renderCompanyLogo(company, config.url)}<div><p class="eyebrow">${escapeHtml(company?.company_name ?? "Empresa")}</p><h1>${escapeHtml(job.title)}</h1><p>${escapeHtml(job.location ?? "MÃ©xico")} - ${escapeHtml(job.work_mode ?? "")} - ${escapeHtml(formatSalary(job.salary_min, job.salary_max))} - ${escapeHtml(job.category ?? "Otra")}</p></div></header><section><h2>DescripciÃ³n</h2><p>${escapeHtml(job.description)}</p></section>${tags.length ? `<section><h2>Requisitos</h2><div class="tags">${tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")}</div></section>` : ""}<section><h2>Sobre la empresa</h2><p>${escapeHtml(company?.description || "Esta empresa publica sus vacantes en RedJob.")}</p></section><div class="job-public-actions"><a class="primary-button" href="${localAppUrl}">Postularme en RedJob</a><a class="secondary-button" href="${localAppUrl}">Guardar o ver detalle</a></div></article></main></body></html>`;
 }
 
 async function handleLocalJobPage(requestUrl, response) {
@@ -123,7 +236,7 @@ async function handleLocalJobPage(requestUrl, response) {
     return true;
   }
 
-  const select = "id,title,description,location,work_mode,category,salary_min,salary_max,status,company_profiles(company_name,description,logo_path),job_skills(skill_name)";
+  const select = "id,title,description,location,work_mode,category,salary_min,salary_max,status,created_at,company_profiles(company_name,description,logo_path),job_skills(skill_name)";
   try {
     const supabaseUrl = `${config.url.replace(/\/$/, "")}/rest/v1/jobs?select=${encodeURIComponent(select)}&id=eq.${jobId}&status=eq.published&limit=1`;
     const apiResponse = await fetch(supabaseUrl, { headers: { apikey: config.key, Authorization: `Bearer ${config.key}` } });
