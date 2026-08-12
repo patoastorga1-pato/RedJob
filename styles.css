@@ -3894,6 +3894,53 @@ textarea:focus {
   text-transform: uppercase;
 }
 
+.job-public-page {
+  width: min(920px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: clamp(36px, 7vw, 72px) 0;
+}
+
+.job-public-card {
+  display: grid;
+  gap: 28px;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 28px;
+  padding: clamp(22px, 4vw, 38px);
+  background: var(--white);
+  box-shadow: var(--soft-shadow);
+}
+
+.job-public-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.job-public-head h1 {
+  margin-bottom: 12px;
+  font-size: clamp(2rem, 5vw, 4rem);
+}
+
+.job-public-card h2 {
+  margin-bottom: 10px;
+  font-size: clamp(1.2rem, 3vw, 1.65rem);
+}
+
+.job-public-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.job-public-actions .primary-button,
+.job-public-actions .secondary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
 @media (min-width: 760px) {
   .blog-page #soro-blog .soro-blog-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));

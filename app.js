@@ -1329,6 +1329,25 @@ function getJobById(jobId) {
   return jobs.find((job) => sameId(job.id, jobId));
 }
 
+function slugifyJobTitle(value) {
+  return String(value ?? "vacante")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 72) || "vacante";
+}
+
+function getPublicJobPath(job) {
+  if (!job?.id) return "/";
+  return `/vacantes/${slugifyJobTitle(job.title)}-${job.id}`;
+}
+
+function extractJobIdFromPublicPath(pathname = window.location.pathname) {
+  return pathname.match(/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i)?.[1] ?? "";
+}
+
 async function fetchJobById(jobId) {
   let rows = null;
   try {
@@ -1354,7 +1373,7 @@ async function fetchJobById(jobId) {
   return mapped;
 }
 
-async function openJobDetail(jobId) {
+async function openJobDetail(jobId, { updateUrl = true, replaceUrl = false } = {}) {
   let job = getJobById(jobId);
   if (!job && /^[0-9a-f-]{36}$/i.test(String(jobId))) {
     job = await fetchJobById(jobId);
@@ -1388,6 +1407,10 @@ async function openJobDetail(jobId) {
   detailApplyButton.textContent = hasApplication(job.id) ? "Postulada" : "Postularme";
   detailReportButton.dataset.reportJobId = String(job.id);
   switchView("vacante");
+  if (updateUrl && window.location.pathname !== getPublicJobPath(job)) {
+    const method = replaceUrl ? "replaceState" : "pushState";
+    window.history[method]({}, "", getPublicJobPath(job));
+  }
 }
 
 async function supabaseAuthRequest(path, body, accessToken) {
@@ -3618,6 +3641,10 @@ function switchView(viewId) {
     link.classList.toggle("active", link.dataset.viewLink === viewId);
   });
 
+  if (viewId !== "vacante" && window.location.pathname.startsWith("/vacantes/")) {
+    window.history.pushState({}, "", viewId === "inicio" ? "/" : `/#${viewId}`);
+  }
+
   window.requestAnimationFrame(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
     if (isLegalView) window.setTimeout(() => window.scrollTo({ top: 0, left: 0, behavior: "auto" }), 0);
@@ -3639,6 +3666,14 @@ function switchView(viewId) {
       .then(() => renderPromotionState())
       .catch(() => null);
   }
+}
+
+async function openInitialJobRoute() {
+  const params = new URLSearchParams(window.location.search);
+  const jobId = params.get("job") || extractJobIdFromPublicPath();
+  if (!jobId) return false;
+  await openJobDetail(jobId, { replaceUrl: true });
+  return true;
 }
 
 function openAuthPanel(mode) {
@@ -4717,6 +4752,15 @@ window.addEventListener("focus", () => {
   refreshVisibleData().catch((error) => showToast(friendlyError(error)));
 });
 
+window.addEventListener("popstate", () => {
+  const jobId = extractJobIdFromPublicPath();
+  if (jobId) {
+    openJobDetail(jobId, { updateUrl: false }).catch((error) => showToast(friendlyError(error)));
+    return;
+  }
+  switchView((window.location.hash || "#inicio").replace("#", "") || "inicio");
+});
+
 const isLocalPreview = ["localhost", "127.0.0.1"].includes(window.location.hostname);
 
 if ("serviceWorker" in navigator && isLocalPreview) {
@@ -4750,6 +4794,7 @@ applyRoleExperience();
 
 async function bootRedJob() {
   await loadRealJobs();
+  await openInitialJobRoute();
 
   if (getStoredSession()?.user?.id) {
     await loadCurrentProfile();
