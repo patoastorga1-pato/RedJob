@@ -165,6 +165,7 @@ const adminJobsCount = document.querySelector("#adminJobsCount");
 const adminCompaniesCount = document.querySelector("#adminCompaniesCount");
 const adminApplicationsCount = document.querySelector("#adminApplicationsCount");
 const adminReportsCount = document.querySelector("#adminReportsCount");
+const adminPageVisitsCount = document.querySelector("#adminPageVisitsCount");
 const adminReportsList = document.querySelector("#adminReportsList");
 const adminJobsList = document.querySelector("#adminJobsList");
 const adminUsersList = document.querySelector("#adminUsersList");
@@ -2156,6 +2157,7 @@ async function loadAdminDashboard() {
   adminCompaniesCount.textContent = String(stats?.companies ?? 0);
   adminApplicationsCount.textContent = String(stats?.applications ?? 0);
   adminReportsCount.textContent = String(stats?.pending_reports ?? 0);
+  if (adminPageVisitsCount) adminPageVisitsCount.textContent = String(stats?.weekly_page_visits ?? 0);
 
   const adminUserIds = new Set((roleRows ?? []).filter((entry) => entry.role === "admin").map((entry) => String(entry.user_id)));
   const companiesByUser = new Map();
@@ -4762,6 +4764,34 @@ window.addEventListener("popstate", () => {
 });
 
 const isLocalPreview = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+
+function getAnalyticsPath() {
+  const pathname = window.location.pathname || "/";
+  if (pathname.startsWith("/vacantes/")) return pathname;
+  if (pathname.startsWith("/blog")) return "/blog/";
+  return "/";
+}
+
+function trackPageVisit() {
+  const payload = JSON.stringify({ path: getAnalyticsPath() });
+  const endpoint = "/api/analytics/page-view";
+
+  if ("sendBeacon" in navigator) {
+    const sent = navigator.sendBeacon(endpoint, new Blob([payload], { type: "application/json" }));
+    if (sent) return;
+  }
+
+  fetch(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: payload,
+    keepalive: true
+  }).catch(() => null);
+}
+
+if (!isLocalPreview) {
+  window.addEventListener("load", trackPageVisit);
+}
 
 if ("serviceWorker" in navigator && isLocalPreview) {
   window.addEventListener("load", () => {

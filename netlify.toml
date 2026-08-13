@@ -27,6 +27,11 @@
   status = 200
 
 [[redirects]]
+  from = "/api/analytics/page-view"
+  to = "/.netlify/functions/track-page-view"
+  status = 200
+
+[[redirects]]
   from = "/blog"
   to = "/blog/"
   status = 301
