@@ -50,6 +50,26 @@ function resolveNotificationType(job, action) {
   return "";
 }
 
+function safeGoogleError(result, fallback = "Error desconocido") {
+  const payload = result?.payload;
+  const message =
+    payload?.error?.message ||
+    payload?.error_description ||
+    payload?.error ||
+    fallback;
+  return String(message).slice(0, 240);
+}
+
+function logIndexingResult({ type, url, googleStatus = null, ok = false, error = "" }) {
+  console.log("[google-indexing]", {
+    type,
+    url,
+    googleStatus,
+    ok,
+    error: error ? String(error).slice(0, 240) : null
+  });
+}
+
 async function getVisibleJobForUser(jobId, accessToken) {
   const rows = await supabaseRequest(
     `/jobs?select=${encodeURIComponent(JOB_SELECT)}&id=eq.${encodeURIComponent(jobId)}&limit=1`,
@@ -59,11 +79,27 @@ async function getVisibleJobForUser(jobId, accessToken) {
 }
 
 async function notifyGoogle({ url, type }) {
-  const result = await publishGoogleIndexingNotification({ url, type });
-  if (!result.ok) {
-    throw new Error(`Google Indexing API respondio ${result.status}.`);
+  try {
+    const result = await publishGoogleIndexingNotification({ url, type });
+    logIndexingResult({
+      type,
+      url,
+      googleStatus: result.status,
+      ok: result.ok,
+      error: result.ok ? "" : safeGoogleError(result, `Google Indexing API respondio ${result.status}.`)
+    });
+    if (!result.ok) {
+      const error = new Error(`Google Indexing API respondio ${result.status}.`);
+      error.alreadyLogged = true;
+      throw error;
+    }
+    return result;
+  } catch (error) {
+    if (!error?.alreadyLogged) {
+      logIndexingResult({ type, url, ok: false, error: error.message || "No se pudo notificar a Google." });
+    }
+    throw error;
   }
-  return result;
 }
 
 export default async (req, context) => {
@@ -103,7 +139,11 @@ export default async (req, context) => {
       });
     }
 
-    const task = notifyGoogle(notification).catch(() => null);
+    const task = notifyGoogle(notification).catch((error) => {
+      if (!error?.alreadyLogged) {
+        logIndexingResult({ type, url, ok: false, error: error.message || "No se pudo notificar a Google." });
+      }
+    });
     if (context?.waitUntil) context.waitUntil(task);
     else await task.catch(() => null);
 
