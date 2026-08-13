@@ -32,6 +32,16 @@
   status = 200
 
 [[redirects]]
+  from = "/api/indexing/job"
+  to = "/.netlify/functions/notify-google-indexing"
+  status = 200
+
+[[redirects]]
+  from = "/api/indexing/backfill-jobs"
+  to = "/.netlify/functions/backfill-google-indexing-jobs"
+  status = 200
+
+[[redirects]]
   from = "/blog"
   to = "/blog/"
   status = 301

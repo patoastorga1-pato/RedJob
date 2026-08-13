@@ -1470,6 +1470,25 @@ async function supabaseRestRequest(path, options = {}) {
   return payload;
 }
 
+async function notifyGoogleIndexing(jobId, action = "updated") {
+  const session = getStoredSession();
+  if (!session?.access_token || !jobId) return null;
+
+  try {
+    const response = await fetch("/api/indexing/job", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ jobId, action })
+    });
+    return await response.json().catch(() => null);
+  } catch {
+    return null;
+  }
+}
+
 function tryParseJson(text) {
   try {
     return JSON.parse(text);
@@ -2141,8 +2160,9 @@ async function loadAdminDashboard() {
     throw new Error("No tienes permisos de administración.");
   }
 
-  const [stats, reports, adminJobs, users, companies, roleRows] = await Promise.all([
+  const [stats, visitStats, reports, adminJobs, users, companies, roleRows] = await Promise.all([
     supabaseRestRequest("/rpc/admin_dashboard_stats", { method: "POST", body: {} }),
+    supabaseRestRequest("/rpc/admin_page_visit_stats", { method: "POST", body: {} }).catch(() => ({ weekly_page_visits: 0 })),
     supabaseRestRequest("/reports?select=id,reporter_user_id,category,target_type,target_id,subject,description,status,admin_note,created_at&order=created_at.desc&limit=500"),
     supabaseRestRequest("/jobs?select=id,title,status,created_at,company_profiles(company_name)&order=created_at.desc&limit=200"),
     supabaseRestRequest("/profiles?select=id,email,role,suspended_at,suspension_reason,created_at&order=created_at.desc&limit=200"),
@@ -2157,7 +2177,7 @@ async function loadAdminDashboard() {
   adminCompaniesCount.textContent = String(stats?.companies ?? 0);
   adminApplicationsCount.textContent = String(stats?.applications ?? 0);
   adminReportsCount.textContent = String(stats?.pending_reports ?? 0);
-  if (adminPageVisitsCount) adminPageVisitsCount.textContent = String(stats?.weekly_page_visits ?? 0);
+  if (adminPageVisitsCount) adminPageVisitsCount.textContent = String(visitStats?.weekly_page_visits ?? 0);
 
   const adminUserIds = new Set((roleRows ?? []).filter((entry) => entry.role === "admin").map((entry) => String(entry.user_id)));
   const companiesByUser = new Map();
@@ -3087,6 +3107,7 @@ async function publishRealJob() {
     });
   }
 
+  notifyGoogleIndexing(newJob?.id, "updated");
   await loadRealJobs();
   await loadReceivedCandidates();
   showToast(activeEditingJobId ? "Vacante actualizada." : "Vacante publicada correctamente.");
@@ -3100,6 +3121,7 @@ async function deleteCompanyJob(jobId) {
   if (!job) return;
 
   if (job.source === "supabase") {
+    await notifyGoogleIndexing(job.id, "deleted");
     await supabaseRestRequest(`/jobs?id=eq.${job.id}`, {
       method: "DELETE"
     });
@@ -4244,9 +4266,11 @@ document.querySelector("#administracion").addEventListener("click", async (event
           next_status: jobStatusButton.dataset.adminJobStatus
         }
       });
+      notifyGoogleIndexing(jobStatusButton.dataset.jobId, "status_changed");
       showToast("Estado de vacante actualizado.");
     } else if (deleteJobButton) {
       if (!window.confirm("¿Eliminar esta vacante definitivamente? También se eliminarán sus postulaciones y conversaciones relacionadas.")) return;
+      await notifyGoogleIndexing(deleteJobButton.dataset.adminDeleteJob, "deleted");
       await supabaseRestRequest("/rpc/admin_delete_job", {
         method: "POST",
         body: { job_uuid: deleteJobButton.dataset.adminDeleteJob }
