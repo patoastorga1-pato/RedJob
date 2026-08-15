@@ -52,6 +52,16 @@
   status = 200
 
 [[redirects]]
+  from = "/eliminar-cuenta"
+  to = "/eliminar-cuenta/"
+  status = 301
+
+[[redirects]]
+  from = "/eliminar-cuenta/"
+  to = "/eliminar-cuenta/index.html"
+  status = 200
+
+[[redirects]]
   from = "/sitemap-jobs.xml"
   to = "/.netlify/functions/sitemap-jobs"
   status = 200

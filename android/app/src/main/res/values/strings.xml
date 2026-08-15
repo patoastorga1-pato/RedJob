@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">RedJob</string>
+    <string name="title_activity_main">RedJob</string>
+    <string name="package_name">mx.com.redjob.app</string>
+    <string name="custom_url_scheme">mx.com.redjob.app</string>
+</resources>

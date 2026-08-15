@@ -14,7 +14,7 @@ const files = [
   "config.js"
 ];
 
-const directories = ["assets"];
+const directories = ["assets", "eliminar-cuenta"];
 
 function copyFile(source, target) {
   fs.mkdirSync(path.dirname(target), { recursive: true });
