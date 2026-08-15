@@ -1449,6 +1449,38 @@ textarea:focus {
   color: var(--white);
 }
 
+.logout-profile-button.subtle-danger {
+  min-height: 38px;
+  padding: 0 14px;
+  border-color: rgba(220, 38, 38, 0.18);
+  background: transparent;
+  font-size: 0.86rem;
+}
+
+.profile-account-zone {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 18px 4px 4px;
+  border-top: 1px solid var(--line);
+}
+
+.profile-account-zone div {
+  display: grid;
+  gap: 4px;
+}
+
+.profile-account-zone strong {
+  color: var(--black);
+  font-size: 0.94rem;
+}
+
+.profile-account-zone small {
+  color: var(--muted);
+  font-weight: 700;
+}
+
 .profile-photo {
   width: 88px;
   height: 88px;
@@ -4372,6 +4404,16 @@ textarea:focus {
   .profile-overview-actions > button {
     flex: 1 1 100%;
     width: 100%;
+  }
+
+  .profile-account-zone {
+    align-items: flex-start;
+    flex-direction: column;
+    padding-top: 16px;
+  }
+
+  .profile-account-zone .logout-profile-button {
+    width: auto;
   }
 
   .company-profile {
