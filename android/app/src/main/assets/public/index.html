@@ -31,7 +31,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/styles.css?v=20260814a" />
+    <link rel="stylesheet" href="/styles.css?v=20260818a" />
   </head>
   <body>
     <header class="site-header">
@@ -276,7 +276,6 @@
               <button class="primary-button" type="button" id="resumeButton">Actualizar currículum</button>
               <button class="secondary-button subtle" type="button" data-view-link="empresas">Publicar vacante</button>
               <button class="logout-profile-button" type="button" id="profileSignOutButton">Cerrar sesión</button>
-              <button class="logout-profile-button danger" type="button" id="deleteAccountRequestButton">Eliminar cuenta</button>
             </div>
             <input class="is-hidden" id="resumeInput" type="file" accept=".pdf,.doc,.docx" />
           </section>
@@ -354,6 +353,13 @@
             <section class="info-card">
               <h2>Postulaciones</h2>
               <div class="profile-list" id="applicationsList"></div>
+            </section>
+            <section class="profile-account-zone" aria-label="Administración de cuenta">
+              <div>
+                <strong>Administración de cuenta</strong>
+                <small>Opciones sensibles de tu cuenta RedJob.</small>
+              </div>
+              <button class="logout-profile-button danger subtle-danger" type="button" id="deleteAccountRequestButton">Eliminar cuenta</button>
             </section>
           </div>
         </section>
@@ -1190,19 +1196,12 @@
             <p>Reporta una vacante, postulación, mensaje o cuenta que parezca falsa, fraudulenta, ofensiva o insegura.</p>
             <button class="secondary-button" type="button" id="openReportDialog">Enviar un reporte</button>
           </article>
-          <article class="contact-option">
-            <span>Privacidad</span>
-            <h2>Eliminar cuenta</h2>
-            <p>Solicita la eliminación de tu cuenta RedJob y los datos asociados a tu perfil.</p>
-            <a class="secondary-button" href="/eliminar-cuenta/">Solicitar eliminación</a>
-          </article>
         </section>
       </article>
     </section>
 
     <footer class="site-footer">
       <a href="/blog/">Blog</a>
-      <a href="/eliminar-cuenta/">Eliminar cuenta</a>
       <button type="button" data-view-link="privacidad">Privacidad</button>
       <button type="button" data-view-link="terminos">Términos</button>
       <button type="button" data-view-link="contacto">Contacto</button>
@@ -1212,7 +1211,7 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script src="/config.js?v=20260801e"></script>
-    <script src="/app.js?v=20260814a"></script>
+    <script src="/app.js?v=20260818a"></script>
     <script src="/admin-report-viewer.js?v=20260801e"></script>
   </body>
 </html>

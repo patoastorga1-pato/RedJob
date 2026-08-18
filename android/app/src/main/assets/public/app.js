@@ -28,6 +28,7 @@ const headerCreateAccountButton = document.querySelector("#headerCreateAccountBu
 const headerProfileButton = document.querySelector("#headerProfileButton");
 const adminNavLink = document.querySelector("#adminNavLink");
 const unreadMessagesBadge = document.querySelector("#unreadMessagesBadge");
+const mobileNavQuery = window.matchMedia("(max-width: 699px)");
 const profileSignOutButton = document.querySelector("#profileSignOutButton");
 const deleteAccountRequestButton = document.querySelector("#deleteAccountRequestButton");
 const profileAvatar = document.querySelector("#profileAvatar");
@@ -3652,11 +3653,46 @@ function openApplicationDialog(job) {
   applicationDialog.showModal();
 }
 
+let lastMobileNavScrollY = Math.max(0, window.scrollY);
+let mobileNavScrollTicking = false;
+
+function hideMobileNav() {
+  document.body.classList.remove("mobile-nav-visible");
+}
+
+function syncMobileNavMode() {
+  lastMobileNavScrollY = Math.max(0, window.scrollY);
+  if (!mobileNavQuery.matches) hideMobileNav();
+}
+
+function handleMobileNavScroll() {
+  if (!mobileNavQuery.matches || mobileNavScrollTicking) return;
+
+  mobileNavScrollTicking = true;
+  window.requestAnimationFrame(() => {
+    const currentScrollY = Math.max(0, window.scrollY);
+    const delta = currentScrollY - lastMobileNavScrollY;
+
+    if (currentScrollY < 24) {
+      hideMobileNav();
+    } else if (delta > 8) {
+      document.body.classList.add("mobile-nav-visible");
+    } else if (delta < -8) {
+      hideMobileNav();
+    }
+
+    lastMobileNavScrollY = currentScrollY;
+    mobileNavScrollTicking = false;
+  });
+}
+
 function switchView(viewId) {
   if (viewId === "administracion" && !isCurrentAdmin()) {
     showToast("No tienes permisos para acceder a Administración.");
     viewId = "inicio";
   }
+
+  hideMobileNav();
 
   const isLegalView = ["privacidad", "terminos", "contacto"].includes(viewId);
   document.body.classList.toggle("is-legal-view", isLegalView);
@@ -3748,6 +3784,14 @@ async function handleBillingReturn() {
   }
 
   window.history.replaceState({}, document.title, `${window.location.pathname}${window.location.hash || ""}`);
+}
+
+syncMobileNavMode();
+window.addEventListener("scroll", handleMobileNavScroll, { passive: true });
+if (typeof mobileNavQuery.addEventListener === "function") {
+  mobileNavQuery.addEventListener("change", syncMobileNavMode);
+} else if (typeof mobileNavQuery.addListener === "function") {
+  mobileNavQuery.addListener(syncMobileNavMode);
 }
 
 document.querySelectorAll("[data-view-link]").forEach((trigger) => {
