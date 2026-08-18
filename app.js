@@ -3676,9 +3676,9 @@ function handleMobileNavScroll() {
     if (currentScrollY < 24) {
       hideMobileNav();
     } else if (delta > 8) {
-      document.body.classList.add("mobile-nav-visible");
-    } else if (delta < -8) {
       hideMobileNav();
+    } else if (delta < -8) {
+      document.body.classList.add("mobile-nav-visible");
     }
 
     lastMobileNavScrollY = currentScrollY;
