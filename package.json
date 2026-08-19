@@ -11,7 +11,9 @@
     "mobile:add:android": "npm run mobile:prepare && npx cap add android",
     "mobile:add:ios": "npm run mobile:prepare && npx cap add ios",
     "mobile:open:android": "npx cap open android",
-    "mobile:open:ios": "npx cap open ios"
+    "mobile:open:ios": "npx cap open ios",
+    "twa:build:debug": "android-twa\\gradlew.bat -p android-twa :app:assembleDebug",
+    "twa:build:aab": "android-twa\\gradlew.bat -p android-twa :app:bundleRelease"
   },
   "dependencies": {
     "@capacitor/core": "^7.4.3",

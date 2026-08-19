@@ -12,6 +12,7 @@ const APP_SHELL = [
   "/app.js?v=20260818b",
   "/admin-report-viewer.js?v=20260801e",
   "/manifest.json?v=20260609b",
+  "/manifest.webmanifest?v=20260818a",
   "/assets/redjob-logo-header.png?v=20260812d",
   "/assets/redjob-icon-192.png?v=20260609b",
   "/assets/redjob-icon-512.png?v=20260609b",
