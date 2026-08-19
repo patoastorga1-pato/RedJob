@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">RedJob</string>
+    <string name="launch_url">https://redjob.com.mx/</string>
+    <string name="asset_statements">[{\"relation\":[\"delegate_permission/common.handle_all_urls\"],\"target\":{\"namespace\":\"web\",\"site\":\"https://redjob.com.mx\"}}]</string>
+</resources>
