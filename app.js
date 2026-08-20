@@ -3686,7 +3686,57 @@ function handleMobileNavScroll() {
   });
 }
 
-function switchView(viewId) {
+const standaloneViewRoutes = {
+  privacidad: {
+    path: "/privacidad",
+    title: "Aviso de Privacidad | RedJob",
+    description: "Consulta el Aviso de Privacidad de RedJob y el tratamiento de datos personales dentro de la plataforma."
+  },
+  terminos: {
+    path: "/terminos",
+    title: "Términos y Condiciones | RedJob",
+    description: "Consulta los Términos y Condiciones de uso de RedJob para candidatos, empresas y reclutadores."
+  }
+};
+
+const defaultDocumentMetadata = {
+  title: document.title,
+  description: document.querySelector('meta[name="description"]')?.getAttribute("content") || "",
+  canonical: document.querySelector('link[rel="canonical"]')?.getAttribute("href") || "https://redjob.com.mx/"
+};
+
+function getStandaloneViewFromPath() {
+  const normalizedPath = window.location.pathname.replace(/\/+$/, "") || "/";
+  return Object.entries(standaloneViewRoutes).find(([, route]) => route.path === normalizedPath)?.[0] || "";
+}
+
+function syncStandaloneViewUrl(viewId) {
+  const route = standaloneViewRoutes[viewId];
+  const isCurrentlyStandalone = Boolean(getStandaloneViewFromPath());
+
+  if (route) {
+    if (window.location.pathname !== route.path) {
+      window.history.pushState({}, "", route.path);
+    }
+    return;
+  }
+
+  if (isCurrentlyStandalone && viewId !== "vacante") {
+    window.history.pushState({}, "", viewId === "inicio" ? "/" : `/#${viewId}`);
+  }
+}
+
+function updateDocumentMetadata(viewId) {
+  const route = standaloneViewRoutes[viewId];
+  const canonical = document.querySelector('link[rel="canonical"]');
+  const description = document.querySelector('meta[name="description"]');
+
+  document.title = route?.title || defaultDocumentMetadata.title;
+  if (description) description.setAttribute("content", route?.description || defaultDocumentMetadata.description);
+  if (canonical) canonical.setAttribute("href", route ? `https://redjob.com.mx${route.path}` : defaultDocumentMetadata.canonical);
+}
+
+function switchView(viewId, options = {}) {
   if (viewId === "administracion" && !isCurrentAdmin()) {
     showToast("No tienes permisos para acceder a Administración.");
     viewId = "inicio";
@@ -3706,9 +3756,15 @@ function switchView(viewId) {
     link.classList.toggle("active", link.dataset.viewLink === viewId);
   });
 
-  if (viewId !== "vacante" && window.location.pathname.startsWith("/vacantes/")) {
-    window.history.pushState({}, "", viewId === "inicio" ? "/" : `/#${viewId}`);
+  if (options.syncUrl !== false) {
+    if (viewId !== "vacante" && window.location.pathname.startsWith("/vacantes/")) {
+      window.history.pushState({}, "", viewId === "inicio" ? "/" : `/#${viewId}`);
+    } else {
+      syncStandaloneViewUrl(viewId);
+    }
   }
+
+  updateDocumentMetadata(viewId);
 
   window.requestAnimationFrame(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
@@ -3738,6 +3794,13 @@ async function openInitialJobRoute() {
   const jobId = params.get("job") || extractJobIdFromPublicPath();
   if (!jobId) return false;
   await openJobDetail(jobId, { replaceUrl: true });
+  return true;
+}
+
+function openInitialStandaloneRoute() {
+  const viewId = getStandaloneViewFromPath();
+  if (!viewId) return false;
+  switchView(viewId, { syncUrl: false });
   return true;
 }
 
@@ -4837,7 +4900,12 @@ window.addEventListener("popstate", () => {
     openJobDetail(jobId, { updateUrl: false }).catch((error) => showToast(friendlyError(error)));
     return;
   }
-  switchView((window.location.hash || "#inicio").replace("#", "") || "inicio");
+  const standaloneView = getStandaloneViewFromPath();
+  if (standaloneView) {
+    switchView(standaloneView, { syncUrl: false });
+    return;
+  }
+  switchView((window.location.hash || "#inicio").replace("#", "") || "inicio", { syncUrl: false });
 });
 
 const isLocalPreview = ["localhost", "127.0.0.1"].includes(window.location.hostname);
@@ -4846,6 +4914,8 @@ function getAnalyticsPath() {
   const pathname = window.location.pathname || "/";
   if (pathname.startsWith("/vacantes/")) return pathname;
   if (pathname.startsWith("/blog")) return "/blog/";
+  if (pathname === "/privacidad" || pathname === "/privacidad/") return "/privacidad";
+  if (pathname === "/terminos" || pathname === "/terminos/") return "/terminos";
   return "/";
 }
 
@@ -4910,8 +4980,9 @@ renderCompanyJobs();
 applyRoleExperience();
 
 async function bootRedJob() {
+  const openedStandaloneRoute = openInitialStandaloneRoute();
   await loadRealJobs();
-  await openInitialJobRoute();
+  if (!openedStandaloneRoute) await openInitialJobRoute();
 
   if (getStoredSession()?.user?.id) {
     await loadCurrentProfile();

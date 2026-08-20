@@ -62,6 +62,26 @@
   status = 200
 
 [[redirects]]
+  from = "/privacidad"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/privacidad/"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/terminos"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/terminos/"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
   from = "/sitemap-jobs.xml"
   to = "/.netlify/functions/sitemap-jobs"
   status = 200

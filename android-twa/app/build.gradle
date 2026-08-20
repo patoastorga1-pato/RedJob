@@ -7,7 +7,7 @@ android {
     compileSdk 36
 
     defaultConfig {
-        applicationId "mx.com.redjob"
+        applicationId "mx.com.redjob.app"
         minSdk 23
         targetSdk 36
         versionCode 1
