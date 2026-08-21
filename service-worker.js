@@ -1,4 +1,4 @@
-const CACHE_NAME = "redjob-shell-20260819a";
+const CACHE_NAME = "redjob-shell-20260820a";
 const APP_SHELL = [
   "/",
   "/index.html",
@@ -11,7 +11,7 @@ const APP_SHELL = [
   "/blog/blog.js?v=20260812c",
   "/offline.html",
   "/styles.css?v=20260818a",
-  "/app.js?v=20260819a",
+  "/app.js?v=20260819b",
   "/admin-report-viewer.js?v=20260801e",
   "/manifest.json?v=20260609b",
   "/manifest.webmanifest?v=20260818a",
@@ -19,7 +19,7 @@ const APP_SHELL = [
   "/assets/redjob-icon-192.png?v=20260609b",
   "/assets/redjob-icon-512.png?v=20260609b",
   "/assets/redjob-icon-maskable-512.png?v=20260609b",
-  "/assets/redjob-favicon-64.png?v=20260812c",
+  "/assets/redjob-favicon-64.png?v=20260820a",
   "/assets/redjob-briefcase-access.png?v=20260812d"
 ];
 

@@ -3437,6 +3437,11 @@ async function signOutFromSupabase() {
 }
 
 function requestAccountDeletion() {
+  const confirmed = window.confirm(
+    "¿Quieres continuar con la solicitud de eliminación de tu cuenta RedJob?\n\nEsta acción abrirá las instrucciones para pedir la eliminación de tu cuenta y datos asociados."
+  );
+
+  if (!confirmed) return;
   window.location.href = "/eliminar-cuenta/";
 }
 
