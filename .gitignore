@@ -13,3 +13,6 @@ dist-mobile/
 android/key.properties
 android/app/release/
 ios/App/App.xcarchive/
+android-twa/local.properties
+android-twa/app/release/
+android-twa/app/build/
