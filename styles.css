@@ -2563,6 +2563,26 @@ textarea:focus {
   color: #991b1b;
 }
 
+.password-recovery-panel {
+  display: grid;
+  gap: 14px;
+  margin-top: 14px;
+  border: 1px solid rgba(229, 28, 35, 0.16);
+  border-radius: 18px;
+  padding: 18px;
+  background: rgba(229, 28, 35, 0.04);
+}
+
+.password-recovery-panel strong {
+  color: var(--black);
+  font-size: 1rem;
+}
+
+.password-recovery-panel p {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
 .legal-consent {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);

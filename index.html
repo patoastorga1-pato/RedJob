@@ -31,7 +31,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/styles.css?v=20260818a" />
+    <link rel="stylesheet" href="/styles.css?v=20260821a" />
   </head>
   <body>
     <header class="site-header">
@@ -752,6 +752,19 @@
                   <button class="primary-button" type="button" id="signInButton">Iniciar sesión</button>
                 </div>
                 <button class="link-button" type="button" id="forgotPasswordButton">Recuperar contraseña</button>
+                <div class="password-recovery-panel is-hidden" id="passwordRecoveryPanel">
+                  <strong>Crear nueva contraseña</strong>
+                  <p>Escribe una contraseña nueva para recuperar el acceso a tu cuenta.</p>
+                  <label>
+                    Nueva contraseña
+                    <input id="newPasswordInput" type="password" placeholder="Mínimo 8 caracteres" autocomplete="new-password" />
+                  </label>
+                  <label>
+                    Confirmar contraseña
+                    <input id="confirmNewPasswordInput" type="password" placeholder="Repite tu contraseña" autocomplete="new-password" />
+                  </label>
+                  <button class="primary-button" type="button" id="updatePasswordButton">Guardar nueva contraseña</button>
+                </div>
               </div>
             </details>
 
@@ -1211,7 +1224,7 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script src="/config.js?v=20260801e"></script>
-    <script src="/app.js?v=20260819b"></script>
+    <script src="/app.js?v=20260821a"></script>
     <script src="/admin-report-viewer.js?v=20260801e"></script>
   </body>
 </html>

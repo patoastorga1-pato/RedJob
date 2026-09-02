@@ -19,6 +19,10 @@ const legalConsent = document.querySelector("#legalConsent");
 const signInButton = document.querySelector("#signInButton");
 const signOutButton = document.querySelector("#signOutButton");
 const forgotPasswordButton = document.querySelector("#forgotPasswordButton");
+const passwordRecoveryPanel = document.querySelector("#passwordRecoveryPanel");
+const newPasswordInput = document.querySelector("#newPasswordInput");
+const confirmNewPasswordInput = document.querySelector("#confirmNewPasswordInput");
+const updatePasswordButton = document.querySelector("#updatePasswordButton");
 const signInPanel = document.querySelector("#signInPanel");
 const createAccountPanel = document.querySelector("#createAccountPanel");
 const sessionStatus = document.querySelector("#sessionStatus");
@@ -1435,6 +1439,28 @@ async function supabaseAuthRequest(path, body, accessToken) {
     if (response.status === 401 || errorMessage.toLowerCase().includes("jwt")) {
       clearExpiredSession("Tu sesión expiró. Inicia sesión de nuevo.");
     }
+    throw new Error(errorMessage);
+  }
+
+  return payload;
+}
+
+async function supabaseAuthUserRequest({ method = "GET", body, accessToken }) {
+  requireSupabaseConfig();
+  const response = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+    method,
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json"
+    },
+    body: body ? JSON.stringify(body) : undefined
+  });
+
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    const errorMessage = payload.msg || payload.message || payload.error_description || "No se pudo completar la solicitud.";
     throw new Error(errorMessage);
   }
 
@@ -3406,6 +3432,103 @@ async function sendPasswordRecovery() {
   showToast("Correo de recuperacion enviado.");
 }
 
+function getRecoveryParamsFromUrl() {
+  const candidates = [
+    window.location.hash ? window.location.hash.slice(1) : "",
+    window.location.search ? window.location.search.slice(1) : ""
+  ].filter(Boolean);
+
+  for (const candidate of candidates) {
+    const params = new URLSearchParams(candidate);
+    if (params.get("type") === "recovery" && params.get("access_token")) {
+      return params;
+    }
+  }
+
+  return null;
+}
+
+function setPasswordRecoveryMode(isActive) {
+  passwordRecoveryPanel?.classList.toggle("is-hidden", !isActive);
+  if (updatePasswordButton) updatePasswordButton.disabled = !isActive;
+  if (isActive) {
+    openAuthPanel("signin");
+    newPasswordInput?.focus();
+  } else {
+    if (newPasswordInput) newPasswordInput.value = "";
+    if (confirmNewPasswordInput) confirmNewPasswordInput.value = "";
+  }
+}
+
+async function handlePasswordRecoveryReturn() {
+  const recoveryParams = getRecoveryParamsFromUrl();
+  if (!recoveryParams) return false;
+
+  const accessToken = recoveryParams.get("access_token");
+  const refreshToken = recoveryParams.get("refresh_token") || "";
+  const expiresIn = Number(recoveryParams.get("expires_in") || 3600);
+
+  let user = null;
+  try {
+    user = await supabaseAuthUserRequest({ accessToken });
+  } catch {
+    user = null;
+  }
+
+  setStoredSession({
+    access_token: accessToken,
+    refresh_token: refreshToken,
+    token_type: recoveryParams.get("token_type") || "bearer",
+    expires_in: expiresIn,
+    expires_at: Math.floor(Date.now() / 1000) + expiresIn,
+    user
+  });
+
+  window.history.replaceState({}, document.title, "/#acceso");
+  switchView("acceso", { syncUrl: false });
+  setPasswordRecoveryMode(true);
+  signupMessage.textContent = "Escribe tu nueva contraseña para recuperar tu cuenta.";
+  showToast("Recuperación de contraseña lista.");
+  return true;
+}
+
+async function updateRecoveredPassword() {
+  const session = getStoredSession();
+  const newPassword = newPasswordInput.value.trim();
+  const confirmPassword = confirmNewPasswordInput.value.trim();
+
+  if (!session?.access_token) {
+    throw new Error("El enlace de recuperación expiró. Solicita otro correo de recuperación.");
+  }
+
+  if (newPassword.length < 8) {
+    throw new Error("La nueva contraseña debe tener al menos 8 caracteres.");
+  }
+
+  if (newPassword !== confirmPassword) {
+    throw new Error("Las contraseñas no coinciden.");
+  }
+
+  signupMessage.textContent = "Actualizando contraseña...";
+  const user = await supabaseAuthUserRequest({
+    method: "PUT",
+    accessToken: session.access_token,
+    body: { password: newPassword }
+  });
+
+  setStoredSession({ ...session, user });
+  setPasswordRecoveryMode(false);
+  await loadCurrentProfile();
+  await loadSavedJobs();
+  await loadFirstConversation(false);
+  renderProfileHeader();
+  renderProfileActivity();
+  renderCompanyJobs();
+  signupMessage.textContent = "Contraseña actualizada correctamente.";
+  showToast("Contraseña actualizada.");
+  switchView("perfil");
+}
+
 async function signOutFromSupabase() {
   const session = getStoredSession();
 
@@ -4085,6 +4208,18 @@ forgotPasswordButton.addEventListener("click", async () => {
   } catch (error) {
     signupMessage.textContent = friendlyError(error);
     showToast(friendlyError(error));
+  }
+});
+
+updatePasswordButton?.addEventListener("click", async () => {
+  try {
+    updatePasswordButton.disabled = true;
+    await updateRecoveredPassword();
+  } catch (error) {
+    signupMessage.textContent = friendlyError(error);
+    showToast(friendlyError(error));
+  } finally {
+    updatePasswordButton.disabled = false;
   }
 });
 
@@ -4985,9 +5120,10 @@ renderCompanyJobs();
 applyRoleExperience();
 
 async function bootRedJob() {
-  const openedStandaloneRoute = openInitialStandaloneRoute();
+  const openedRecoveryRoute = await handlePasswordRecoveryReturn();
+  const openedStandaloneRoute = openedRecoveryRoute ? false : openInitialStandaloneRoute();
   await loadRealJobs();
-  if (!openedStandaloneRoute) await openInitialJobRoute();
+  if (!openedRecoveryRoute && !openedStandaloneRoute) await openInitialJobRoute();
 
   if (getStoredSession()?.user?.id) {
     await loadCurrentProfile();
