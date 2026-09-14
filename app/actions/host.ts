@@ -42,8 +42,6 @@ type SpaceWrite = {
 
 type SpaceUpdate = Partial<SpaceWrite> & {
   exact_address?: string;
-  latitude?: number;
-  longitude?: number;
 };
 
 function value(formData: FormData, key: string) {
@@ -235,8 +233,6 @@ export async function createHostListingAction(formData: FormData) {
       host_id: userId,
       slug: slugify(payload.name),
       exact_address: optionalText(formData, "exact_address"),
-      latitude: optionalNumericValue(formData, "latitude"),
-      longitude: optionalNumericValue(formData, "longitude"),
     })
     .select("id")
     .single();
@@ -260,8 +256,6 @@ export async function updateHostListingAction(formData: FormData) {
   const { supabase, userId } = await requireHostSupabase(returnPath);
   const payload = buildSpacePayload(formData, status);
   const exactAddress = optionalText(formData, "exact_address");
-  const latitude = optionalNumericValue(formData, "latitude");
-  const longitude = optionalNumericValue(formData, "longitude");
 
   if (status === "pending_review") {
     validateListingForReview(payload, formData, returnPath);
@@ -272,8 +266,6 @@ export async function updateHostListingAction(formData: FormData) {
   const updatePayload: SpaceUpdate = { ...payload };
   if (!value(formData, "postal_code")) delete updatePayload.postal_code;
   if (exactAddress) updatePayload.exact_address = exactAddress;
-  if (latitude !== null) updatePayload.latitude = latitude;
-  if (longitude !== null) updatePayload.longitude = longitude;
   const { error } = await supabase.from("spaces").update(updatePayload).eq("id", listingId).eq("host_id", userId);
   if (error) redirect(withMessage(returnPath, "error", error.message));
 
