@@ -2224,7 +2224,10 @@ async function loadAdminDashboard() {
 
   const [stats, visitStats, reports, adminJobs, users, companies, roleRows] = await Promise.all([
     supabaseRestRequest("/rpc/admin_dashboard_stats", { method: "POST", body: {} }),
-    supabaseRestRequest("/rpc/admin_page_visit_stats", { method: "POST", body: {} }).catch(() => ({ weekly_page_visits: 0 })),
+    supabaseRestRequest("/rpc/admin_page_visit_stats", { method: "POST", body: {} }).catch((error) => ({
+      error: friendlyError(error),
+      weekly_page_visits: null
+    })),
     supabaseRestRequest("/reports?select=id,reporter_user_id,category,target_type,target_id,subject,description,status,admin_note,created_at&order=created_at.desc&limit=500"),
     supabaseRestRequest("/jobs?select=id,title,status,created_at,company_profiles(company_name)&order=created_at.desc&limit=200"),
     supabaseRestRequest("/profiles?select=id,email,role,suspended_at,suspension_reason,created_at&order=created_at.desc&limit=200"),
@@ -2239,7 +2242,10 @@ async function loadAdminDashboard() {
   adminCompaniesCount.textContent = String(stats?.companies ?? 0);
   adminApplicationsCount.textContent = String(stats?.applications ?? 0);
   adminReportsCount.textContent = String(stats?.pending_reports ?? 0);
-  if (adminPageVisitsCount) adminPageVisitsCount.textContent = String(visitStats?.weekly_page_visits ?? 0);
+  if (adminPageVisitsCount) {
+    adminPageVisitsCount.textContent = visitStats?.error ? "Sin configurar" : String(visitStats?.weekly_page_visits ?? 0);
+    adminPageVisitsCount.title = visitStats?.error ?? "Visitas registradas en los ultimos 7 dias";
+  }
 
   const adminUserIds = new Set((roleRows ?? []).filter((entry) => entry.role === "admin").map((entry) => String(entry.user_id)));
   const companiesByUser = new Map();

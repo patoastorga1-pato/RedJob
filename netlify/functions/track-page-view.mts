@@ -11,6 +11,8 @@ function normalizePath(value) {
   const normalized = path.startsWith("/") ? path : `/${path}`;
   if (normalized.startsWith("/vacantes/")) return normalized.slice(0, 240);
   if (normalized.startsWith("/blog")) return "/blog/";
+  if (normalized === "/privacidad" || normalized === "/privacidad/") return "/privacidad";
+  if (normalized === "/terminos" || normalized === "/terminos/") return "/terminos";
   return "/";
 }
 
@@ -37,17 +39,21 @@ export default async (request) => {
 
   const body = await readBody(request);
   const key = SUPABASE_SERVICE_ROLE_KEY || SUPABASE_ANON_KEY;
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/record_page_visit`, {
-    method: "POST",
-    headers: {
-      apikey: key,
-      Authorization: `Bearer ${key}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ visit_path: normalizePath(body.path) })
-  });
+  try {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/record_page_visit`, {
+      method: "POST",
+      headers: {
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ visit_path: normalizePath(body.path) })
+    });
 
-  if (!response.ok) {
+    if (!response.ok) {
+      return new Response(null, { status: 204, headers: { "Cache-Control": "no-store" } });
+    }
+  } catch (error) {
     return new Response(null, { status: 204, headers: { "Cache-Control": "no-store" } });
   }
 
