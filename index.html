@@ -31,7 +31,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/styles.css?v=20260821a" />
+    <link rel="stylesheet" href="/styles.css?v=20260904a" />
   </head>
   <body>
     <header class="site-header">
@@ -95,7 +95,21 @@
             </label>
             <label>
               <span>Municipio o alcaldía</span>
-              <select id="locationCityInput"></select>
+              <select class="sr-only-select" id="locationCityInput" multiple tabindex="-1" aria-hidden="true"></select>
+              <div class="municipality-filter" id="municipalityFilter">
+                <button
+                  class="municipality-filter-button"
+                  type="button"
+                  id="municipalityFilterButton"
+                  aria-expanded="false"
+                  aria-controls="municipalityFilterMenu"
+                  disabled>
+                  Todos los municipios
+                </button>
+                <div class="municipality-filter-menu is-hidden" id="municipalityFilterMenu" role="listbox" aria-multiselectable="true">
+                  <p>Selecciona un estado primero.</p>
+                </div>
+              </div>
             </label>
             <label>
               <span>Modalidad</span>
@@ -219,8 +233,12 @@
           <aside class="conversation-panel">
             <div class="panel-head">
               <h2>Conversaciones</h2>
-              <span id="conversationCount">0</span>
+              <div class="panel-head-actions">
+                <button class="notification-toggle-button" type="button" id="messageNotificationsButton">Activar notificaciones</button>
+                <span id="conversationCount">0</span>
+              </div>
             </div>
+            <p class="notification-status is-hidden" id="messageNotificationsStatus"></p>
             <div class="conversation-list" id="conversationList"></div>
           </aside>
 
@@ -1224,7 +1242,7 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script src="/config.js?v=20260801e"></script>
-    <script src="/app.js?v=20260821a"></script>
+    <script src="/app.js?v=20260904a"></script>
     <script src="/admin-report-viewer.js?v=20260801e"></script>
   </body>
 </html>

@@ -6,6 +6,9 @@ const resultCount = document.querySelector("#resultCount");
 const searchInput = document.querySelector("#searchInput");
 const locationInput = document.querySelector("#locationInput");
 const locationCityInput = document.querySelector("#locationCityInput");
+const municipalityFilter = document.querySelector("#municipalityFilter");
+const municipalityFilterButton = document.querySelector("#municipalityFilterButton");
+const municipalityFilterMenu = document.querySelector("#municipalityFilterMenu");
 const modeFilter = document.querySelector("#modeFilter");
 const categoryFilter = document.querySelector("#categoryFilter");
 const signupMessage = document.querySelector("#signupMessage");
@@ -64,6 +67,8 @@ const messagesShell = document.querySelector("#messagesShell");
 const chatPanel = document.querySelector("#chatPanel");
 const closeChatPanel = document.querySelector("#closeChatPanel");
 const chatJobDetailButton = document.querySelector("#chatJobDetailButton");
+const messageNotificationsButton = document.querySelector("#messageNotificationsButton");
+const messageNotificationsStatus = document.querySelector("#messageNotificationsStatus");
 const candidatePreview = document.querySelector("#candidatePreview");
 const candidatePreviewAvatar = document.querySelector("#candidatePreviewAvatar");
 const candidatePreviewName = document.querySelector("#candidatePreviewName");
@@ -222,6 +227,7 @@ window.REDJOB_CONFIG = {
   NEXT_PUBLIC_SUPABASE_ANON_KEY: SUPABASE_ANON_KEY
 };
 const SESSION_STORAGE_KEY = "redjob_supabase_session";
+const MESSAGE_NOTIFICATIONS_KEY = "redjob_message_notifications";
 const LEGAL_TERMS_VERSION = "Julio 2026";
 const LEGAL_PRIVACY_VERSION = "Julio 2026";
 const SUPABASE_SCHEMA_MESSAGE =
@@ -248,9 +254,14 @@ let currentConversations = [];
 let receivedCandidateRows = [];
 let activeCandidateFilter = "all";
 const unreadConversationCounts = new Map();
+const selectedLocationCities = new Set();
 let messageRefreshTimer = null;
 let lastBackgroundRefreshAt = 0;
 let isBackgroundRefreshing = false;
+let unreadNotificationTimer = null;
+let unreadNotificationInitialized = false;
+let lastUnreadNotificationCount = 0;
+let lastMessageNotificationAt = 0;
 
 function isCurrentAdmin() {
   return currentUserRoles.includes("admin");
@@ -437,6 +448,7 @@ function renderMunicipalityOptions(select, municipalities, includeAll, selectedC
   if (selectedCity && municipalityOptions.some((option) => option.value === selectedCity)) {
     select.value = selectedCity;
   }
+  if (select === locationCityInput) renderMunicipalityFilter();
 }
 
 async function loadMunicipalities(state) {
@@ -460,6 +472,7 @@ async function populateCitySelect(select, state, options = {}) {
   const { includeAll = false, selectedCity = "" } = options;
   const cityOptions = cityOptionsForState(state, includeAll);
   select.dataset.stateRequest = state;
+  if (select === locationCityInput) selectedLocationCities.clear();
   select.innerHTML = cityOptions.length
     ? cityOptions.map((city) => `<option value="${escapeHtml(city.value)}">${escapeHtml(city.label)}</option>`).join("")
     : `<option value="">Selecciona un estado</option>`;
@@ -469,6 +482,7 @@ async function populateCitySelect(select, state, options = {}) {
     select.value = selectedCity;
   }
 
+  if (select === locationCityInput) renderMunicipalityFilter();
   if (select.disabled) return;
   select.setAttribute("aria-busy", "true");
   try {
@@ -1707,6 +1721,26 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
+function normalizeSearchText(value) {
+  return String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+function municipalityMatchesJobLocation(municipality, location) {
+  const municipalityText = normalizeSearchText(municipality);
+  const locationText = normalizeSearchText(location);
+  const primaryLocation = locationText.split(",")[0]?.trim() || "";
+
+  return (
+    locationText.includes(municipalityText) ||
+    (primaryLocation && municipalityText.includes(primaryLocation)) ||
+    (primaryLocation && primaryLocation.includes(municipalityText))
+  );
+}
+
 function safePercent(value) {
   const number = Number(value);
   if (!Number.isFinite(number)) return 0;
@@ -2536,6 +2570,152 @@ async function loadUnreadMessagesCount() {
   }
 }
 
+function isNotificationSupported() {
+  return "Notification" in window;
+}
+
+function wantsMessageNotifications() {
+  return localStorage.getItem(MESSAGE_NOTIFICATIONS_KEY) === "enabled";
+}
+
+function updateMessageNotificationsUi() {
+  if (!messageNotificationsButton || !messageNotificationsStatus) return;
+
+  const hasSession = Boolean(getStoredSession()?.user?.id);
+  const supported = isNotificationSupported();
+  const permission = supported ? Notification.permission : "unsupported";
+  const enabled = supported && wantsMessageNotifications() && permission === "granted";
+
+  messageNotificationsButton.disabled = !hasSession || !supported || permission === "denied";
+  messageNotificationsButton.textContent = enabled ? "Notificaciones activas" : "Activar notificaciones";
+  messageNotificationsButton.classList.toggle("active", enabled);
+
+  let statusMessage = "";
+  if (!supported) {
+    statusMessage = "Este navegador no permite notificaciones.";
+  } else if (!hasSession) {
+    statusMessage = "Inicia sesión para activar notificaciones.";
+  } else if (permission === "denied") {
+    statusMessage = "Las notificaciones están bloqueadas en el navegador.";
+  } else if (enabled) {
+    statusMessage = "Te avisaremos cuando lleguen mensajes nuevos.";
+  }
+
+  messageNotificationsStatus.textContent = statusMessage;
+  messageNotificationsStatus.classList.toggle("is-hidden", !statusMessage);
+}
+
+async function requestMessageNotifications() {
+  if (!isNotificationSupported()) {
+    showToast("Este navegador no permite notificaciones.");
+    updateMessageNotificationsUi();
+    return;
+  }
+
+  if (!getStoredSession()?.user?.id) {
+    switchView("acceso");
+    showToast("Inicia sesión para activar notificaciones.");
+    updateMessageNotificationsUi();
+    return;
+  }
+
+  const permission = Notification.permission === "granted"
+    ? "granted"
+    : await Notification.requestPermission();
+
+  if (permission !== "granted") {
+    localStorage.removeItem(MESSAGE_NOTIFICATIONS_KEY);
+    updateMessageNotificationsUi();
+    showToast("No se activaron las notificaciones.");
+    return;
+  }
+
+  localStorage.setItem(MESSAGE_NOTIFICATIONS_KEY, "enabled");
+  unreadNotificationInitialized = false;
+  startUnreadMessageNotifications();
+  updateMessageNotificationsUi();
+  showToast("Notificaciones de mensajes activadas.");
+}
+
+async function showMessageNotification(unreadCount) {
+  if (!isNotificationSupported() || Notification.permission !== "granted") return;
+  if (isMessagesViewActive() && document.visibilityState === "visible") return;
+
+  const now = Date.now();
+  if (now - lastMessageNotificationAt < 12000) return;
+  lastMessageNotificationAt = now;
+
+  const title = unreadCount === 1 ? "Tienes un mensaje nuevo" : `Tienes ${unreadCount} mensajes nuevos`;
+  const options = {
+    body: "Abre RedJob para responder tu conversación.",
+    icon: "/assets/redjob-favicon-64.png?v=20260820b",
+    badge: "/assets/redjob-favicon-64.png?v=20260820b",
+    tag: "redjob-messages",
+    data: { url: "/#mensajes" }
+  };
+
+  try {
+    if (!isLocalPreview && navigator.serviceWorker?.ready) {
+      const registration = await navigator.serviceWorker.ready;
+      if (registration?.showNotification) {
+        await registration.showNotification(title, options);
+        return;
+      }
+    }
+  } catch {
+    // Browser notifications remain available when the service worker is not ready.
+  }
+
+  try {
+    new Notification(title, options);
+  } catch {
+    // Notification delivery is best-effort and must not break messages.
+  }
+}
+
+async function checkUnreadMessagesForNotification() {
+  if (!getStoredSession()?.user?.id || !wantsMessageNotifications() || !isNotificationSupported() || Notification.permission !== "granted") {
+    stopUnreadMessageNotifications();
+    updateMessageNotificationsUi();
+    return;
+  }
+
+  const unreadCount = await loadUnreadMessagesCount();
+  if (!unreadNotificationInitialized) {
+    lastUnreadNotificationCount = unreadCount;
+    unreadNotificationInitialized = true;
+    return;
+  }
+
+  if (unreadCount > lastUnreadNotificationCount) {
+    await showMessageNotification(unreadCount);
+  }
+
+  lastUnreadNotificationCount = unreadCount;
+}
+
+function startUnreadMessageNotifications() {
+  if (!getStoredSession()?.user?.id || !wantsMessageNotifications() || !isNotificationSupported() || Notification.permission !== "granted") {
+    updateMessageNotificationsUi();
+    return;
+  }
+
+  if (unreadNotificationTimer) return;
+  updateMessageNotificationsUi();
+  checkUnreadMessagesForNotification().catch(() => null);
+  unreadNotificationTimer = window.setInterval(() => {
+    checkUnreadMessagesForNotification().catch(() => null);
+  }, 12000);
+}
+
+function stopUnreadMessageNotifications() {
+  if (!unreadNotificationTimer) return;
+  window.clearInterval(unreadNotificationTimer);
+  unreadNotificationTimer = null;
+  unreadNotificationInitialized = false;
+  lastUnreadNotificationCount = 0;
+}
+
 function resizeMessageComposer() {
   if (!messageInput) return;
   messageInput.style.height = "auto";
@@ -2869,6 +3049,7 @@ async function refreshVisibleData({ force = false } = {}) {
     if (session?.user?.id) {
       await loadSavedJobs();
       await loadFirstConversation(false);
+      startUnreadMessageNotifications();
       await loadReceivedCandidates();
     }
 
@@ -3412,6 +3593,7 @@ async function signInWithSupabase() {
   await loadRealJobs();
   await loadSavedJobs();
   await loadFirstConversation(false);
+  startUnreadMessageNotifications();
   signupMessage.textContent = "Sesión iniciada correctamente.";
   showToast("Sesión iniciada.");
   switchView("inicio");
@@ -3458,6 +3640,68 @@ function setPasswordRecoveryMode(isActive) {
     if (newPasswordInput) newPasswordInput.value = "";
     if (confirmNewPasswordInput) confirmNewPasswordInput.value = "";
   }
+}
+
+function getAvailableMunicipalityFilters() {
+  return Array.from(locationCityInput?.options ?? []).filter((option) => option.value);
+}
+
+function syncNativeMunicipalitySelect() {
+  Array.from(locationCityInput?.options ?? []).forEach((option) => {
+    option.selected = Boolean(option.value && selectedLocationCities.has(option.value));
+  });
+}
+
+function getSelectedLocationCityFilters() {
+  return Array.from(selectedLocationCities).map((city) => city.trim().toLowerCase()).filter(Boolean);
+}
+
+function renderMunicipalityFilter() {
+  if (!municipalityFilter || !municipalityFilterButton || !municipalityFilterMenu || !locationCityInput) return;
+
+  const options = getAvailableMunicipalityFilters();
+  const availableValues = new Set(options.map((option) => option.value));
+  Array.from(selectedLocationCities).forEach((city) => {
+    if (!availableValues.has(city)) selectedLocationCities.delete(city);
+  });
+  syncNativeMunicipalitySelect();
+
+  const isDisabled = locationCityInput.disabled || !options.length;
+  municipalityFilter.classList.toggle("is-disabled", isDisabled);
+  municipalityFilterButton.disabled = isDisabled;
+  municipalityFilterButton.setAttribute("aria-expanded", municipalityFilterMenu.classList.contains("is-hidden") ? "false" : "true");
+
+  const selectedCount = selectedLocationCities.size;
+  municipalityFilterButton.textContent = isDisabled
+    ? locationInput.value === "Remoto"
+      ? "No aplica"
+      : "Todos los municipios"
+    : selectedCount
+      ? `${selectedCount} municipio${selectedCount === 1 ? "" : "s"}`
+      : "Todos los municipios";
+
+  if (isDisabled) {
+    municipalityFilterMenu.innerHTML = `<p>${locationInput.value === "Remoto" ? "No aplica para vacantes remotas." : "Selecciona un estado primero."}</p>`;
+    municipalityFilterMenu.classList.add("is-hidden");
+    municipalityFilterButton.setAttribute("aria-expanded", "false");
+    return;
+  }
+
+  municipalityFilterMenu.innerHTML = `
+    <button class="municipality-clear" type="button" data-clear-municipalities>Todos los municipios</button>
+    <div class="municipality-options">
+      ${options
+        .map(
+          (option) => `
+            <label class="municipality-option">
+              <input type="checkbox" value="${escapeHtml(option.value)}" ${selectedLocationCities.has(option.value) ? "checked" : ""} />
+              <span>${escapeHtml(option.textContent)}</span>
+            </label>
+          `
+        )
+        .join("")}
+    </div>
+  `;
 }
 
 async function handlePasswordRecoveryReturn() {
@@ -3541,6 +3785,7 @@ async function signOutFromSupabase() {
   }
 
   setStoredSession(null);
+  stopUnreadMessageNotifications();
   resetUserState({ clearJobs: true });
   conversationList.innerHTML = `<p class="empty-list">Inicia sesión para ver tus conversaciones.</p>`;
   chatBody.innerHTML = `<p class="empty-list">Selecciona una conversación.</p>`;
@@ -3555,6 +3800,7 @@ async function signOutFromSupabase() {
   renderProfileActivity();
   renderCompanyProfileSelect();
   renderCompanyJobs();
+  updateMessageNotificationsUi();
   signupMessage.textContent = "Sesión cerrada.";
   showToast("Sesión cerrada.");
 }
@@ -3595,20 +3841,20 @@ async function checkSupabaseSchema() {
 }
 
 function renderJobs() {
-  const query = searchInput.value.trim().toLowerCase();
-  const locationState = formatLocationLabel(locationInput.value).trim().toLowerCase();
-  const locationCity = locationCityInput.value.trim().toLowerCase();
+  const query = normalizeSearchText(searchInput.value);
+  const locationState = normalizeSearchText(formatLocationLabel(locationInput.value));
+  const locationCities = getSelectedLocationCityFilters();
   const mode = modeFilter.value;
   const category = categoryFilter.value;
 
   const filteredJobs = jobs
     .filter((job) => {
-      const searchable = `${job.title} ${job.company} ${job.category ?? ""} ${job.tags.join(" ")}`.toLowerCase();
-      const jobLocation = `${job.location} ${job.mode}`.toLowerCase();
+      const searchable = normalizeSearchText(`${job.title} ${job.company} ${job.category ?? ""} ${job.tags.join(" ")}`);
+      const jobLocation = normalizeSearchText(`${job.location} ${job.mode}`);
       const matchesQuery = !query || searchable.includes(query);
       const matchesLocation =
         (!locationState || jobLocation.includes(locationState)) &&
-        (!locationCity || jobLocation.includes(locationCity));
+        (!locationCities.length || locationCities.some((city) => municipalityMatchesJobLocation(city, job.location)));
       const matchesMode = mode === "all" || job.mode === mode;
       const matchesCategory = category === "all" || job.category === category;
 
@@ -4160,6 +4406,43 @@ locationInput.addEventListener("change", () => {
   renderJobs();
 });
 
+municipalityFilterButton?.addEventListener("click", () => {
+  if (municipalityFilterButton.disabled) return;
+  const shouldOpen = municipalityFilterMenu.classList.contains("is-hidden");
+  municipalityFilterMenu.classList.toggle("is-hidden", !shouldOpen);
+  municipalityFilterButton.setAttribute("aria-expanded", shouldOpen ? "true" : "false");
+});
+
+municipalityFilterMenu?.addEventListener("change", (event) => {
+  const checkbox = event.target.closest("input[type='checkbox']");
+  if (!checkbox) return;
+  if (checkbox.checked) {
+    selectedLocationCities.add(checkbox.value);
+  } else {
+    selectedLocationCities.delete(checkbox.value);
+  }
+  renderMunicipalityFilter();
+  municipalityFilterMenu.classList.remove("is-hidden");
+  municipalityFilterButton?.setAttribute("aria-expanded", "true");
+  renderJobs();
+});
+
+municipalityFilterMenu?.addEventListener("click", (event) => {
+  const clearButton = event.target.closest("[data-clear-municipalities]");
+  if (!clearButton) return;
+  selectedLocationCities.clear();
+  renderMunicipalityFilter();
+  municipalityFilterMenu.classList.remove("is-hidden");
+  municipalityFilterButton?.setAttribute("aria-expanded", "true");
+  renderJobs();
+});
+
+document.addEventListener("click", (event) => {
+  if (!municipalityFilter || municipalityFilter.contains(event.target)) return;
+  municipalityFilterMenu?.classList.add("is-hidden");
+  municipalityFilterButton?.setAttribute("aria-expanded", "false");
+});
+
 candidateLocation.addEventListener("change", () => {
   populateCitySelect(candidateCity, candidateLocation.value);
 });
@@ -4209,6 +4492,13 @@ forgotPasswordButton.addEventListener("click", async () => {
     signupMessage.textContent = friendlyError(error);
     showToast(friendlyError(error));
   }
+});
+
+messageNotificationsButton?.addEventListener("click", () => {
+  requestMessageNotifications().catch((error) => {
+    showToast(friendlyError(error));
+    updateMessageNotificationsUi();
+  });
 });
 
 updatePasswordButton?.addEventListener("click", async () => {
@@ -5115,6 +5405,7 @@ renderJobs();
 renderHiringCompanies();
 renderProfileActivity();
 renderSessionStatus();
+updateMessageNotificationsUi();
 renderCompanyHeader();
 renderCompanyJobs();
 applyRoleExperience();
@@ -5131,9 +5422,11 @@ async function bootRedJob() {
     renderProfileActivity();
     await loadSavedJobs();
     await loadFirstConversation(false);
+    startUnreadMessageNotifications();
   }
 
   await handleBillingReturn();
+  updateMessageNotificationsUi();
 }
 
 bootRedJob().catch((error) => showToast(friendlyError(error)));

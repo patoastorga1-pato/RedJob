@@ -136,6 +136,15 @@ button {
   display: none !important;
 }
 
+.sr-only-select {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+}
+
 .header-actions {
   display: flex;
   align-items: center;
@@ -436,6 +445,128 @@ p {
 
 .job-search .primary-button {
   align-self: end;
+}
+
+.municipality-filter {
+  position: relative;
+}
+
+.municipality-filter-button {
+  display: flex;
+  width: 100%;
+  min-height: 52px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 0 16px;
+  background: var(--white);
+  color: var(--black);
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 500;
+  text-align: left;
+  transition: border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
+}
+
+.municipality-filter-button::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid #64748b;
+  border-bottom: 2px solid #64748b;
+  transform: rotate(45deg) translateY(-2px);
+  transition: transform 180ms ease;
+}
+
+.municipality-filter-button[aria-expanded="true"]::after {
+  transform: rotate(225deg) translateY(-2px);
+}
+
+.municipality-filter-button:hover {
+  border-color: var(--red-line);
+}
+
+.municipality-filter-button:focus {
+  border-color: rgba(220, 38, 38, 0.42);
+  background: #ffffff;
+  box-shadow: 0 0 0 5px rgba(220, 38, 38, 0.09);
+  outline: none;
+}
+
+.municipality-filter-button:disabled {
+  cursor: not-allowed;
+  color: #94a3b8;
+  background: #f8fafc;
+}
+
+.municipality-filter-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 40;
+  width: min(320px, 92vw);
+  max-height: 280px;
+  overflow: auto;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 18px;
+  padding: 10px;
+  background: var(--white);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
+}
+
+.municipality-filter-menu p {
+  margin: 0;
+  padding: 12px;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.municipality-clear {
+  width: 100%;
+  border: 0;
+  border-radius: 12px;
+  padding: 11px 12px;
+  background: #fff5f5;
+  color: var(--red);
+  cursor: pointer;
+  font-weight: 900;
+  text-align: left;
+}
+
+.municipality-clear:hover {
+  background: #fee2e2;
+}
+
+.municipality-options {
+  display: grid;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.municipality-option {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  border-radius: 12px;
+  padding: 10px 12px;
+  color: var(--black);
+  cursor: pointer;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.municipality-option:hover {
+  background: #f8fafc;
+}
+
+.municipality-option input {
+  width: 18px;
+  min-height: 18px;
+  height: 18px;
+  accent-color: var(--red);
 }
 
 label {
@@ -1100,6 +1231,53 @@ textarea:focus {
 
 .panel-head span {
   display: none;
+}
+
+.panel-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.notification-toggle-button {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0 12px;
+  background: var(--white);
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 900;
+  transition: border-color 180ms ease, background 180ms ease, color 180ms ease, transform 180ms ease;
+}
+
+.notification-toggle-button:hover {
+  border-color: rgba(220, 38, 38, 0.3);
+  background: #fff5f5;
+  color: var(--red);
+  transform: translateY(-1px);
+}
+
+.notification-toggle-button.active {
+  border-color: rgba(22, 163, 74, 0.18);
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.notification-toggle-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+  transform: none;
+}
+
+.notification-status {
+  margin: 0;
+  border-bottom: 1px solid var(--line);
+  padding: 0 20px 16px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
 }
 
 .conversation-item {
@@ -4174,7 +4352,7 @@ textarea:focus {
 
   .desktop-nav {
     position: fixed;
-    top: calc(72px + env(safe-area-inset-top));
+    top: calc(64px + env(safe-area-inset-top));
     right: auto;
     bottom: auto;
     left: 50%;
@@ -4214,7 +4392,8 @@ textarea:focus {
 
   .nav-link {
     min-width: 0;
-    padding: 10px 6px;
+    min-height: 40px;
+    padding: 9px 6px;
     font-size: 12px;
     text-align: center;
   }
@@ -4274,6 +4453,21 @@ textarea:focus {
     gap: 14px;
     border-radius: 20px;
     padding: 16px;
+  }
+
+  .municipality-filter-menu {
+    width: 100%;
+    max-height: 260px;
+  }
+
+  .panel-head {
+    align-items: flex-start;
+  }
+
+  .panel-head-actions {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
   }
 
   .section-block {
