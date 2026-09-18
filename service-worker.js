@@ -1,4 +1,4 @@
-const CACHE_NAME = "redjob-shell-20260904a";
+const CACHE_NAME = "redjob-shell-20260918a";
 const APP_SHELL = [
   "/",
   "/index.html",
@@ -11,7 +11,7 @@ const APP_SHELL = [
   "/blog/blog.js?v=20260812c",
   "/offline.html",
   "/styles.css?v=20260904a",
-  "/app.js?v=20260904a",
+  "/app.js?v=20260918a",
   "/admin-report-viewer.js?v=20260801e",
   "/manifest.json?v=20260609b",
   "/manifest.webmanifest?v=20260818a",

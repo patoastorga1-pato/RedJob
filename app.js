@@ -5419,6 +5419,13 @@ applyRoleExperience();
 async function bootRedJob() {
   const openedRecoveryRoute = await handlePasswordRecoveryReturn();
   const openedStandaloneRoute = openedRecoveryRoute ? false : openInitialStandaloneRoute();
+  const initialHashView = (window.location.hash || "#inicio").replace(/^#/, "") || "inicio";
+
+  if (!openedRecoveryRoute && !openedStandaloneRoute && !extractJobIdFromPublicPath()) {
+    const requestedView = document.getElementById(initialHashView)?.classList.contains("view") ? initialHashView : "inicio";
+    switchView(requestedView, { syncUrl: false });
+  }
+
   await loadRealJobs();
   if (!openedRecoveryRoute && !openedStandaloneRoute) await openInitialJobRoute();
 

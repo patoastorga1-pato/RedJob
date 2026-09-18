@@ -104,6 +104,35 @@ create trigger auth_users_create_profile
 after insert on auth.users
 for each row execute function public.handle_new_auth_user();
 
+-- Rebuild public profiles for accounts that existed before a public-schema
+-- recovery. This does not change passwords or anything inside auth.users.
+insert into public.profiles (
+  id,
+  email,
+  role,
+  legal_terms_version,
+  legal_privacy_version,
+  legal_accepted_at
+)
+select
+  users.id,
+  coalesce(users.email, ''),
+  case
+    when users.raw_user_meta_data->>'role' in ('candidate', 'company')
+      then users.raw_user_meta_data->>'role'
+    else 'candidate'
+  end,
+  nullif(users.raw_user_meta_data->>'legal_terms_version', ''),
+  nullif(users.raw_user_meta_data->>'legal_privacy_version', ''),
+  case
+    when coalesce(users.raw_user_meta_data->>'legal_accepted_at', '') ~
+      '^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}'
+      then (users.raw_user_meta_data->>'legal_accepted_at')::timestamptz
+    else null
+  end
+from auth.users as users
+on conflict (id) do nothing;
+
 create table if not exists public.candidate_profiles (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null unique references public.profiles(id) on delete cascade,
@@ -336,6 +365,19 @@ create table if not exists public.reports (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+-- Keep upgrades compatible with early RedJob databases where reports existed
+-- before moderation fields were introduced.
+alter table public.reports add column if not exists category text;
+alter table public.reports add column if not exists target_type text;
+alter table public.reports add column if not exists target_id uuid;
+alter table public.reports add column if not exists subject text;
+alter table public.reports add column if not exists description text;
+alter table public.reports add column if not exists status text default 'pending';
+alter table public.reports add column if not exists admin_note text;
+alter table public.reports add column if not exists resolved_at timestamptz;
+alter table public.reports add column if not exists resolved_by uuid references auth.users(id) on delete set null;
+alter table public.reports add column if not exists updated_at timestamptz not null default now();
 
 create index if not exists reports_status_created_at_idx on public.reports(status, created_at desc);
 create index if not exists reports_target_idx on public.reports(target_type, target_id);

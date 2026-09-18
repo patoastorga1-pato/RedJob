@@ -1,0 +1,49 @@
+{
+  "recoveredAt": "2026-09-18",
+  "source": "Public search index snapshots of redjob.com.mx",
+  "imported": false,
+  "jobs": [
+    {
+      "id": "ba1e636d-fd45-47ff-8e56-f479a1068beb",
+      "canonicalUrl": "https://redjob.com.mx/vacantes/operador-a-de-produccion-ba1e636d-fd45-47ff-8e56-f479a1068beb",
+      "companyName": "The Hersheys Company",
+      "companyDescription": "The Hershey Company es una empresa internacional líder en la fabricación de chocolates, dulces y productos de confitería. Con presencia en diversos países, se caracteriza por ofrecer oportunidades de desarrollo profesional, capacitación constante y prestaciones competitivas para sus colaboradores.",
+      "title": "Operador(a) de Producción",
+      "description": "Hershey's solicita personal para el área de producción. La persona será responsable de apoyar en los procesos de fabricación, empaque, inspección y manejo de productos, asegurando el cumplimiento de los estándares de calidad y seguridad de la empresa. Funciones principales: apoyo en líneas de producción; empaque y acomodo de producto terminado; inspección visual de calidad; limpieza y orden del área de trabajo; cumplimiento de normas de seguridad e higiene; apoyo en actividades generales de manufactura. Ofrecemos pago semanal aproximado de $1,950 libres, vales de despensa, aguinaldo de 27 días, prima vacacional del 90%, fondo de ahorro del 8.5%, caja de ahorro, transporte de personal, apoyo para útiles escolares, descuentos en productos de la marca, prestaciones superiores a las de ley y turnos rotativos. Contacto publicado: 311 593 9782.",
+      "location": "El Salto, Jalisco",
+      "workMode": "onsite",
+      "category": "Operaciones",
+      "salaryMin": 9000,
+      "salaryMax": 16000,
+      "requirements": ["Capacidad para trabajar en equipo", "Disponibilidad para rolar turnos", "Experiencia en producción deseable", "Mayor de edad", "Responsabilidad y puntualidad", "Secundaria terminada deseable"]
+    },
+    {
+      "id": "f12e4ec3-9f8c-4e5b-8df1-dd1b7f5401fe",
+      "canonicalUrl": "https://redjob.com.mx/vacantes/agente-de-atencion-al-cliente-bilingue-f12e4ec3-9f8c-4e5b-8df1-dd1b7f5401fe",
+      "companyName": "Teleperformance",
+      "companyDescription": "Esta empresa publica sus vacantes en RedJob.",
+      "title": "Agente de Atención al Cliente Bilingüe",
+      "description": "Únete a Teleperformance como Agente de Atención al Cliente Bilingüe. Brindarás atención a clientes en inglés mediante llamadas, ofreciendo soporte y resolviendo dudas con un servicio de calidad. La campaña y las funciones específicas se asignan después del proceso de selección. Responsabilidades: atender llamadas en inglés; resolver dudas y brindar soporte al cliente; registrar información de cada interacción; mantener una atención profesional y cordial.",
+      "location": "Toluca, Estado de México",
+      "workMode": "hybrid",
+      "category": "Atencion al Cliente",
+      "salaryMin": 11000,
+      "salaryMax": 16000,
+      "requirements": ["Inglés avanzado conversacional", "Preparatoria terminada", "Computadora o laptop con los requisitos necesarios para Home Office", "Conexión estable a internet", "Excelente comunicación y atención al cliente"]
+    },
+    {
+      "id": "8f288a9a-a25a-4992-b30e-644532acc6bf",
+      "canonicalUrl": "https://redjob.com.mx/vacantes/agente-de-llamadas-home-office-8f288a9a-a25a-4992-b30e-644532acc6bf",
+      "companyName": "Language Line Solutions",
+      "companyDescription": "LanguageLine Solutions es una empresa internacional líder en servicios de interpretación y traducción, que ayuda a personas y organizaciones a comunicarse en diferentes idiomas a través de intérpretes profesionales.",
+      "title": "Agente de llamadas - Home Office",
+      "description": "Atención de llamadas en inglés y español para brindar asistencia y facilitar la comunicación entre clientes y usuarios. El trabajo se realiza completamente desde casa utilizando computadora e internet. Se proporciona capacitación pagada antes de iniciar operaciones. Responsabilidades: atender llamadas de manera profesional; escuchar y transmitir información con precisión; mantener una comunicación clara en inglés y español; seguir los procedimientos y lineamientos de la empresa; brindar una experiencia de calidad al cliente.",
+      "location": "Remoto",
+      "workMode": "remote",
+      "category": "Atencion al Cliente",
+      "salaryMin": 10000,
+      "salaryMax": 20000,
+      "requirements": ["Computadora o laptop propia", "Conexión estable a internet", "Inglés avanzado", "Preparatoria terminada", "Residir en México"]
+    }
+  ]
+}
