@@ -342,13 +342,12 @@ create table if not exists public.company_ratings (
   unique (company_id, candidate_id)
 );
 
-create or replace view public.company_rating_summary as
-select
-  company_id,
-  round(avg(rating)::numeric, 1) as average_rating,
-  count(*)::integer as rating_count
-from public.company_ratings
-group by company_id;
+create table if not exists public.company_rating_summary (
+  company_id uuid primary key references public.company_profiles(id) on delete cascade,
+  average_rating numeric(2, 1) not null check (average_rating between 1 and 5),
+  rating_count integer not null check (rating_count > 0),
+  updated_at timestamptz not null default now()
+);
 
 create table if not exists public.reports (
   id uuid primary key default gen_random_uuid(),
@@ -497,6 +496,80 @@ drop trigger if exists company_ratings_updated_at on public.company_ratings;
 create trigger company_ratings_updated_at
 before update on public.company_ratings
 for each row execute function public.set_updated_at();
+
+create or replace function public.refresh_company_rating_summary()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  affected_company_ids uuid[];
+  affected_company_id uuid;
+begin
+  if tg_op = 'INSERT' then
+    affected_company_ids := array[new.company_id];
+  elsif tg_op = 'DELETE' then
+    affected_company_ids := array[old.company_id];
+  elsif old.company_id is distinct from new.company_id then
+    affected_company_ids := array[old.company_id, new.company_id];
+  else
+    affected_company_ids := array[new.company_id];
+  end if;
+
+  foreach affected_company_id in array affected_company_ids loop
+    delete from public.company_rating_summary
+    where company_id = affected_company_id;
+
+    insert into public.company_rating_summary (
+      company_id,
+      average_rating,
+      rating_count,
+      updated_at
+    )
+    select
+      ratings.company_id,
+      round(avg(ratings.rating)::numeric, 1),
+      count(*)::integer,
+      now()
+    from public.company_ratings as ratings
+    where ratings.company_id = affected_company_id
+    group by ratings.company_id;
+  end loop;
+
+  if tg_op = 'DELETE' then
+    return old;
+  end if;
+
+  return new;
+end;
+$$;
+
+revoke all on function public.refresh_company_rating_summary() from public, anon, authenticated;
+
+drop trigger if exists company_ratings_refresh_summary on public.company_ratings;
+
+create trigger company_ratings_refresh_summary
+after insert or update of company_id, rating or delete on public.company_ratings
+for each row execute function public.refresh_company_rating_summary();
+
+insert into public.company_rating_summary (
+  company_id,
+  average_rating,
+  rating_count,
+  updated_at
+)
+select
+  ratings.company_id,
+  round(avg(ratings.rating)::numeric, 1),
+  count(*)::integer,
+  now()
+from public.company_ratings as ratings
+group by ratings.company_id
+on conflict (company_id) do update
+set average_rating = excluded.average_rating,
+    rating_count = excluded.rating_count,
+    updated_at = excluded.updated_at;
 
 drop trigger if exists reports_updated_at on public.reports;
 
@@ -1465,6 +1538,7 @@ alter table public.job_skills enable row level security;
 alter table public.applications enable row level security;
 alter table public.saved_jobs enable row level security;
 alter table public.company_ratings enable row level security;
+alter table public.company_rating_summary enable row level security;
 alter table public.billing_events enable row level security;
 alter table public.conversations enable row level security;
 alter table public.messages enable row level security;
@@ -1608,6 +1682,13 @@ using (
   or public.is_admin()
 );
 
+drop policy if exists "Public reads company rating summary" on public.company_rating_summary;
+
+create policy "Public reads company rating summary"
+on public.company_rating_summary for select
+to anon, authenticated
+using (rating_count > 0 and average_rating between 1 and 5);
+
 drop policy if exists "Candidates create company ratings after applying" on public.company_ratings;
 
 create policy "Candidates create company ratings after applying"
@@ -1663,6 +1744,7 @@ grant select on table public.user_roles to authenticated;
 revoke all on table public.reports from anon, authenticated;
 grant select, insert on table public.reports to authenticated;
 
+revoke all on table public.company_rating_summary from anon, authenticated;
 grant select on table public.company_rating_summary to anon, authenticated;
 grant select, insert, update, delete on table public.company_ratings to authenticated;
 grant select, insert, delete on table public.messages to authenticated;
