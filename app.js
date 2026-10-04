@@ -189,6 +189,16 @@ const adminReportsEmpty = document.querySelector("#adminReportsEmpty");
 const adminJobsEmpty = document.querySelector("#adminJobsEmpty");
 const adminUsersEmpty = document.querySelector("#adminUsersEmpty");
 const adminCompaniesEmpty = document.querySelector("#adminCompaniesEmpty");
+const adminNavBadge = document.querySelector("#adminNavBadge");
+const adminNotificationsUpdated = document.querySelector("#adminNotificationsUpdated");
+const adminAttentionTitle = document.querySelector("#adminAttentionTitle");
+const adminReportsAttentionCount = document.querySelector("#adminReportsAttentionCount");
+const adminJobsReviewCount = document.querySelector("#adminJobsReviewCount");
+const adminNewJobsCount = document.querySelector("#adminNewJobsCount");
+const adminUnverifiedCompaniesCount = document.querySelector("#adminUnverifiedCompaniesCount");
+const adminReportsSectionBadge = document.querySelector("#adminReportsSectionBadge");
+const adminJobsSectionBadge = document.querySelector("#adminJobsSectionBadge");
+const adminCompaniesSectionBadge = document.querySelector("#adminCompaniesSectionBadge");
 const reportDialog = document.querySelector("#reportDialog");
 const reportForm = document.querySelector("#reportForm");
 const reportCategory = document.querySelector("#reportCategory");
@@ -262,6 +272,10 @@ let unreadNotificationTimer = null;
 let unreadNotificationInitialized = false;
 let lastUnreadNotificationCount = 0;
 let lastMessageNotificationAt = 0;
+let adminNotificationTimer = null;
+let adminNotificationLoading = false;
+let adminNotificationGeneration = 0;
+const ADMIN_NOTIFICATION_REFRESH_MS = 60000;
 
 function isCurrentAdmin() {
   return currentUserRoles.includes("admin");
@@ -611,6 +625,7 @@ function resetUserState({ clearJobs = false } = {}) {
   receivedCandidateRows = [];
   unreadConversationCounts.clear();
   stopMessageRefresh();
+  stopAdminNotificationRefresh();
   chatPanel?.classList.add("is-hidden");
   messagesShell?.classList.remove("chat-open");
 
@@ -737,6 +752,11 @@ function renderHeaderAuthState() {
   adminNavLink.hidden = !isSignedIn || !isCurrentAdmin();
   document.body.classList.toggle("is-signed-in", isSignedIn);
   document.body.classList.toggle("is-admin", isSignedIn && isCurrentAdmin());
+  if (isSignedIn && isCurrentAdmin()) {
+    startAdminNotificationRefresh();
+  } else {
+    stopAdminNotificationRefresh();
+  }
   document.querySelectorAll("[data-auth-create]").forEach((button) => {
     button.classList.toggle("is-hidden", isSignedIn);
     button.hidden = isSignedIn;
@@ -2137,6 +2157,118 @@ function adminReportStatusLabel(status) {
   }[status] ?? status;
 }
 
+function countRecentPublishedJobs(adminJobs = []) {
+  const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  return adminJobs.filter((job) => {
+    const createdAt = Date.parse(job.created_at || "");
+    return job.status === "published" && Number.isFinite(createdAt) && createdAt >= sevenDaysAgo;
+  }).length;
+}
+
+function buildAdminNotificationState({ stats = {}, reports = null, jobs = [], companies = null } = {}) {
+  const pendingReports = Array.isArray(reports)
+    ? reports.filter((report) => ["pending", "reviewing"].includes(report.status)).length
+    : Number(stats.pending_reports) || 0;
+  const jobsToReview = jobs.filter((job) => ["draft", "paused"].includes(job.status)).length;
+  const newPublishedJobs = countRecentPublishedJobs(jobs);
+  const unverifiedCompanies = Array.isArray(companies)
+    ? companies.filter((company) => !company.is_verified).length
+    : Math.max(0, (Number(stats.companies) || 0) - (Number(stats.verified_companies) || 0));
+
+  return { pendingReports, jobsToReview, newPublishedJobs, unverifiedCompanies };
+}
+
+function setAdminBadge(element, count, label) {
+  if (!element) return;
+  const safeCount = Math.max(0, Number(count) || 0);
+  element.textContent = safeCount > 99 ? "99+" : String(safeCount);
+  element.classList.toggle("is-hidden", safeCount === 0);
+  element.setAttribute("aria-label", `${safeCount} ${label}`);
+  element.title = `${safeCount} ${label}`;
+}
+
+function updateAdminNotificationUi(state = {}) {
+  const pendingReports = Math.max(0, Number(state.pendingReports) || 0);
+  const jobsToReview = Math.max(0, Number(state.jobsToReview) || 0);
+  const newPublishedJobs = Math.max(0, Number(state.newPublishedJobs) || 0);
+  const unverifiedCompanies = Math.max(0, Number(state.unverifiedCompanies) || 0);
+  const notificationTotal = pendingReports + jobsToReview + newPublishedJobs + unverifiedCompanies;
+
+  setAdminBadge(adminNavBadge, notificationTotal, "avisos administrativos");
+  setAdminBadge(adminReportsSectionBadge, pendingReports, "reportes pendientes o en revisión");
+  setAdminBadge(
+    adminJobsSectionBadge,
+    jobsToReview + newPublishedJobs,
+    `${jobsToReview} vacantes por revisar y ${newPublishedJobs} vacantes nuevas`
+  );
+  setAdminBadge(adminCompaniesSectionBadge, unverifiedCompanies, "empresas sin verificar");
+
+  if (adminReportsAttentionCount) adminReportsAttentionCount.textContent = String(pendingReports);
+  if (adminJobsReviewCount) adminJobsReviewCount.textContent = String(jobsToReview);
+  if (adminNewJobsCount) adminNewJobsCount.textContent = String(newPublishedJobs);
+  if (adminUnverifiedCompaniesCount) adminUnverifiedCompaniesCount.textContent = String(unverifiedCompanies);
+  if (adminAttentionTitle) {
+    adminAttentionTitle.textContent = notificationTotal === 0
+      ? "Todo al día"
+      : `${notificationTotal} ${notificationTotal === 1 ? "aviso requiere" : "avisos requieren"} atención`;
+  }
+  if (adminNotificationsUpdated) {
+    adminNotificationsUpdated.textContent = `Actualizado ${new Intl.DateTimeFormat("es-MX", {
+      hour: "2-digit",
+      minute: "2-digit"
+    }).format(new Date())}`;
+  }
+}
+
+function resetAdminNotificationUi() {
+  updateAdminNotificationUi({
+    pendingReports: 0,
+    jobsToReview: 0,
+    newPublishedJobs: 0,
+    unverifiedCompanies: 0
+  });
+  if (adminNotificationsUpdated) adminNotificationsUpdated.textContent = "Sin sesión administrativa";
+}
+
+async function loadAdminNotificationCounts() {
+  if (!isCurrentAdmin() || !getStoredSession()?.access_token || adminNotificationLoading) return;
+
+  const requestGeneration = adminNotificationGeneration;
+  adminNotificationLoading = true;
+  try {
+    const [stats, adminJobs] = await Promise.all([
+      supabaseRestRequest("/rpc/admin_dashboard_stats", { method: "POST", body: {} }),
+      supabaseRestRequest("/jobs?select=id,status,created_at&order=created_at.desc&limit=1000")
+    ]);
+    if (stats?.error) throw new Error(stats.error);
+    if (requestGeneration !== adminNotificationGeneration || !isCurrentAdmin()) return;
+    updateAdminNotificationUi(buildAdminNotificationState({ stats, jobs: adminJobs ?? [] }));
+  } catch (error) {
+    if (requestGeneration === adminNotificationGeneration && isCurrentAdmin() && adminNotificationsUpdated) {
+      adminNotificationsUpdated.textContent = "No se pudieron actualizar los avisos";
+    }
+    throw error;
+  } finally {
+    if (requestGeneration === adminNotificationGeneration) adminNotificationLoading = false;
+  }
+}
+
+function startAdminNotificationRefresh() {
+  if (adminNotificationTimer || !isCurrentAdmin() || !getStoredSession()?.access_token) return;
+  loadAdminNotificationCounts().catch(() => null);
+  adminNotificationTimer = window.setInterval(() => {
+    loadAdminNotificationCounts().catch(() => null);
+  }, ADMIN_NOTIFICATION_REFRESH_MS);
+}
+
+function stopAdminNotificationRefresh() {
+  if (adminNotificationTimer) window.clearInterval(adminNotificationTimer);
+  adminNotificationTimer = null;
+  adminNotificationGeneration += 1;
+  adminNotificationLoading = false;
+  resetAdminNotificationUi();
+}
+
 function adminReportCategoryLabel(category) {
   return {
     job: "Vacante",
@@ -2257,6 +2389,13 @@ async function loadAdminDashboard() {
     ownedCompanies.push(company);
     companiesByUser.set(ownerId, ownedCompanies);
   });
+
+  updateAdminNotificationUi(buildAdminNotificationState({
+    stats,
+    reports: reports ?? [],
+    jobs: adminJobs ?? [],
+    companies: companies ?? []
+  }));
 
   adminReportsById.clear();
   (reports ?? []).forEach((report) => adminReportsById.set(String(report.id), report));
@@ -4786,6 +4925,7 @@ adminRefreshButton.addEventListener("click", async () => {
 });
 
 document.querySelector("#administracion").addEventListener("click", async (event) => {
+  const sectionButton = event.target.closest("[data-admin-open-section]");
   const jobStatusButton = event.target.closest("[data-admin-job-status]");
   const deleteJobButton = event.target.closest("[data-admin-delete-job]");
   const openJobButton = event.target.closest("[data-admin-open-job]");
@@ -4795,7 +4935,13 @@ document.querySelector("#administracion").addEventListener("click", async (event
   const reportButton = event.target.closest("[data-admin-report-status]");
 
   try {
-    if (viewReportButton) {
+    if (sectionButton) {
+      const section = document.getElementById(sectionButton.dataset.adminOpenSection);
+      if (!section) return;
+      section.open = true;
+      section.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    } else if (viewReportButton) {
       openAdminReportDialog(viewReportButton.dataset.adminViewReport);
       return;
     }
@@ -5323,11 +5469,13 @@ if (window.matchMedia("(display-mode: standalone)").matches) {
 window.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible") {
     refreshVisibleData().catch((error) => showToast(friendlyError(error)));
+    loadAdminNotificationCounts().catch(() => null);
   }
 });
 
 window.addEventListener("focus", () => {
   refreshVisibleData().catch((error) => showToast(friendlyError(error)));
+  loadAdminNotificationCounts().catch(() => null);
 });
 
 window.addEventListener("popstate", () => {

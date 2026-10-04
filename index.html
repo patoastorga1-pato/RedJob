@@ -31,7 +31,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/styles.css?v=20260904a" />
+    <link rel="stylesheet" href="/styles.css?v=20261004a" />
   </head>
   <body>
     <header class="site-header">
@@ -48,6 +48,7 @@
         </a>
         <a class="nav-link admin-nav-link is-hidden" href="#administracion" data-view-link="administracion" id="adminNavLink">
           Administración
+          <span class="admin-nav-badge is-hidden" id="adminNavBadge" aria-live="polite">0</span>
         </a>
       </nav>
 
@@ -628,8 +629,41 @@
               <h1>Panel de administración</h1>
               <p>Moderación, seguridad y estado general de la plataforma.</p>
             </div>
-            <button class="secondary-button subtle" type="button" id="adminRefreshButton">Actualizar datos</button>
+            <aside class="admin-heading-actions">
+              <small id="adminNotificationsUpdated" aria-live="polite">Comprobando novedades...</small>
+              <button class="secondary-button subtle" type="button" id="adminRefreshButton">Actualizar datos</button>
+            </aside>
           </header>
+
+          <section class="admin-attention" aria-labelledby="adminAttentionTitle">
+            <div class="admin-attention-copy">
+              <span>Centro de atención</span>
+              <strong id="adminAttentionTitle">Todo al día</strong>
+              <small>Los avisos se actualizan automáticamente cada minuto.</small>
+            </div>
+            <div class="admin-attention-items">
+              <button type="button" data-admin-open-section="adminReportsSection">
+                <span>Reportes</span>
+                <strong id="adminReportsAttentionCount">0</strong>
+                <small>Pendientes o en revisión</small>
+              </button>
+              <button type="button" data-admin-open-section="adminJobsSection">
+                <span>Vacantes por revisar</span>
+                <strong id="adminJobsReviewCount">0</strong>
+                <small>Pausadas o en borrador</small>
+              </button>
+              <button type="button" data-admin-open-section="adminJobsSection">
+                <span>Vacantes nuevas</span>
+                <strong id="adminNewJobsCount">0</strong>
+                <small>Publicadas en los últimos 7 días</small>
+              </button>
+              <button type="button" data-admin-open-section="adminCompaniesSection">
+                <span>Empresas</span>
+                <strong id="adminUnverifiedCompaniesCount">0</strong>
+                <small>Sin verificar</small>
+              </button>
+            </div>
+          </section>
 
           <section class="admin-stats" aria-label="Estadísticas globales">
             <article>
@@ -656,11 +690,11 @@
             <article><span>Reportes pendientes</span><strong id="adminReportsCount">0</strong></article>
           </section>
 
-          <details class="admin-section">
+          <details class="admin-section" id="adminReportsSection">
             <summary class="admin-section-heading">
               <div>
                 <span>Seguridad</span>
-                <h2>Reportes</h2>
+                <h2>Reportes <span class="admin-section-count is-hidden" id="adminReportsSectionBadge">0</span></h2>
               </div>
               <span class="admin-section-chevron" aria-hidden="true"></span>
             </summary>
@@ -676,11 +710,11 @@
             </div>
           </details>
 
-          <details class="admin-section">
+          <details class="admin-section" id="adminJobsSection">
             <summary class="admin-section-heading">
               <div>
                 <span>Contenido</span>
-                <h2>Vacantes</h2>
+                <h2>Vacantes <span class="admin-section-count is-hidden" id="adminJobsSectionBadge">0</span></h2>
               </div>
               <span class="admin-section-chevron" aria-hidden="true"></span>
             </summary>
@@ -696,7 +730,7 @@
             </div>
           </details>
 
-          <details class="admin-section">
+          <details class="admin-section" id="adminUsersSection">
             <summary class="admin-section-heading">
               <div>
                 <span>Acceso</span>
@@ -716,11 +750,11 @@
             </div>
           </details>
 
-          <details class="admin-section">
+          <details class="admin-section" id="adminCompaniesSection">
             <summary class="admin-section-heading">
               <div>
                 <span>Confianza</span>
-                <h2>Empresas</h2>
+                <h2>Empresas <span class="admin-section-count is-hidden" id="adminCompaniesSectionBadge">0</span></h2>
               </div>
               <span class="admin-section-chevron" aria-hidden="true"></span>
             </summary>
@@ -1242,7 +1276,7 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script src="/config.js?v=20260801e"></script>
-    <script src="/app.js?v=20260918a"></script>
+    <script src="/app.js?v=20261004a"></script>
     <script src="/admin-report-viewer.js?v=20260801e"></script>
   </body>
 </html>
