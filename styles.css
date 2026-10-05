@@ -2322,6 +2322,36 @@ textarea:focus {
   line-height: 1.25;
 }
 
+.company-job-status {
+  justify-self: start;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 4px 8px;
+  background: #f8fafc;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 900;
+}
+
+.company-job-status.published {
+  border-color: rgba(22, 163, 74, 0.2);
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.company-job-status.draft {
+  border-color: rgba(37, 99, 235, 0.2);
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.company-job-status.paused,
+.company-job-status.closed {
+  border-color: rgba(220, 38, 38, 0.18);
+  background: var(--red-soft);
+  color: var(--red);
+}
+
 .company-job-meta {
   display: flex;
   min-width: 0;
@@ -3815,6 +3845,64 @@ textarea:focus {
   display: grid;
 }
 
+.admin-job-groups {
+  display: grid;
+  background: #f1f5f9;
+  gap: 1px;
+}
+
+.admin-job-group {
+  background: var(--white);
+}
+
+.admin-job-group > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid var(--line);
+  padding: 16px 22px;
+  background: #f8fafc;
+}
+
+.admin-job-group > header > div {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.admin-job-group > header strong {
+  color: var(--black);
+  font-size: 14px;
+}
+
+.admin-job-group > header small {
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.admin-job-group > header > span {
+  display: grid;
+  min-width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--black);
+  color: var(--white);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.admin-job-group .admin-row[data-job-status="draft"] {
+  border-left: 4px solid #2563eb;
+}
+
+.admin-job-group .admin-row[data-job-status="paused"],
+.admin-job-group .admin-row[data-job-status="closed"] {
+  border-left: 4px solid var(--red);
+}
+
 .admin-list > .empty-list {
   padding: 22px;
 }
@@ -3935,6 +4023,18 @@ textarea:focus {
   border-color: rgba(220, 38, 38, 0.18);
   background: var(--red-soft);
   color: var(--red);
+}
+
+.admin-status.draft {
+  border-color: rgba(37, 99, 235, 0.18);
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.admin-status.closed {
+  border-color: rgba(71, 85, 105, 0.2);
+  background: #f1f5f9;
+  color: #475569;
 }
 
 .admin-status.admin,
@@ -5068,6 +5168,11 @@ textarea:focus {
 
   .admin-search {
     padding: 16px;
+  }
+
+  .admin-job-group > header {
+    align-items: flex-start;
+    padding: 15px 16px;
   }
 
   .admin-row-actions {

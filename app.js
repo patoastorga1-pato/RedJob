@@ -1,6 +1,7 @@
 ﻿let jobs = [];
 
 const jobsList = document.querySelector("#jobsList");
+let companyManagedJobs = [];
 const hiringCompaniesList = document.querySelector("#hiringCompaniesList");
 const resultCount = document.querySelector("#resultCount");
 const searchInput = document.querySelector("#searchInput");
@@ -179,6 +180,12 @@ const adminReportsCount = document.querySelector("#adminReportsCount");
 const adminPageVisitsCount = document.querySelector("#adminPageVisitsCount");
 const adminReportsList = document.querySelector("#adminReportsList");
 const adminJobsList = document.querySelector("#adminJobsList");
+const adminPendingJobsList = document.querySelector("#adminPendingJobsList");
+const adminPublishedJobsList = document.querySelector("#adminPublishedJobsList");
+const adminInactiveJobsList = document.querySelector("#adminInactiveJobsList");
+const adminPendingJobsCount = document.querySelector("#adminPendingJobsCount");
+const adminPublishedJobsCount = document.querySelector("#adminPublishedJobsCount");
+const adminInactiveJobsCount = document.querySelector("#adminInactiveJobsCount");
 const adminUsersList = document.querySelector("#adminUsersList");
 const adminCompaniesList = document.querySelector("#adminCompaniesList");
 const adminReportsSearch = document.querySelector("#adminReportsSearch");
@@ -609,6 +616,7 @@ function resetUserState({ clearJobs = false } = {}) {
   currentCandidateProfile = null;
   currentCompanyProfile = null;
   currentCompanyProfiles = [];
+  companyManagedJobs = [];
   savedJobs.clear();
   applications.length = 0;
   receivedCandidateProfiles.clear();
@@ -1176,6 +1184,7 @@ async function promoteCompanyJob(jobId) {
   }
 
   await loadRealJobs();
+  await loadCompanyManagedJobs();
   await refreshCurrentCompanyProfile();
   showToast("Vacante destacada por 30 dias.");
 }
@@ -1193,11 +1202,15 @@ function getApplicationCountsByJob() {
 function renderCompanyJobs() {
   const companyIds = new Set(currentCompanyProfiles.map((company) => String(company.id)));
   const companyJobs = companyIds.size
-    ? jobs.filter((job) => companyIds.has(String(job.companyId)))
+    ? companyManagedJobs.filter((job) => companyIds.has(String(job.companyId)))
     : [];
-  companyActiveJobsCount.textContent = companyJobs.length;
+  const publishedCount = companyJobs.filter((job) => job.status === "published").length;
+  const pendingCount = companyJobs.filter((job) => job.status === "draft").length;
+  companyActiveJobsCount.textContent = String(publishedCount);
   if (companyActiveJobsMeta) {
-    companyActiveJobsMeta.textContent = companyJobs.length === 1 ? "1 vacante publicada" : `${companyJobs.length} vacantes publicadas`;
+    const publishedCopy = publishedCount === 1 ? "1 publicada" : `${publishedCount} publicadas`;
+    const pendingCopy = pendingCount === 1 ? "1 en revisión" : `${pendingCount} en revisión`;
+    companyActiveJobsMeta.textContent = `${publishedCopy} · ${pendingCopy}`;
   }
   const applicationsByJob = getApplicationCountsByJob();
 
@@ -1209,9 +1222,16 @@ function renderCompanyJobs() {
               ? `<span class="company-job-verified" title="Empresa verificada" aria-label="Empresa verificada">✓</span>`
               : "";
 
-            const promoteButton = isJobFeatured(job)
-              ? `<button class="secondary-button subtle compact" type="button" disabled>Destacada</button>`
-              : `<button class="secondary-button subtle compact" type="button" data-promote-job="${escapeHtml(job.id)}">Destacar</button>`;
+            const promoteButton = job.status !== "published"
+              ? ""
+              : isJobFeatured(job)
+                ? `<button class="secondary-button subtle compact" type="button" disabled>Destacada</button>`
+                : `<button class="secondary-button subtle compact" type="button" data-promote-job="${escapeHtml(job.id)}">Destacar</button>`;
+            const statusAction = job.status === "published"
+              ? `<button type="button" data-company-job-status="paused" data-job-id="${escapeHtml(job.id)}">Pausar publicación</button>`
+              : job.status === "draft"
+                ? `<button type="button" disabled>Pendiente de aprobación</button>`
+                : `<button type="button" data-company-job-status="draft" data-job-id="${escapeHtml(job.id)}">Enviar a revisión</button>`;
             const candidatesCount = applicationsByJob.get(String(job.id)) ?? 0;
 
             return `
@@ -1219,6 +1239,7 @@ function renderCompanyJobs() {
               ${renderCompanyLogoMarkup(job.company, job.companyLogoPath, "compact")}
               <div class="company-job-info">
                 <strong class="company-job-title">${escapeHtml(job.title)}</strong>
+                <span class="company-job-status ${escapeHtml(job.status)}">${escapeHtml(adminJobStatusLabel(job.status))}</span>
                 <div class="company-job-meta">
                   <span class="company-job-company">${escapeHtml(job.company)}</span>
                   ${verifiedMark}
@@ -1239,7 +1260,7 @@ function renderCompanyJobs() {
                   <summary aria-label="Más acciones">•••</summary>
                   <div>
                     <button type="button" data-edit-job="${escapeHtml(job.id)}">Editar</button>
-                    <button type="button" disabled title="Requiere estado de pausa en flujo actual">Pausar / Activar</button>
+                    ${statusAction}
                     <button type="button" disabled title="Disponible cuando se defina duplicado seguro">Duplicar vacante</button>
                     <button class="danger" type="button" data-delete-job="${escapeHtml(job.id)}">Eliminar</button>
                   </div>
@@ -1250,7 +1271,7 @@ function renderCompanyJobs() {
           }
         )
         .join("")
-    : `<p class="empty-list">Aún no hay vacantes publicadas en tus empresas.</p>`;
+    : `<p class="empty-list">Aún no hay vacantes en tus empresas.</p>`;
 }
 
 function renderHiringCompanies() {
@@ -1367,7 +1388,7 @@ function hasApplication(jobId) {
 }
 
 function getJobById(jobId) {
-  return jobs.find((job) => sameId(job.id, jobId));
+  return jobs.find((job) => sameId(job.id, jobId)) || companyManagedJobs.find((job) => sameId(job.id, jobId));
 }
 
 function slugifyJobTitle(value) {
@@ -1914,6 +1935,7 @@ async function loadCurrentProfile() {
     hydrateCompanyForm(null);
   }
   renderCompanyProfileSelect();
+  await loadCompanyManagedJobs();
   await loadReceivedCandidates();
 
   renderProfileHeader();
@@ -2141,7 +2163,7 @@ async function updateApplicationStatus(applicationId, nextStatus) {
 
 function adminJobStatusLabel(status) {
   return {
-    draft: "Borrador",
+    draft: "Pendiente",
     published: "Publicada",
     paused: "Pausada",
     closed: "Cerrada"
@@ -2169,7 +2191,7 @@ function buildAdminNotificationState({ stats = {}, reports = null, jobs = [], co
   const pendingReports = Array.isArray(reports)
     ? reports.filter((report) => ["pending", "reviewing"].includes(report.status)).length
     : Number(stats.pending_reports) || 0;
-  const jobsToReview = jobs.filter((job) => ["draft", "paused"].includes(job.status)).length;
+  const jobsToReview = jobs.filter((job) => job.status === "draft").length;
   const newPublishedJobs = countRecentPublishedJobs(jobs);
   const unverifiedCompanies = Array.isArray(companies)
     ? companies.filter((company) => !company.is_verified).length
@@ -2290,6 +2312,26 @@ function adminReportTargetLabel(report) {
   }[report?.target_type] ?? "General";
 }
 
+function renderAdminReportStatusActions(report) {
+  const reportId = escapeHtml(report.id);
+  if (report.status === "pending") {
+    return `
+      <button class="admin-action" type="button" data-admin-report-status="reviewing" data-report-id="${reportId}">Marcar en revisión</button>
+      <button class="admin-action success" type="button" data-admin-report-status="resolved" data-report-id="${reportId}">Resolver</button>
+      <button class="admin-action" type="button" data-admin-report-status="dismissed" data-report-id="${reportId}">Descartar</button>
+    `;
+  }
+
+  if (report.status === "reviewing") {
+    return `
+      <button class="admin-action success" type="button" data-admin-report-status="resolved" data-report-id="${reportId}">Resolver</button>
+      <button class="admin-action" type="button" data-admin-report-status="dismissed" data-report-id="${reportId}">Descartar</button>
+    `;
+  }
+
+  return `<button class="admin-action" type="button" data-admin-report-status="pending" data-report-id="${reportId}">Reabrir reporte</button>`;
+}
+
 function openAdminReportDialog(reportId) {
   const report = adminReportsById.get(String(reportId));
   if (!report || !adminReportDialog) {
@@ -2340,6 +2382,14 @@ function filterAdminList(input, list, emptyMessage) {
   });
 
   emptyMessage.classList.toggle("is-hidden", !query || visibleCount > 0 || rows.length === 0);
+
+  if (list === adminJobsList) {
+    list.querySelectorAll("[data-admin-job-group]").forEach((group) => {
+      const groupRows = Array.from(group.querySelectorAll(".admin-row"));
+      const hasVisibleRows = groupRows.some((row) => !row.classList.contains("is-hidden"));
+      group.classList.toggle("is-hidden", Boolean(query) && !hasVisibleRows);
+    });
+  }
 }
 
 function refreshAdminFilters() {
@@ -2347,6 +2397,84 @@ function refreshAdminFilters() {
   filterAdminList(adminJobsSearch, adminJobsList, adminJobsEmpty);
   filterAdminList(adminUsersSearch, adminUsersList, adminUsersEmpty);
   filterAdminList(adminCompaniesSearch, adminCompaniesList, adminCompaniesEmpty);
+}
+
+function renderAdminJobActions(job) {
+  const jobId = escapeHtml(job.id);
+  const previewLabel = job.status === "published" ? "Ver vacante" : "Vista previa";
+  const previewButton = `<button class="admin-action" type="button" data-admin-open-job="${jobId}">${previewLabel}</button>`;
+  const deleteButton = `<button class="admin-action danger" type="button" data-admin-delete-job="${jobId}">Eliminar</button>`;
+
+  if (job.status === "draft") {
+    return `
+      ${previewButton}
+      <button class="admin-action success" type="button" data-admin-job-status="published" data-current-status="draft" data-job-id="${jobId}">Aprobar y publicar</button>
+      <button class="admin-action" type="button" data-admin-job-status="closed" data-current-status="draft" data-job-id="${jobId}">Cerrar</button>
+      ${deleteButton}
+    `;
+  }
+
+  if (job.status === "published") {
+    return `
+      ${previewButton}
+      <button class="admin-action" type="button" data-admin-job-status="paused" data-current-status="published" data-job-id="${jobId}">Retirar publicación</button>
+      ${deleteButton}
+    `;
+  }
+
+  if (job.status === "paused") {
+    return `
+      ${previewButton}
+      <button class="admin-action success" type="button" data-admin-job-status="published" data-current-status="paused" data-job-id="${jobId}">Volver a publicar</button>
+      <button class="admin-action" type="button" data-admin-job-status="closed" data-current-status="paused" data-job-id="${jobId}">Cerrar</button>
+      ${deleteButton}
+    `;
+  }
+
+  return `
+    ${previewButton}
+    <button class="admin-action success" type="button" data-admin-job-status="published" data-current-status="closed" data-job-id="${jobId}">Reabrir y publicar</button>
+    ${deleteButton}
+  `;
+}
+
+function renderAdminJobRow(job) {
+  const company = Array.isArray(job.company_profiles) ? job.company_profiles[0] : job.company_profiles;
+  const searchable = `${job.title} ${company?.company_name ?? ""} ${adminJobStatusLabel(job.status)}`;
+  const activityDate = job.updated_at || job.created_at;
+
+  return `
+    <article class="admin-row" data-search="${escapeHtml(searchable)}" data-job-status="${escapeHtml(job.status)}">
+      <div class="admin-row-main">
+        <div class="admin-row-title">
+          <strong>${escapeHtml(job.title)}</strong>
+          <span class="admin-status ${escapeHtml(job.status)}">${escapeHtml(adminJobStatusLabel(job.status))}</span>
+        </div>
+        <p>${escapeHtml(company?.company_name ?? "Empresa sin nombre")}</p>
+        <small>Actualizada ${escapeHtml(formatMessageTime(activityDate))}</small>
+      </div>
+      <div class="admin-row-actions">
+        ${renderAdminJobActions(job)}
+      </div>
+    </article>
+  `;
+}
+
+function renderAdminJobGroup(list, countElement, rows, emptyMessage) {
+  countElement.textContent = String(rows.length);
+  list.innerHTML = rows.length
+    ? rows.map(renderAdminJobRow).join("")
+    : `<p class="empty-list">${escapeHtml(emptyMessage)}</p>`;
+}
+
+function renderAdminJobsByStatus(adminJobs = []) {
+  const pendingJobs = adminJobs.filter((job) => job.status === "draft");
+  const publishedJobs = adminJobs.filter((job) => job.status === "published");
+  const inactiveJobs = adminJobs.filter((job) => ["paused", "closed"].includes(job.status));
+
+  renderAdminJobGroup(adminPendingJobsList, adminPendingJobsCount, pendingJobs, "No hay vacantes pendientes.");
+  renderAdminJobGroup(adminPublishedJobsList, adminPublishedJobsCount, publishedJobs, "No hay vacantes publicadas.");
+  renderAdminJobGroup(adminInactiveJobsList, adminInactiveJobsCount, inactiveJobs, "No hay vacantes retiradas o cerradas.");
 }
 
 async function loadAdminDashboard() {
@@ -2361,7 +2489,7 @@ async function loadAdminDashboard() {
       weekly_page_visits: null
     })),
     supabaseRestRequest("/reports?select=id,reporter_user_id,category,target_type,target_id,subject,description,status,admin_note,created_at&order=created_at.desc&limit=500"),
-    supabaseRestRequest("/jobs?select=id,title,status,created_at,company_profiles(company_name)&order=created_at.desc&limit=200"),
+    supabaseRestRequest("/jobs?select=id,title,status,created_at,updated_at,company_profiles(company_name)&order=updated_at.desc&limit=500"),
     supabaseRestRequest("/profiles?select=id,email,role,suspended_at,suspension_reason,created_at&order=created_at.desc&limit=200"),
     supabaseRestRequest("/company_profiles?select=id,user_id,company_name,is_verified,created_at&order=created_at.desc&limit=200"),
     supabaseRestRequest("/user_roles?select=user_id,role")
@@ -2397,11 +2525,18 @@ async function loadAdminDashboard() {
     companies: companies ?? []
   }));
 
-  adminReportsById.clear();
-  (reports ?? []).forEach((report) => adminReportsById.set(String(report.id), report));
+  const reportPriority = { pending: 0, reviewing: 1, resolved: 2, dismissed: 3 };
+  const orderedReports = [...(reports ?? [])].sort((left, right) => {
+    const priorityDifference = (reportPriority[left.status] ?? 9) - (reportPriority[right.status] ?? 9);
+    if (priorityDifference) return priorityDifference;
+    return Date.parse(right.created_at || "") - Date.parse(left.created_at || "");
+  });
 
-  adminReportsList.innerHTML = reports?.length
-    ? reports.map((report) => `
+  adminReportsById.clear();
+  orderedReports.forEach((report) => adminReportsById.set(String(report.id), report));
+
+  adminReportsList.innerHTML = orderedReports.length
+    ? orderedReports.map((report) => `
         <article class="admin-row" data-search="${escapeHtml(`${report.subject} ${report.description} ${report.category} ${adminReportStatusLabel(report.status)}`)}">
           <div class="admin-row-main">
             <div class="admin-row-title">
@@ -2414,36 +2549,13 @@ async function loadAdminDashboard() {
           <div class="admin-row-actions">
             <button class="admin-action strong" type="button" data-admin-view-report="${escapeHtml(report.id)}">Ver reporte</button>
             ${report.target_type === "job" && report.target_id ? `<button class="admin-action" type="button" data-admin-open-job="${escapeHtml(report.target_id)}">Ver vacante</button>` : ""}
-            <button class="admin-action" type="button" data-admin-report-status="reviewing" data-report-id="${escapeHtml(report.id)}">Revisar</button>
-            <button class="admin-action success" type="button" data-admin-report-status="resolved" data-report-id="${escapeHtml(report.id)}">Resolver</button>
-            <button class="admin-action" type="button" data-admin-report-status="dismissed" data-report-id="${escapeHtml(report.id)}">Descartar</button>
+            ${renderAdminReportStatusActions(report)}
           </div>
         </article>
       `).join("")
     : `<p class="empty-list">No hay reportes registrados.</p>`;
 
-  adminJobsList.innerHTML = adminJobs?.length
-    ? adminJobs.map((job) => {
-        const company = Array.isArray(job.company_profiles) ? job.company_profiles[0] : job.company_profiles;
-        return `
-          <article class="admin-row" data-search="${escapeHtml(`${job.title} ${company?.company_name ?? ""} ${adminJobStatusLabel(job.status)}`)}">
-            <div class="admin-row-main">
-              <div class="admin-row-title">
-                <strong>${escapeHtml(job.title)}</strong>
-                <span class="admin-status ${escapeHtml(job.status)}">${escapeHtml(adminJobStatusLabel(job.status))}</span>
-              </div>
-              <p>${escapeHtml(company?.company_name ?? "Empresa sin nombre")}</p>
-              <small>${escapeHtml(formatMessageTime(job.created_at))}</small>
-            </div>
-            <div class="admin-row-actions">
-              <button class="admin-action success" type="button" data-admin-job-status="published" data-job-id="${escapeHtml(job.id)}">Aprobar</button>
-              <button class="admin-action" type="button" data-admin-job-status="paused" data-job-id="${escapeHtml(job.id)}">Pausar</button>
-              <button class="admin-action danger" type="button" data-admin-delete-job="${escapeHtml(job.id)}">Eliminar</button>
-            </div>
-          </article>
-        `;
-      }).join("")
-    : `<p class="empty-list">No hay vacantes disponibles.</p>`;
+  renderAdminJobsByStatus(adminJobs ?? []);
 
   adminUsersList.innerHTML = users?.length
     ? users.map((user) => {
@@ -3141,6 +3253,21 @@ function hydrateCompanyForm(profile) {
   renderCompanyHeader();
 }
 
+async function loadCompanyManagedJobs() {
+  const companyIds = currentCompanyProfiles.map((company) => company.id).filter(Boolean);
+  if (!companyIds.length || !getStoredSession()?.access_token) {
+    companyManagedJobs = [];
+    renderCompanyJobs();
+    return;
+  }
+
+  const rows = await supabaseRestRequest(
+    `/jobs?select=id,title,description,location,work_mode,category,salary_min,salary_max,is_featured,featured_priority,featured_until,promotion_source,status,created_at,updated_at,company_profiles(id,user_id,company_name,description,logo_path,logo_name,plan,plan_status,is_verified),job_skills(skill_name)&company_id=in.(${companyIds.join(",")})&order=updated_at.desc`
+  );
+  companyManagedJobs = (rows ?? []).map(mapSupabaseJob).filter(Boolean);
+  renderCompanyJobs();
+}
+
 async function loadRealJobs() {
   try {
     let rows = null;
@@ -3216,6 +3343,9 @@ function mapSupabaseJob(row) {
   const mappedJob = {
     id: row.id,
     source: "supabase",
+    status: row.status ?? "published",
+    createdAt: row.created_at ?? null,
+    updatedAt: row.updated_at ?? row.created_at ?? null,
     title: row.title,
     description: row.description,
     category: row.category || "Otra",
@@ -3388,6 +3518,11 @@ async function uploadCompanyLogo(file) {
       ? { ...job, companyLogoPath: imageDataUrl, companyLogoName: file.name }
       : job
   );
+  companyManagedJobs = companyManagedJobs.map((job) =>
+    sameId(job.companyId, currentCompanyProfile.id)
+      ? { ...job, companyLogoPath: imageDataUrl, companyLogoName: file.name }
+      : job
+  );
   renderCompanyProfileSelect();
   renderCompanyHeader();
   renderJobs();
@@ -3413,7 +3548,7 @@ async function publishRealJob() {
     throw new Error("Selecciona la ciudad de la vacante.");
   }
 
-  const duplicateJob = jobs.find(
+  const duplicateJob = [...companyManagedJobs, ...jobs].find(
     (job) =>
       sameId(job.companyId, companyProfile.id) &&
       job.title.trim().toLowerCase() === jobTitle.toLowerCase() &&
@@ -3424,6 +3559,7 @@ async function publishRealJob() {
     throw new Error("Ya existe una vacante con ese puesto en esta empresa.");
   }
 
+  const existingJob = activeEditingJobId ? getJobById(activeEditingJobId) : null;
   const jobPayload = {
     company_id: companyProfile.id,
     title: jobTitle,
@@ -3433,7 +3569,7 @@ async function publishRealJob() {
     category: getSelectedJobCategory(),
     salary_min: jobSalaryMinInput.value ? Number(jobSalaryMinInput.value) : null,
     salary_max: jobSalaryMaxInput.value ? Number(jobSalaryMaxInput.value) : null,
-    status: "published"
+    status: existingJob?.status ?? "draft"
   };
 
   const jobRows = await supabaseRestRequest(activeEditingJobId ? `/jobs?id=eq.${activeEditingJobId}` : "/jobs", {
@@ -3461,17 +3597,26 @@ async function publishRealJob() {
     });
   }
 
-  notifyGoogleIndexing(newJob?.id, "updated");
+  if (newJob?.id && (newJob.status === "published" || existingJob?.status === "published")) {
+    notifyGoogleIndexing(newJob.id, "status_changed");
+  }
+  await loadCompanyManagedJobs();
   await loadRealJobs();
   await loadReceivedCandidates();
-  showToast(activeEditingJobId ? "Vacante actualizada." : "Vacante publicada correctamente.");
+  showToast(
+    newJob?.status === "draft"
+      ? activeEditingJobId
+        ? "Vacante actualizada y enviada a revisión."
+        : "Vacante enviada a revisión."
+      : "Vacante actualizada."
+  );
   activeEditingJobId = null;
   updateJobFormMode();
   return newJob;
 }
 
 async function deleteCompanyJob(jobId) {
-  const job = jobs.find((item) => sameId(item.id, jobId));
+  const job = getJobById(jobId);
   if (!job) return;
 
   if (job.source === "supabase") {
@@ -3480,6 +3625,7 @@ async function deleteCompanyJob(jobId) {
       method: "DELETE"
     });
     showToast("Vacante eliminada.");
+    await loadCompanyManagedJobs();
     await loadRealJobs();
     await loadReceivedCandidates();
     return;
@@ -3489,8 +3635,24 @@ async function deleteCompanyJob(jobId) {
 }
 
 function updateJobFormMode() {
-  companyJobSubmitButton.textContent = activeEditingJobId ? "Actualizar vacante" : "Publicar vacante real";
+  companyJobSubmitButton.textContent = activeEditingJobId ? "Actualizar vacante" : "Enviar a revisión";
   cancelJobEditButton.classList.toggle("is-hidden", !activeEditingJobId);
+}
+
+async function updateCompanyJobStatus(jobId, nextStatus) {
+  const job = getJobById(jobId);
+  if (!job || !["draft", "paused"].includes(nextStatus)) return;
+
+  await supabaseRestRequest(`/jobs?id=eq.${jobId}`, {
+    method: "PATCH",
+    prefer: "return=representation",
+    body: { status: nextStatus }
+  });
+
+  if (nextStatus === "paused") notifyGoogleIndexing(jobId, "status_changed");
+  await loadCompanyManagedJobs();
+  await loadRealJobs();
+  showToast(nextStatus === "draft" ? "Vacante enviada nuevamente a revisión." : "Vacante pausada.");
 }
 
 function resetJobForm() {
@@ -4737,6 +4899,7 @@ companyJobsList.addEventListener("click", async (event) => {
   const deleteButton = event.target.closest("[data-delete-job]");
   const editButton = event.target.closest("[data-edit-job]");
   const promoteButton = event.target.closest("[data-promote-job]");
+  const statusButton = event.target.closest("[data-company-job-status]");
 
   if (editButton) {
     editCompanyJob(editButton.dataset.editJob);
@@ -4750,6 +4913,19 @@ companyJobsList.addEventListener("click", async (event) => {
     } catch (error) {
       showToast(friendlyError(error));
       promoteButton.disabled = false;
+    }
+    return;
+  }
+
+  if (statusButton) {
+    const nextStatus = statusButton.dataset.companyJobStatus;
+    if (nextStatus === "paused" && !window.confirm("¿Pausar esta vacante? Dejará de ser visible para candidatos.")) return;
+    statusButton.disabled = true;
+    try {
+      await updateCompanyJobStatus(statusButton.dataset.jobId, nextStatus);
+    } catch (error) {
+      showToast(friendlyError(error));
+      statusButton.disabled = false;
     }
     return;
   }
@@ -4955,17 +5131,26 @@ document.querySelector("#administracion").addEventListener("click", async (event
       const existingIndex = jobs.findIndex((item) => sameId(item.id, job.id));
       if (existingIndex >= 0) jobs[existingIndex] = job;
       else jobs.unshift(job);
-      await openJobDetail(job.id);
+      await openJobDetail(job.id, { updateUrl: job.status === "published" });
     } else if (jobStatusButton) {
+      const nextStatus = jobStatusButton.dataset.adminJobStatus;
+      if (nextStatus === "paused" && !window.confirm("¿Retirar esta vacante? Dejará de ser visible para candidatos, pero no se eliminará.")) return;
+      if (nextStatus === "closed" && !window.confirm("¿Cerrar esta vacante? Quedará fuera de circulación y podrá reabrirse después.")) return;
+      jobStatusButton.disabled = true;
       await supabaseRestRequest("/rpc/admin_set_job_status", {
         method: "POST",
         body: {
           job_uuid: jobStatusButton.dataset.jobId,
-          next_status: jobStatusButton.dataset.adminJobStatus
+          next_status: nextStatus
         }
       });
       notifyGoogleIndexing(jobStatusButton.dataset.jobId, "status_changed");
-      showToast("Estado de vacante actualizado.");
+      const statusMessages = {
+        published: "Vacante aprobada y publicada.",
+        paused: "Vacante retirada de la publicación.",
+        closed: "Vacante cerrada."
+      };
+      showToast(statusMessages[nextStatus] ?? "Estado de vacante actualizado.");
     } else if (deleteJobButton) {
       if (!window.confirm("¿Eliminar esta vacante definitivamente? También se eliminarán sus postulaciones y conversaciones relacionadas.")) return;
       await notifyGoogleIndexing(deleteJobButton.dataset.adminDeleteJob, "deleted");
@@ -5015,7 +5200,9 @@ document.querySelector("#administracion").addEventListener("click", async (event
 
     await loadAdminDashboard();
     await loadRealJobs();
+    await loadCompanyManagedJobs();
   } catch (error) {
+    if (jobStatusButton) jobStatusButton.disabled = false;
     showToast(friendlyError(error));
   }
 });
@@ -5412,20 +5599,25 @@ companyJobForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
   try {
-    const publishedJob = await withButtonLoading(
+    const savedJob = await withButtonLoading(
       companyJobSubmitButton,
-      activeEditingJobId ? "Actualizando..." : "Publicando...",
+      activeEditingJobId ? "Actualizando..." : "Enviando...",
       publishRealJob
     );
     resetJobForm();
-    if (publishedJob?.title) {
+    if (savedJob?.title) {
       searchInput.value = "";
       locationInput.value = "";
       populateCitySelect(locationCityInput, "", { includeAll: true });
       modeFilter.value = "all";
       categoryFilter.value = "all";
       renderJobs();
-      await openJobDetail(publishedJob.id);
+      if (savedJob.status === "published") {
+        await openJobDetail(savedJob.id);
+      } else {
+        companyJobEditor.open = false;
+        companyJobsList.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
     }
   } catch (error) {
     showToast(friendlyError(error));

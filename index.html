@@ -31,7 +31,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/styles.css?v=20261004a" />
+    <link rel="stylesheet" href="/styles.css?v=20261004b" />
   </head>
   <body>
     <header class="site-header">
@@ -411,7 +411,7 @@
             <article><strong id="companyHiredCount">0</strong><span>Contratados</span><small id="companyHiredMeta">Cierres logrados</small></article>
           </div>
           <div class="company-primary-action">
-            <button class="primary-button" type="button" id="openJobEditorButton">+ Publicar vacante</button>
+            <button class="primary-button" type="button" id="openJobEditorButton">+ Enviar vacante</button>
           </div>
           <section class="info-card">
             <h2>Mis empresas</h2>
@@ -434,8 +434,8 @@
           <details class="info-card profile-editor company-job-editor" id="companyJobEditor">
             <summary>
               <span>
-                <strong>Publicar vacante</strong>
-                <small>Crea una nueva oportunidad para tu empresa</small>
+                <strong>Enviar vacante</strong>
+                <small>Crea una oportunidad y envíala a revisión</small>
               </span>
               <span class="profile-editor-chevron" aria-hidden="true"></span>
             </summary>
@@ -501,13 +501,13 @@
                 Requisitos
                 <textarea id="jobSkillsInput" rows="6" placeholder="Escribe un requisito por renglón.&#10;Ej. Experiencia en ventas&#10;Manejo de Excel&#10;Disponibilidad de horario"></textarea>
               </label>
-              <button class="primary-button" type="submit" id="companyJobSubmitButton">Publicar vacante real</button>
+              <button class="primary-button" type="submit" id="companyJobSubmitButton">Enviar a revisión</button>
                 <button class="secondary-button subtle is-hidden" type="button" id="cancelJobEditButton">Cancelar edición</button>
               </form>
             </div>
           </details>
           <section class="info-card">
-            <h2>Vacantes activas</h2>
+            <h2>Vacantes de mis empresas</h2>
             <div class="mini-job-list" id="companyJobsList">
               <p class="empty-list">Aún no hay vacantes publicadas para esta empresa.</p>
             </div>
@@ -650,7 +650,7 @@
               <button type="button" data-admin-open-section="adminJobsSection">
                 <span>Vacantes por revisar</span>
                 <strong id="adminJobsReviewCount">0</strong>
-                <small>Pausadas o en borrador</small>
+                <small>Pendientes de aprobación</small>
               </button>
               <button type="button" data-admin-open-section="adminJobsSection">
                 <span>Vacantes nuevas</span>
@@ -724,8 +724,43 @@
                 <input id="adminJobsSearch" type="search" placeholder="Nombre de la vacante, empresa o estado" />
               </label>
               <p class="admin-search-result is-hidden" id="adminJobsEmpty">No encontramos vacantes con esa búsqueda.</p>
-              <div class="admin-list" id="adminJobsList">
-                <p class="empty-list">No hay vacantes disponibles.</p>
+              <div class="admin-job-groups" id="adminJobsList">
+                <section class="admin-job-group" data-admin-job-group>
+                  <header>
+                    <div>
+                      <strong>Pendientes de aprobación</strong>
+                      <small>Vacantes nuevas que todavía no son visibles públicamente.</small>
+                    </div>
+                    <span id="adminPendingJobsCount">0</span>
+                  </header>
+                  <div class="admin-list" id="adminPendingJobsList">
+                    <p class="empty-list">No hay vacantes pendientes.</p>
+                  </div>
+                </section>
+                <section class="admin-job-group" data-admin-job-group>
+                  <header>
+                    <div>
+                      <strong>Publicadas</strong>
+                      <small>Vacantes aprobadas y visibles para candidatos.</small>
+                    </div>
+                    <span id="adminPublishedJobsCount">0</span>
+                  </header>
+                  <div class="admin-list" id="adminPublishedJobsList">
+                    <p class="empty-list">No hay vacantes publicadas.</p>
+                  </div>
+                </section>
+                <section class="admin-job-group" data-admin-job-group>
+                  <header>
+                    <div>
+                      <strong>Retiradas o cerradas</strong>
+                      <small>Contenido fuera de circulación que puede revisarse o eliminarse.</small>
+                    </div>
+                    <span id="adminInactiveJobsCount">0</span>
+                  </header>
+                  <div class="admin-list" id="adminInactiveJobsList">
+                    <p class="empty-list">No hay vacantes retiradas o cerradas.</p>
+                  </div>
+                </section>
               </div>
             </div>
           </details>
@@ -1276,7 +1311,7 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script src="/config.js?v=20260801e"></script>
-    <script src="/app.js?v=20261004a"></script>
+    <script src="/app.js?v=20261004b"></script>
     <script src="/admin-report-viewer.js?v=20260801e"></script>
   </body>
 </html>
