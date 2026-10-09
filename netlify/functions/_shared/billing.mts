@@ -1,4 +1,5 @@
-﻿import Stripe from "stripe";
+import Stripe from "stripe";
+import { getAuthenticatedUser, getOwnedCompanyRecord } from "./supabase-auth.mts";
 
 export const planConfig = {
   pro: {
@@ -87,17 +88,11 @@ export async function supabaseRequest(path, options = {}) {
 }
 
 export async function getOwnedCompany(companyId, accessToken) {
-  if (!companyId) throw new Error("Selecciona una empresa.");
-  if (!accessToken) throw new Error("Inicia sesión para continuar.");
-
-  const rows = await supabaseRequest(`/company_profiles?select=*&id=eq.${encodeURIComponent(companyId)}&limit=1`, {
-    authorization: `Bearer ${accessToken}`
-  });
-
-  const company = rows?.[0];
-  if (!company) throw new Error("Empresa no encontrada o sin permisos.");
+  const { company } = await getOwnedCompanyRecord(companyId, accessToken);
   return company;
 }
+
+export { getAuthenticatedUser };
 
 export async function updateCompanyBilling(companyId, body) {
   const rows = await supabaseRequest(`/company_profiles?id=eq.${encodeURIComponent(companyId)}`, {

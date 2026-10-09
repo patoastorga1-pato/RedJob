@@ -1,4 +1,4 @@
-const CACHE_NAME = "redjob-shell-20261004b";
+const CACHE_NAME = "redjob-shell-20261006a";
 const APP_SHELL = [
   "/",
   "/index.html",
@@ -11,7 +11,7 @@ const APP_SHELL = [
   "/blog/blog.js?v=20260812c",
   "/offline.html",
   "/styles.css?v=20261004b",
-  "/app.js?v=20261004b",
+  "/app.js?v=20261006a",
   "/admin-report-viewer.js?v=20260801e",
   "/manifest.json?v=20260609b",
   "/manifest.webmanifest?v=20260818a",
@@ -96,6 +96,26 @@ self.addEventListener("fetch", (event) => {
       });
     })
   );
+});
+
+self.addEventListener("push", (event) => {
+  let payload = {};
+  try {
+    payload = event.data?.json() ?? {};
+  } catch {
+    payload = { body: event.data?.text() || "Tienes una notificación nueva." };
+  }
+
+  const title = payload.title || "RedJob";
+  const options = {
+    body: payload.body || "Tienes una actualización nueva.",
+    icon: "/assets/redjob-icon-192.png?v=20260609b",
+    badge: "/assets/redjob-favicon-64.png?v=20260820b",
+    tag: payload.tag || "redjob-notification",
+    renotify: true,
+    data: { url: payload.url || "/" }
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
 });
 
 self.addEventListener("notificationclick", (event) => {

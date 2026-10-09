@@ -1,4 +1,5 @@
-import { getBearerToken, jsonResponse, planConfig, supabaseRequest } from "./_shared/billing.mts";
+import { getBearerToken, jsonResponse, planConfig } from "./_shared/billing.mts";
+import { getAuthenticatedUser, supabaseServiceRequest } from "./_shared/supabase-auth.mts";
 
 function addDays(date, days) {
   const next = new Date(date);
@@ -15,13 +16,18 @@ export default async (req) => {
     if (!jobId) return jsonResponse({ error: "Selecciona una vacante." }, 400);
     if (!accessToken) return jsonResponse({ error: "Inicia sesión para continuar." }, 401);
 
-    const rows = await supabaseRequest(
-      `/jobs?select=id,company_id,company_profiles(id,plan,plan_status)&id=eq.${encodeURIComponent(jobId)}&limit=1`,
-      { authorization: `Bearer ${accessToken}` }
+    const user = await getAuthenticatedUser(accessToken);
+    const rows = await supabaseServiceRequest(
+      `/jobs?select=id,status,company_id,company_profiles(id,user_id,plan,plan_status)&id=eq.${encodeURIComponent(jobId)}&limit=1`
     );
     const job = rows?.[0];
     const company = Array.isArray(job?.company_profiles) ? job.company_profiles[0] : job?.company_profiles;
-    if (!job || !company) return jsonResponse({ error: "Vacante no encontrada o sin permisos." }, 404);
+    if (!job || !company || company.user_id !== user.id) {
+      return jsonResponse({ error: "Vacante no encontrada o sin permisos." }, 403);
+    }
+    if (job.status !== "published") {
+      return jsonResponse({ error: "Solo se pueden destacar vacantes publicadas." }, 409);
+    }
 
     const plan = company.plan;
     const selectedPlan = planConfig[plan];
@@ -29,18 +35,16 @@ export default async (req) => {
       return jsonResponse({ error: "Contrata Pro o Premium para destacar vacantes." }, 403);
     }
 
-    const activeFeaturedRows = await supabaseRequest(
-      `/jobs?select=id&company_id=eq.${encodeURIComponent(company.id)}&is_featured=eq.true&or=(featured_until.is.null,featured_until.gt.${encodeURIComponent(new Date().toISOString())})`,
-      { service: true }
+    const activeFeaturedRows = await supabaseServiceRequest(
+      `/jobs?select=id&company_id=eq.${encodeURIComponent(company.id)}&is_featured=eq.true&or=(featured_until.is.null,featured_until.gt.${encodeURIComponent(new Date().toISOString())})`
     );
 
     if ((activeFeaturedRows?.length ?? 0) >= selectedPlan.featuredSlots) {
       return jsonResponse({ error: `Tu plan ${selectedPlan.label} permite ${selectedPlan.featuredSlots} vacante${selectedPlan.featuredSlots === 1 ? "" : "s"} destacada${selectedPlan.featuredSlots === 1 ? "" : "s"}.` }, 409);
     }
 
-    const updatedRows = await supabaseRequest(`/jobs?id=eq.${encodeURIComponent(job.id)}`, {
+    const updatedRows = await supabaseServiceRequest(`/jobs?id=eq.${encodeURIComponent(job.id)}`, {
       method: "PATCH",
-      service: true,
       prefer: "return=representation",
       body: {
         is_featured: true,

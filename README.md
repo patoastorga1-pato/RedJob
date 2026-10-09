@@ -80,6 +80,24 @@ Eventos a enviar:
 
 Importante: las llaves `sk_live` y `SUPABASE_SERVICE_ROLE_KEY` nunca deben guardarse en archivos del proyecto.
 
+## Notificaciones push
+
+Ejecuta una sola vez `supabase-functional-hardening.sql` en el SQL Editor de Supabase. Despues genera las claves VAPID con:
+
+```text
+npx web-push generate-vapid-keys
+```
+
+Guarda el resultado solamente en las variables de entorno de Netlify:
+
+```text
+WEB_PUSH_VAPID_PUBLIC_KEY=...
+WEB_PUSH_VAPID_PRIVATE_KEY=...
+WEB_PUSH_CONTACT=mailto:redjobmx@gmail.com
+```
+
+La clave privada no debe guardarse en GitHub, `config.js` ni el frontend. Sin estas variables, RedJob conserva el aviso local mientras la pagina esta abierta.
+
 ## Pruebas recomendadas
 
 1. Crear cuenta de candidato y completar perfil.

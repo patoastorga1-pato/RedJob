@@ -1,4 +1,4 @@
-﻿let jobs = [];
+let jobs = [];
 
 const jobsList = document.querySelector("#jobsList");
 let companyManagedJobs = [];
@@ -70,6 +70,7 @@ const closeChatPanel = document.querySelector("#closeChatPanel");
 const chatJobDetailButton = document.querySelector("#chatJobDetailButton");
 const messageNotificationsButton = document.querySelector("#messageNotificationsButton");
 const messageNotificationsStatus = document.querySelector("#messageNotificationsStatus");
+const adminNotificationsButton = document.querySelector("#adminNotificationsButton");
 const candidatePreview = document.querySelector("#candidatePreview");
 const candidatePreviewAvatar = document.querySelector("#candidatePreviewAvatar");
 const candidatePreviewName = document.querySelector("#candidatePreviewName");
@@ -252,7 +253,9 @@ const SUPABASE_SCHEMA_MESSAGE =
 const SUPABASE_CONFIG_MESSAGE =
   "Falta configurar Supabase. Copia config.example.js como config.js y agrega la URL y la llave anon de tu proyecto.";
 const CONVERSATION_SELECT =
-  "id,application_id,job_id,last_message_at,jobs(title),applications(id,status,match_score),company_profiles(company_name,logo_path),candidate_profiles(full_name,age,target_role,location,work_mode,summary,resume_name,resume_path)";
+  "id,application_id,job_id,candidate_id,company_id,last_message_at,jobs(title),applications(id,status,match_score),company_profiles(id,user_id,company_name,logo_path),candidate_profiles(full_name,age,target_role,location,work_mode,summary,resume_name,resume_path)";
+const COMPANY_PROFILE_SELECT =
+  "id,user_id,company_name,industry,location,website,description,plan,plan_status,is_verified,logo_path,logo_name,created_at,updated_at";
 let currentProfile = null;
 let currentUserRoles = [];
 let currentCandidateProfile = null;
@@ -279,6 +282,9 @@ let unreadNotificationTimer = null;
 let unreadNotificationInitialized = false;
 let lastUnreadNotificationCount = 0;
 let lastMessageNotificationAt = 0;
+let pushNotificationsAvailable = false;
+let pushSubscriptionPromise = null;
+let sessionRefreshPromise = null;
 let adminNotificationTimer = null;
 let adminNotificationLoading = false;
 let adminNotificationGeneration = 0;
@@ -590,7 +596,7 @@ function getStoredSession() {
   try {
     localStorage.removeItem("redjob_resume_file");
     const session = JSON.parse(localStorage.getItem(SESSION_STORAGE_KEY));
-    if (session?.expires_at && Date.now() / 1000 > session.expires_at) {
+    if (session?.expires_at && Date.now() / 1000 > session.expires_at && !session?.refresh_token) {
       localStorage.removeItem(SESSION_STORAGE_KEY);
       return null;
     }
@@ -608,6 +614,60 @@ function setStoredSession(session) {
   }
 
   renderSessionStatus();
+}
+
+function sessionNeedsRefresh(session, leewaySeconds = 60) {
+  if (!session?.access_token) return Boolean(session?.refresh_token);
+  if (!session?.expires_at) return false;
+  return Date.now() / 1000 >= Number(session.expires_at) - leewaySeconds;
+}
+
+async function refreshSupabaseSession({ force = false } = {}) {
+  const session = getStoredSession();
+  if (!session?.refresh_token) return session;
+  if (!force && !sessionNeedsRefresh(session)) return session;
+  if (sessionRefreshPromise) return sessionRefreshPromise;
+
+  sessionRefreshPromise = (async () => {
+    requireSupabaseConfig();
+    const response = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+      method: "POST",
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ refresh_token: session.refresh_token })
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || !payload?.access_token) {
+      if ([400, 401].includes(response.status)) {
+        clearExpiredSession("Tu sesión expiró. Inicia sesión de nuevo.");
+      }
+      throw new Error(payload?.message || payload?.error_description || "La sesión expiró.");
+    }
+    const refreshedSession = {
+      ...session,
+      ...payload,
+      user: payload.user ?? session.user,
+      refresh_token: payload.refresh_token || session.refresh_token,
+      expires_at: payload.expires_at || Math.floor(Date.now() / 1000) + Number(payload.expires_in || 3600)
+    };
+    setStoredSession(refreshedSession);
+    return refreshedSession;
+  })().finally(() => {
+    sessionRefreshPromise = null;
+  });
+
+  return sessionRefreshPromise;
+}
+
+async function getValidSession({ required = false, forceRefresh = false } = {}) {
+  const session = await refreshSupabaseSession({ force: forceRefresh });
+  if (required && !session?.access_token) {
+    switchView("acceso");
+    throw new Error("Inicia sesión para continuar.");
+  }
+  return session;
 }
 
 function resetUserState({ clearJobs = false } = {}) {
@@ -1109,7 +1169,9 @@ function renderCompanyProfileSelect() {
 async function refreshCurrentCompanyProfile() {
   if (!currentCompanyProfile?.id) return currentCompanyProfile;
 
-  const rows = await supabaseRestRequest(`/company_profiles?select=*&id=eq.${currentCompanyProfile.id}&limit=1`);
+  const rows = await supabaseRestRequest(
+    `/company_profiles?select=${COMPANY_PROFILE_SELECT}&id=eq.${currentCompanyProfile.id}&limit=1`
+  );
   const refreshedCompany = rows?.[0];
   if (!refreshedCompany) return currentCompanyProfile;
 
@@ -1524,7 +1586,7 @@ async function supabaseAuthUserRequest({ method = "GET", body, accessToken }) {
 
 async function supabaseRestRequest(path, options = {}) {
   requireSupabaseConfig();
-  const session = getStoredSession();
+  const session = await getValidSession();
   const response = await fetch(`${SUPABASE_URL}/rest/v1${path}`, {
     method: options.method ?? "GET",
     headers: {
@@ -1541,6 +1603,10 @@ async function supabaseRestRequest(path, options = {}) {
 
   if (!response.ok) {
     const errorMessage = payload?.message || payload?.hint || "Supabase no pudo completar la operacion.";
+    if (response.status === 401 && session?.refresh_token && !options.sessionRetry) {
+      await getValidSession({ required: true, forceRefresh: true });
+      return supabaseRestRequest(path, { ...options, sessionRetry: true });
+    }
     if (response.status === 401 || errorMessage.toLowerCase().includes("jwt")) {
       clearExpiredSession("Tu sesión expiró. Inicia sesión de nuevo.");
     }
@@ -1553,8 +1619,24 @@ async function supabaseRestRequest(path, options = {}) {
   return payload;
 }
 
+async function supabaseRestAll(path, { pageSize = 500, maxRows = 50000 } = {}) {
+  const rows = [];
+  const separator = path.includes("?") ? "&" : "?";
+
+  while (rows.length < maxRows) {
+    const page = await supabaseRestRequest(
+      `${path}${separator}limit=${pageSize}&offset=${rows.length}`
+    );
+    if (!Array.isArray(page)) return page;
+    rows.push(...page);
+    if (page.length < pageSize) return rows;
+  }
+
+  throw new Error("El panel alcanzó el límite seguro de registros. Reduce la búsqueda o amplía la paginación.");
+}
+
 async function notifyGoogleIndexing(jobId, action = "updated") {
-  const session = getStoredSession();
+  const session = await getValidSession();
   if (!session?.access_token || !jobId) return null;
 
   try {
@@ -1572,6 +1654,29 @@ async function notifyGoogleIndexing(jobId, action = "updated") {
   }
 }
 
+async function authenticatedFunctionRequest(path, body = {}, { method = "POST", retry = true } = {}) {
+  const session = await getValidSession({ required: true });
+  const response = await fetch(path, {
+    method,
+    headers: {
+      Authorization: `Bearer ${session.access_token}`,
+      "Content-Type": "application/json"
+    },
+    body: method === "GET" ? undefined : JSON.stringify(body)
+  });
+  const text = await response.text().catch(() => "");
+  const payload = text ? tryParseJson(text) : null;
+
+  if (response.status === 401 && retry && session.refresh_token) {
+    await getValidSession({ required: true, forceRefresh: true });
+    return authenticatedFunctionRequest(path, body, { method, retry: false });
+  }
+  if (!response.ok) {
+    throw new Error(payload?.error || payload?.message || "No se pudo completar la solicitud.");
+  }
+  return payload;
+}
+
 function tryParseJson(text) {
   try {
     return JSON.parse(text);
@@ -1581,7 +1686,7 @@ function tryParseJson(text) {
 }
 
 async function billingRequest(paths, body = {}) {
-  const session = requireSession();
+  const session = await getValidSession({ required: true });
   const pathList = Array.isArray(paths) ? paths : [paths];
   let fallbackError = null;
 
@@ -1622,7 +1727,7 @@ async function billingRequest(paths, body = {}) {
 
 async function supabaseStorageUpload(path, file) {
   requireSupabaseConfig();
-  const session = requireSession();
+  const session = await getValidSession({ required: true });
   const response = await fetch(`${SUPABASE_URL}/storage/v1/object/resumes/${path}`, {
     method: "PUT",
     headers: {
@@ -1642,7 +1747,7 @@ async function supabaseStorageUpload(path, file) {
 
 async function supabaseStorageUploadToBucket(bucket, path, file, errorMessage) {
   requireSupabaseConfig();
-  const session = requireSession();
+  const session = await getValidSession({ required: true });
   const response = await fetch(`${SUPABASE_URL}/storage/v1/object/${bucket}/${path}`, {
     method: "PUT",
     headers: {
@@ -1662,7 +1767,7 @@ async function supabaseStorageUploadToBucket(bucket, path, file, errorMessage) {
 
 async function createResumeSignedUrl(path) {
   requireSupabaseConfig();
-  const session = requireSession();
+  const session = await getValidSession({ required: true });
   const response = await fetch(`${SUPABASE_URL}/storage/v1/object/sign/resumes/${path}`, {
     method: "POST",
     headers: {
@@ -1923,7 +2028,9 @@ async function loadCurrentProfile() {
     await loadCompanyRatingSummary();
   }
 
-  const companyRows = await supabaseRestRequest(`/company_profiles?select=*&user_id=eq.${session.user.id}&order=created_at.asc`);
+  const companyRows = await supabaseRestRequest(
+    `/company_profiles?select=${COMPANY_PROFILE_SELECT}&user_id=eq.${session.user.id}&order=created_at.asc`
+  );
   currentCompanyProfiles = companyRows ?? [];
   currentCompanyProfile = currentCompanyProfile?.id
     ? currentCompanyProfiles.find((company) => sameId(company.id, currentCompanyProfile.id)) ?? currentCompanyProfiles[0] ?? null
@@ -2122,7 +2229,7 @@ function renderApplicationStatusButtons(applicationId, status) {
 
 function renderApplicationStatusOptions(status) {
   const statuses = [
-    ["submitted", "Nuevo"],
+    ...(status === "submitted" ? [["submitted", "Nuevo"]] : []),
     ["reviewing", "En revisión"],
     ["interview", "Entrevista"],
     ["hired", "Contratado"],
@@ -2187,15 +2294,19 @@ function countRecentPublishedJobs(adminJobs = []) {
   }).length;
 }
 
-function buildAdminNotificationState({ stats = {}, reports = null, jobs = [], companies = null } = {}) {
+function buildAdminNotificationState({ stats = {}, reports = null, jobs = null, companies = null } = {}) {
   const pendingReports = Array.isArray(reports)
     ? reports.filter((report) => ["pending", "reviewing"].includes(report.status)).length
     : Number(stats.pending_reports) || 0;
-  const jobsToReview = jobs.filter((job) => job.status === "draft").length;
-  const newPublishedJobs = countRecentPublishedJobs(jobs);
+  const jobsToReview = Array.isArray(jobs)
+    ? jobs.filter((job) => job.status === "draft").length
+    : Number(stats.jobs_to_review) || 0;
+  const newPublishedJobs = Array.isArray(jobs)
+    ? countRecentPublishedJobs(jobs)
+    : Number(stats.new_published_jobs) || 0;
   const unverifiedCompanies = Array.isArray(companies)
     ? companies.filter((company) => !company.is_verified).length
-    : Math.max(0, (Number(stats.companies) || 0) - (Number(stats.verified_companies) || 0));
+    : Number(stats.unverified_companies) || 0;
 
   return { pendingReports, jobsToReview, newPublishedJobs, unverifiedCompanies };
 }
@@ -2258,13 +2369,10 @@ async function loadAdminNotificationCounts() {
   const requestGeneration = adminNotificationGeneration;
   adminNotificationLoading = true;
   try {
-    const [stats, adminJobs] = await Promise.all([
-      supabaseRestRequest("/rpc/admin_dashboard_stats", { method: "POST", body: {} }),
-      supabaseRestRequest("/jobs?select=id,status,created_at&order=created_at.desc&limit=1000")
-    ]);
+    const stats = await supabaseRestRequest("/rpc/admin_dashboard_stats", { method: "POST", body: {} });
     if (stats?.error) throw new Error(stats.error);
     if (requestGeneration !== adminNotificationGeneration || !isCurrentAdmin()) return;
-    updateAdminNotificationUi(buildAdminNotificationState({ stats, jobs: adminJobs ?? [] }));
+    updateAdminNotificationUi(buildAdminNotificationState({ stats }));
   } catch (error) {
     if (requestGeneration === adminNotificationGeneration && isCurrentAdmin() && adminNotificationsUpdated) {
       adminNotificationsUpdated.textContent = "No se pudieron actualizar los avisos";
@@ -2488,11 +2596,11 @@ async function loadAdminDashboard() {
       error: friendlyError(error),
       weekly_page_visits: null
     })),
-    supabaseRestRequest("/reports?select=id,reporter_user_id,category,target_type,target_id,subject,description,status,admin_note,created_at&order=created_at.desc&limit=500"),
-    supabaseRestRequest("/jobs?select=id,title,status,created_at,updated_at,company_profiles(company_name)&order=updated_at.desc&limit=500"),
-    supabaseRestRequest("/profiles?select=id,email,role,suspended_at,suspension_reason,created_at&order=created_at.desc&limit=200"),
-    supabaseRestRequest("/company_profiles?select=id,user_id,company_name,is_verified,created_at&order=created_at.desc&limit=200"),
-    supabaseRestRequest("/user_roles?select=user_id,role")
+    supabaseRestAll("/reports?select=id,reporter_user_id,category,target_type,target_id,subject,description,status,admin_note,created_at&order=created_at.desc"),
+    supabaseRestAll("/jobs?select=id,title,status,created_at,updated_at,company_profiles(company_name)&order=updated_at.desc"),
+    supabaseRestAll("/profiles?select=id,email,role,suspended_at,suspension_reason,created_at&order=created_at.desc"),
+    supabaseRestAll("/company_profiles?select=id,user_id,company_name,is_verified,created_at&order=created_at.desc"),
+    supabaseRestAll("/user_roles?select=user_id,role")
   ]);
 
   if (stats?.error) throw new Error(stats.error);
@@ -2504,7 +2612,7 @@ async function loadAdminDashboard() {
   adminReportsCount.textContent = String(stats?.pending_reports ?? 0);
   if (adminPageVisitsCount) {
     adminPageVisitsCount.textContent = visitStats?.error ? "Sin configurar" : String(visitStats?.weekly_page_visits ?? 0);
-    adminPageVisitsCount.title = visitStats?.error ?? "Visitas registradas en los ultimos 7 dias";
+    adminPageVisitsCount.title = visitStats?.error ?? "Aperturas de página registradas en los últimos 7 días";
   }
 
   const adminUserIds = new Set((roleRows ?? []).filter((entry) => entry.role === "admin").map((entry) => String(entry.user_id)));
@@ -2644,9 +2752,9 @@ async function submitSafetyReport() {
     throw new Error("Agrega el asunto y la descripción del reporte.");
   }
 
-  await supabaseRestRequest("/reports", {
+  const reportRows = await supabaseRestRequest("/reports", {
     method: "POST",
-    prefer: "return=minimal",
+    prefer: "return=representation",
     body: {
       reporter_user_id: session.user.id,
       category: reportCategory.value,
@@ -2656,6 +2764,9 @@ async function submitSafetyReport() {
       description
     }
   });
+
+  const newReport = reportRows?.[0];
+  if (newReport?.id) notifyAdmins("report_pending", newReport.id);
 
   reportForm.reset();
   activeReportTarget = null;
@@ -2835,17 +2946,101 @@ function wantsMessageNotifications() {
   return localStorage.getItem(MESSAGE_NOTIFICATIONS_KEY) === "enabled";
 }
 
+function urlBase64ToUint8Array(value) {
+  const padding = "=".repeat((4 - (value.length % 4)) % 4);
+  const base64 = (value + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const raw = window.atob(base64);
+  return Uint8Array.from([...raw].map((character) => character.charCodeAt(0)));
+}
+
+async function ensurePushSubscription() {
+  if (pushSubscriptionPromise) return pushSubscriptionPromise;
+  if (
+    isLocalPreview ||
+    !("serviceWorker" in navigator) ||
+    !("PushManager" in window) ||
+    Notification.permission !== "granted" ||
+    !getStoredSession()?.user?.id
+  ) {
+    pushNotificationsAvailable = false;
+    return false;
+  }
+
+  pushSubscriptionPromise = (async () => {
+    const keyResponse = await fetch("/api/notifications/public-key", { cache: "no-store" });
+    const keyPayload = await keyResponse.json().catch(() => ({}));
+    if (!keyResponse.ok || !keyPayload?.publicKey) return false;
+
+    const registration = await navigator.serviceWorker.ready;
+    let subscription = await registration.pushManager.getSubscription();
+    if (!subscription) {
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(keyPayload.publicKey)
+      });
+    }
+
+    await authenticatedFunctionRequest("/api/notifications/subscription", {
+      subscription: subscription.toJSON()
+    });
+    pushNotificationsAvailable = true;
+    updateMessageNotificationsUi();
+    return true;
+  })()
+    .catch(() => {
+      pushNotificationsAvailable = false;
+      updateMessageNotificationsUi();
+      return false;
+    })
+    .finally(() => {
+      pushSubscriptionPromise = null;
+    });
+
+  return pushSubscriptionPromise;
+}
+
+async function removePushSubscription() {
+  if (isLocalPreview || !("serviceWorker" in navigator) || !("PushManager" in window)) return;
+  const registration = await navigator.serviceWorker.ready.catch(() => null);
+  const subscription = await registration?.pushManager?.getSubscription().catch(() => null);
+  if (!subscription) return;
+
+  await authenticatedFunctionRequest(
+    "/api/notifications/subscription",
+    { endpoint: subscription.endpoint },
+    { method: "DELETE" }
+  ).catch(() => null);
+  await subscription.unsubscribe().catch(() => null);
+  pushNotificationsAvailable = false;
+}
+
+function notifyMessageRecipient(messageId) {
+  if (!messageId) return;
+  authenticatedFunctionRequest("/api/notifications/message", { messageId }).catch(() => null);
+}
+
+function notifyAdmins(eventType, targetId) {
+  if (!eventType || !targetId) return;
+  authenticatedFunctionRequest("/api/notifications/admin-event", { eventType, targetId }).catch(() => null);
+}
+
 function updateMessageNotificationsUi() {
-  if (!messageNotificationsButton || !messageNotificationsStatus) return;
+  if (!messageNotificationsStatus) return;
 
   const hasSession = Boolean(getStoredSession()?.user?.id);
   const supported = isNotificationSupported();
   const permission = supported ? Notification.permission : "unsupported";
   const enabled = supported && wantsMessageNotifications() && permission === "granted";
 
-  messageNotificationsButton.disabled = !hasSession || !supported || permission === "denied";
-  messageNotificationsButton.textContent = enabled ? "Notificaciones activas" : "Activar notificaciones";
-  messageNotificationsButton.classList.toggle("active", enabled);
+  [messageNotificationsButton, adminNotificationsButton].filter(Boolean).forEach((button) => {
+    button.disabled = !hasSession || !supported || permission === "denied";
+    button.textContent = enabled
+      ? "Notificaciones activas"
+      : button === adminNotificationsButton
+        ? "Activar avisos"
+        : "Activar notificaciones";
+    button.classList.toggle("active", enabled);
+  });
 
   let statusMessage = "";
   if (!supported) {
@@ -2855,7 +3050,9 @@ function updateMessageNotificationsUi() {
   } else if (permission === "denied") {
     statusMessage = "Las notificaciones están bloqueadas en el navegador.";
   } else if (enabled) {
-    statusMessage = "Te avisaremos cuando lleguen mensajes nuevos.";
+    statusMessage = pushNotificationsAvailable
+      ? "Te avisaremos aunque RedJob esté cerrado."
+      : "Los avisos funcionan mientras RedJob está abierto.";
   }
 
   messageNotificationsStatus.textContent = statusMessage;
@@ -2889,9 +3086,10 @@ async function requestMessageNotifications() {
 
   localStorage.setItem(MESSAGE_NOTIFICATIONS_KEY, "enabled");
   unreadNotificationInitialized = false;
+  const pushEnabled = await ensurePushSubscription();
   startUnreadMessageNotifications();
   updateMessageNotificationsUi();
-  showToast("Notificaciones de mensajes activadas.");
+  showToast(pushEnabled ? "Notificaciones de mensajes activadas." : "Avisos activados mientras RedJob esté abierto.");
 }
 
 async function showMessageNotification(unreadCount) {
@@ -2958,6 +3156,7 @@ function startUnreadMessageNotifications() {
   }
 
   if (unreadNotificationTimer) return;
+  ensurePushSubscription().catch(() => null);
   updateMessageNotificationsUi();
   checkUnreadMessagesForNotification().catch(() => null);
   unreadNotificationTimer = window.setInterval(() => {
@@ -3079,7 +3278,8 @@ function getConversationDisplay(conversation) {
     ? conversation.candidate_profiles[0]
     : conversation.candidate_profiles;
   const jobTitle = Array.isArray(conversation.jobs) ? conversation.jobs[0]?.title : conversation.jobs?.title;
-  const isCompanyView = currentCompanyProfiles.some((company) => company.company_name === companyName);
+  const conversationCompanyId = conversation.company_id ?? companyRecord?.id;
+  const isCompanyView = currentCompanyProfiles.some((company) => sameId(company.id, conversationCompanyId));
 
   return {
     isCompanyView,
@@ -3134,13 +3334,13 @@ function renderActiveConversation() {
 function renderChatMessages(messages, conversation) {
   const session = getStoredSession();
   const jobTitle = Array.isArray(conversation.jobs) ? conversation.jobs[0]?.title : conversation.jobs?.title;
-  const companyName = Array.isArray(conversation.company_profiles)
-    ? conversation.company_profiles[0]?.company_name
-    : conversation.company_profiles?.company_name;
+  const companyRecord = getConversationCompanyRecord(conversation);
+  const companyName = companyRecord?.company_name;
   const candidate = Array.isArray(conversation.candidate_profiles)
     ? conversation.candidate_profiles[0]
     : conversation.candidate_profiles;
-  const isCompanyView = currentCompanyProfiles.some((company) => company.company_name === companyName);
+  const conversationCompanyId = conversation.company_id ?? companyRecord?.id;
+  const isCompanyView = currentCompanyProfiles.some((company) => sameId(company.id, conversationCompanyId));
   const chatTitle = isCompanyView ? candidate?.full_name ?? "Candidato" : companyName ?? "Empresa";
   const conversationDisplay = getConversationDisplay(conversation);
   const chatSubtitle = isCompanyView
@@ -3377,21 +3577,25 @@ async function saveCandidateProfile() {
   if (candidateLocation.value !== "Remoto" && !candidateCity.value) {
     throw new Error("Selecciona tu ciudad.");
   }
-  const profileRows = await supabaseRestRequest("/candidate_profiles?on_conflict=user_id", {
-    method: "POST",
-    prefer: "resolution=merge-duplicates,return=representation",
-    body: {
-      user_id: session.user.id,
-      full_name: candidateFullName.value.trim(),
-      age: candidateAge.value ? Number(candidateAge.value) : null,
-      target_role: candidateTargetRole.value.trim(),
-      location: composeLocation(candidateLocation.value, candidateCity.value),
-      work_mode: candidateWorkMode.value,
-      salary_min: 38000,
-      salary_max: 48000,
-      summary: candidateSummary.value.trim()
-    }
-  });
+  const profileBody = {
+    full_name: candidateFullName.value.trim(),
+    age: candidateAge.value ? Number(candidateAge.value) : null,
+    target_role: candidateTargetRole.value.trim(),
+    location: composeLocation(candidateLocation.value, candidateCity.value),
+    work_mode: candidateWorkMode.value,
+    summary: candidateSummary.value.trim()
+  };
+  const profileRows = currentCandidateProfile?.id
+    ? await supabaseRestRequest(`/candidate_profiles?id=eq.${currentCandidateProfile.id}`, {
+        method: "PATCH",
+        prefer: "return=representation",
+        body: profileBody
+      })
+    : await supabaseRestRequest("/candidate_profiles", {
+        method: "POST",
+        prefer: "return=representation",
+        body: { ...profileBody, user_id: session.user.id }
+      });
 
   currentCandidateProfile = profileRows?.[0] ?? currentCandidateProfile;
   const skills = splitSkills(candidateSkills.value);
@@ -3437,12 +3641,12 @@ async function saveCompanyProfile({ silent = false } = {}) {
   };
 
   const rows = currentCompanyProfile?.id
-    ? await supabaseRestRequest(`/company_profiles?id=eq.${currentCompanyProfile.id}`, {
+    ? await supabaseRestRequest(`/company_profiles?id=eq.${currentCompanyProfile.id}&select=${COMPANY_PROFILE_SELECT}`, {
         method: "PATCH",
         prefer: "return=representation",
         body
       })
-    : await supabaseRestRequest("/company_profiles", {
+    : await supabaseRestRequest(`/company_profiles?select=${COMPANY_PROFILE_SELECT}`, {
         method: "POST",
         prefer: "return=representation",
         body
@@ -3486,7 +3690,7 @@ async function uploadCompanyLogo(file) {
 
   let rows = null;
   try {
-    rows = await supabaseRestRequest(`/company_profiles?id=eq.${currentCompanyProfile.id}`, {
+    rows = await supabaseRestRequest(`/company_profiles?id=eq.${currentCompanyProfile.id}&select=${COMPANY_PROFILE_SELECT}`, {
       method: "PATCH",
       prefer: "return=representation",
       body: {
@@ -3599,6 +3803,9 @@ async function publishRealJob() {
 
   if (newJob?.id && (newJob.status === "published" || existingJob?.status === "published")) {
     notifyGoogleIndexing(newJob.id, "status_changed");
+  }
+  if (newJob?.id && newJob.status === "draft") {
+    notifyAdmins("job_pending", newJob.id);
   }
   await loadCompanyManagedJobs();
   await loadRealJobs();
@@ -3755,7 +3962,7 @@ async function createRealApplication(job) {
 
   const initialMessage = coverNote.value.trim();
   if (createdConversationId && initialMessage) {
-    await supabaseRestRequest("/messages", {
+    const messageRows = await supabaseRestRequest("/messages", {
       method: "POST",
       prefer: "return=representation",
       body: {
@@ -3764,6 +3971,7 @@ async function createRealApplication(job) {
         body: initialMessage
       }
     });
+    notifyMessageRecipient(messageRows?.[0]?.id);
   }
 
   showToast("Postulación enviada correctamente.");
@@ -3778,7 +3986,7 @@ async function sendRealMessage(body) {
     throw new Error("Aún no hay una conversación real. Postúlate a una vacante real primero.");
   }
 
-  await supabaseRestRequest("/messages", {
+  const messageRows = await supabaseRestRequest("/messages", {
     method: "POST",
     prefer: "return=representation",
     body: {
@@ -3787,6 +3995,9 @@ async function sendRealMessage(body) {
       body
     }
   });
+  const message = messageRows?.[0];
+  notifyMessageRecipient(message?.id);
+  return message;
 }
 
 async function deleteOwnMessage(messageId) {
@@ -4084,6 +4295,7 @@ async function signOutFromSupabase() {
   const session = getStoredSession();
 
   if (session?.access_token) {
+    await removePushSubscription().catch(() => null);
     try {
       await supabaseAuthRequest("/auth/v1/logout", {}, session.access_token);
     } catch (error) {
@@ -4112,13 +4324,22 @@ async function signOutFromSupabase() {
   showToast("Sesión cerrada.");
 }
 
-function requestAccountDeletion() {
+async function requestAccountDeletion() {
   const confirmed = window.confirm(
-    "¿Quieres continuar con la solicitud de eliminación de tu cuenta RedJob?\n\nEsta acción abrirá las instrucciones para pedir la eliminación de tu cuenta y datos asociados."
+    "¿Quieres eliminar definitivamente tu cuenta RedJob?\n\nSe borrarán tu perfil y los datos asociados. Esta acción no se puede deshacer."
   );
 
   if (!confirmed) return;
-  window.location.href = "/eliminar-cuenta/";
+  const confirmation = window.prompt("Para confirmar, escribe exactamente ELIMINAR:");
+  if (confirmation !== "ELIMINAR") {
+    showToast("Eliminación cancelada.");
+    return;
+  }
+
+  await authenticatedFunctionRequest("/api/account/delete", { confirmation });
+  await signOutFromSupabase();
+  switchView("inicio");
+  showToast("Tu cuenta y sus datos fueron eliminados.");
 }
 
 async function checkSupabaseSchema() {
@@ -4808,6 +5029,13 @@ messageNotificationsButton?.addEventListener("click", () => {
   });
 });
 
+adminNotificationsButton?.addEventListener("click", () => {
+  requestMessageNotifications().catch((error) => {
+    showToast(friendlyError(error));
+    updateMessageNotificationsUi();
+  });
+});
+
 updatePasswordButton?.addEventListener("click", async () => {
   try {
     updatePasswordButton.disabled = true;
@@ -4838,8 +5066,12 @@ profileSignOutButton.addEventListener("click", async () => {
   }
 });
 
-deleteAccountRequestButton?.addEventListener("click", () => {
-  requestAccountDeletion();
+deleteAccountRequestButton?.addEventListener("click", async () => {
+  try {
+    await withButtonLoading(deleteAccountRequestButton, "Eliminando...", requestAccountDeletion);
+  } catch (error) {
+    showToast(friendlyError(error));
+  }
 });
 
 savedJobsList.addEventListener("click", async (event) => {

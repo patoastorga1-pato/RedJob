@@ -42,6 +42,31 @@
   status = 200
 
 [[redirects]]
+  from = "/api/notifications/public-key"
+  to = "/.netlify/functions/push-public-key"
+  status = 200
+
+[[redirects]]
+  from = "/api/notifications/subscription"
+  to = "/.netlify/functions/push-subscribe"
+  status = 200
+
+[[redirects]]
+  from = "/api/notifications/message"
+  to = "/.netlify/functions/push-message-notification"
+  status = 200
+
+[[redirects]]
+  from = "/api/notifications/admin-event"
+  to = "/.netlify/functions/push-admin-notification"
+  status = 200
+
+[[redirects]]
+  from = "/api/account/delete"
+  to = "/.netlify/functions/delete-account"
+  status = 200
+
+[[redirects]]
   from = "/blog"
   to = "/blog/"
   status = 301

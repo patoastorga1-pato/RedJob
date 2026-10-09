@@ -1,10 +1,7 @@
 import { getCanonicalJobUrl, publishGoogleIndexingNotification } from "./_shared/google-indexing.mts";
+import { getAuthenticatedUser, isAdminUser, supabaseServiceRequest } from "./_shared/supabase-auth.mts";
 
-const JOB_SELECT = "id,title,status,company_id";
-
-function getEnv(name, fallback = "") {
-  return globalThis.Netlify?.env?.get(name) ?? fallback;
-}
+const JOB_SELECT = "id,title,status,company_id,company_profiles(user_id)";
 
 function jsonResponse(payload, status = 200) {
   return new Response(JSON.stringify(payload), {
@@ -19,28 +16,6 @@ function jsonResponse(payload, status = 200) {
 function getBearerToken(req) {
   const authorization = req.headers.get("authorization") ?? "";
   return authorization.startsWith("Bearer ") ? authorization.slice(7).trim() : "";
-}
-
-function getSupabaseConfig() {
-  const url = getEnv("NEXT_PUBLIC_SUPABASE_URL") || getEnv("SUPABASE_URL");
-  const key = getEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY") || getEnv("SUPABASE_ANON_KEY");
-  if (!url || !key) throw new Error("Falta configuracion de Supabase.");
-  return { url: url.replace(/\/$/, ""), key };
-}
-
-async function supabaseRequest(path, accessToken) {
-  const { url, key } = getSupabaseConfig();
-  const response = await fetch(`${url}/rest/v1${path}`, {
-    headers: {
-      apikey: key,
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json"
-    }
-  });
-  const text = await response.text();
-  const payload = text ? JSON.parse(text) : null;
-  if (!response.ok) throw new Error(payload?.message || payload?.hint || "Supabase no pudo completar la solicitud.");
-  return payload;
 }
 
 function resolveNotificationType(job, action) {
@@ -70,12 +45,15 @@ function logIndexingResult({ type, url, googleStatus = null, ok = false, error =
   });
 }
 
-async function getVisibleJobForUser(jobId, accessToken) {
-  const rows = await supabaseRequest(
-    `/jobs?select=${encodeURIComponent(JOB_SELECT)}&id=eq.${encodeURIComponent(jobId)}&limit=1`,
-    accessToken
+async function getAuthorizedJob(jobId, accessToken) {
+  const user = await getAuthenticatedUser(accessToken);
+  const rows = await supabaseServiceRequest(
+    `/jobs?select=${encodeURIComponent(JOB_SELECT)}&id=eq.${encodeURIComponent(jobId)}&limit=1`
   );
-  return rows?.[0] ?? null;
+  const job = rows?.[0] ?? null;
+  const company = Array.isArray(job?.company_profiles) ? job.company_profiles[0] : job?.company_profiles;
+  if (!job || (company?.user_id !== user.id && !(await isAdminUser(user.id)))) return null;
+  return job;
 }
 
 async function notifyGoogle({ url, type }) {
@@ -119,7 +97,7 @@ export default async (req, context) => {
       return jsonResponse({ error: "Accion no permitida." }, 400);
     }
 
-    const job = await getVisibleJobForUser(jobId, accessToken);
+    const job = await getAuthorizedJob(jobId, accessToken);
     if (!job?.id || !job?.title) return jsonResponse({ error: "Vacante no encontrada o sin permisos." }, 404);
 
     const type = resolveNotificationType(job, action);
